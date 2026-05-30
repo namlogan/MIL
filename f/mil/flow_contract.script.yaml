@@ -1,0 +1,21 @@
+summary: MIL generic flow contract
+description: Generic Windmill entrypoint for manually running a MIL AI Factory flow.
+lock: '!inline f/mil/flow_contract.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    flow:
+      type: string
+      enum:
+        - issue_to_plan
+        - plan_to_pr
+        - pr_quality_gate
+        - fix_ci_or_review
+    task:
+      type: object
+      description: MIL task payload.
+  required:
+    - flow
+    - task

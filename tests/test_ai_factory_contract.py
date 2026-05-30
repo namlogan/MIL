@@ -89,6 +89,11 @@ class AIFactoryContractTests(unittest.TestCase):
         for decision in ["REQUEST_CHANGES", "REJECT", "BLOCKED_NEEDS_HUMAN"]:
             with self.subTest(decision=decision):
                 self.assertFalse(final_gate_check.evaluate_gate({"decision": decision})["pass"])
+        for alias in ["PASS", "PASSED", "APPROVED", "FAILED", "BLOCKED"]:
+            with self.subTest(alias=alias):
+                result = final_gate_check.evaluate_gate({"decision": alias})
+                self.assertEqual(result["decision"], "BLOCKED_NEEDS_HUMAN")
+                self.assertFalse(result["pass"])
 
     def test_flow_gate_samples_match_executable_flow_harness(self) -> None:
         task = mil_flow.load_task(REPO_ROOT / "tests/fixtures/agent_task.json")

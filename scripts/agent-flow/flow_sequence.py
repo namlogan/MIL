@@ -15,7 +15,6 @@ FLOW_SEQUENCE = (
     "issue_to_plan",
     "plan_to_pr",
     "pr_quality_gate",
-    "fix_ci_or_review",
 )
 
 

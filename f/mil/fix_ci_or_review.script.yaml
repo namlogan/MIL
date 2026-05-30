@@ -1,0 +1,13 @@
+summary: MIL fix CI or review
+description: Route failed CI or review blockers through Auggie diagnosis and scoped Codex fix.
+lock: ''
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    task:
+      type: object
+      description: MIL task payload.
+  required:
+    - task

@@ -1,0 +1,86 @@
+from __future__ import annotations
+
+import importlib.util
+import unittest
+from pathlib import Path
+
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+def load_module(name: str, relative_path: str):
+    module_path = REPO_ROOT / relative_path
+    spec = importlib.util.spec_from_file_location(name, module_path)
+    assert spec is not None
+    assert spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+class WindmillRuntimeConfigTests(unittest.TestCase):
+    def test_wmill_project_files_exist_and_sync_only_safe_paths(self) -> None:
+        config = (REPO_ROOT / "wmill.yaml").read_text(encoding="utf-8")
+
+        self.assertIn('includes:', config)
+        self.assertIn('"f/**"', config)
+        self.assertIn("skipSecrets: true", config)
+        self.assertIn("nonDottedPaths: true", config)
+        self.assertTrue((REPO_ROOT / "wmill-lock.yaml").exists())
+
+    def test_runtime_scripts_exist_with_metadata(self) -> None:
+        for name in [
+            "issue_to_plan",
+            "plan_to_pr",
+            "pr_quality_gate",
+            "fix_ci_or_review",
+            "auggie_supervised_advisory",
+        ]:
+            with self.subTest(name=name):
+                script = REPO_ROOT / "f" / "mil" / f"{name}.py"
+                metadata = REPO_ROOT / "f" / "mil" / f"{name}.script.yaml"
+
+                self.assertTrue(script.exists())
+                self.assertTrue(metadata.exists())
+                self.assertIn("kind: script", metadata.read_text(encoding="utf-8"))
+
+    def test_windmill_worker_bridge_reuses_ai_factory_contract(self) -> None:
+        bridge = load_module(
+            "mil_windmill_bridge",
+            "scripts/windmill/mil_windmill_bridge.py",
+        )
+
+        result = bridge.run_windmill_flow(
+            "plan_to_pr",
+            {
+                "task_id": "MIL-LOCAL",
+                "checks": ["git diff --check"],
+                "restricted_changes": [],
+            },
+        )
+
+        self.assertEqual(result["flow"], "plan_to_pr")
+        self.assertEqual(result["agent_calls"][0]["agent"], "windmill")
+        self.assertEqual(result["agent_calls"][0]["action"], "dispatch_coding_agent")
+
+    def test_windmill_validator_self_test_succeeds(self) -> None:
+        validator = load_module(
+            "validate_windmill_project",
+            "scripts/windmill/validate_windmill_project.py",
+        )
+
+        self.assertEqual(validator.validate(REPO_ROOT), [])
+
+    def test_workspace_bootstrap_script_uses_environment_secrets(self) -> None:
+        script = (REPO_ROOT / "scripts" / "windmill" / "bootstrap_workspace.sh").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn("WINDMILL_TOKEN is required", script)
+        self.assertIn("wmill workspace add", script)
+        self.assertIn("wmill sync push --dry-run", script)
+        self.assertNotIn("WINDMILL_TOKEN=", script)
+
+
+if __name__ == "__main__":
+    unittest.main()

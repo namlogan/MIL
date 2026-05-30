@@ -10,10 +10,10 @@ from pathlib import Path
 from typing import Any
 
 
-APPROVE_VALUES = {"APPROVE_MERGE", "PASS", "PASSED", "APPROVED"}
-REQUEST_CHANGES_VALUES = {"REQUEST_CHANGES", "CHANGES_REQUESTED", "FAIL", "FAILED"}
-REJECT_VALUES = {"REJECT", "REJECTED"}
-BLOCK_VALUES = {"BLOCKED", "BLOCKED_NEEDS_HUMAN", "NEEDS_HUMAN"}
+APPROVE_VALUES = {"APPROVE_MERGE"}
+REQUEST_CHANGES_VALUES = {"REQUEST_CHANGES"}
+REJECT_VALUES = {"REJECT"}
+BLOCK_VALUES = {"BLOCKED_NEEDS_HUMAN"}
 
 
 def normalize_decision(value: Any) -> str:
@@ -110,4 +110,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

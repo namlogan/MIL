@@ -24,6 +24,8 @@ jobs:
         run: python scripts/agent-gate/final_gate_check.py --self-test
       - name: Validate AI Factory artifacts
         run: python scripts/agent-gate/validate_ai_factory.py --self-test
+      - name: Validate Windmill project files
+        run: python scripts/windmill/validate_windmill_project.py --self-test
       - name: Test GitHub check payload
         run: python scripts/agent-gate/github_check_payload.py --self-test
       - name: Test GitHub status payload
@@ -35,4 +37,4 @@ jobs:
       - name: Test Augment config checker
         run: python scripts/agent-flow/check_augment_config.py --self-test
       - name: Check shell wrappers
-        run: bash -n scripts/agent-flow/auggie_mcp_server.sh scripts/agent-flow/run_codex_with_mil_env.sh scripts/agent-flow/auggie_interactive.sh
+        run: bash -n scripts/agent-flow/auggie_mcp_server.sh scripts/agent-flow/run_codex_with_mil_env.sh scripts/agent-flow/auggie_interactive.sh scripts/windmill/bootstrap_workspace.sh

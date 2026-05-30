@@ -31,7 +31,7 @@ class FlowSequenceTests(unittest.TestCase):
 
         self.assertEqual(
             [item["flow"] for item in result["flows"]],
-            ["issue_to_plan", "plan_to_pr", "pr_quality_gate", "fix_ci_or_review"],
+            ["issue_to_plan", "plan_to_pr", "pr_quality_gate"],
         )
         plan_to_pr = next(item for item in result["flows"] if item["flow"] == "plan_to_pr")
         calls = [
@@ -58,7 +58,11 @@ class FlowSequenceTests(unittest.TestCase):
             self.assertEqual(exit_code, 0)
             payload = json.loads(out_path.read_text(encoding="utf-8"))
             self.assertEqual(payload["task_id"], "MIL-001")
-            self.assertEqual(payload["flows"][2]["decision"], "APPROVE_MERGE")
+            self.assertEqual(payload["flows"][-1]["decision"], "APPROVE_MERGE")
+            self.assertNotIn(
+                "fix_ci_or_review",
+                [item["flow"] for item in payload["flows"]],
+            )
 
 
 if __name__ == "__main__":

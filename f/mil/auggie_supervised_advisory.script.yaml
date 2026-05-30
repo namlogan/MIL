@@ -1,0 +1,13 @@
+summary: MIL Auggie supervised advisory
+description: Queue a supervised Auggie advisory review while non-interactive Auggie is blocked.
+lock: ''
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    target:
+      type: object
+      description: Issue, PR, or failing check target.
+  required:
+    - target
