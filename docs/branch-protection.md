@@ -5,9 +5,13 @@ Configure this after the GitHub remote exists.
 Status as of 2026-05-30:
 
 - Remote exists at `https://github.com/namlogan/MIL`.
+- Repository visibility is public by Product Owner approval.
 - Initial CI passes on `main`.
-- Enabling branch protection through the GitHub API returned HTTP 403 because this private repository requires GitHub Pro or public visibility for that feature on the current account.
-- Do not make the repository public just to enable protection unless the Product Owner explicitly approves that visibility change.
+- Branch protection is enabled for `main`.
+- Required status check: `control-plane`.
+- Pull requests are required with zero required approvals for the solo-owner pilot.
+- Force pushes and branch deletion are disabled.
+- Conversation resolution is required.
 
 Recommended protection for `main`:
 
@@ -23,11 +27,10 @@ Recommended protection for `main`:
 Initial required checks:
 
 ```text
-ci / control-plane
-ai-gate/final-review
+control-plane
 ```
 
-`ai-gate/final-review` should be written by Windmill through the GitHub Checks API after it parses the final `aif-gate-result`.
+`ai-gate/final-review` should be added as a required check after Windmill is provisioned and consistently writes the status through the GitHub Checks API or commit status API.
 
 Add application-specific checks after the product stack exists:
 
@@ -45,7 +48,7 @@ Merge bot policy:
 - must not author implementation commits
 - must not merge PRs with restricted-change labels unless human approval is recorded
 
-Fallback until branch protection is available:
+Fallback if branch protection must be disabled temporarily:
 
 - keep `main` changes manual and deliberate
 - require agents to work on `agent/*` or `fix/*` branches only
