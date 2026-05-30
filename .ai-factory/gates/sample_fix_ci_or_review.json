@@ -1,0 +1,27 @@
+{
+  "agent_calls": [
+    {
+      "action": "diagnose",
+      "agent": "auggie",
+      "role": "advisory_review_and_diagnosis_worker",
+      "task_id": "MIL-001"
+    },
+    {
+      "action": "fix",
+      "agent": "codex",
+      "role": "implementation_test_and_qa_worker",
+      "task_id": "MIL-001"
+    }
+  ],
+  "artifacts": {
+    "required_checks": [
+      "python3 -m unittest discover -s tests -v",
+      "git diff --check"
+    ],
+    "summary": "fix_ci_or_review completed for MIL-001"
+  },
+  "blocking": false,
+  "decision": "FIX_PUSH_READY",
+  "flow": "fix_ci_or_review",
+  "task_id": "MIL-001"
+}

@@ -1,0 +1,33 @@
+{
+  "agent_calls": [
+    {
+      "action": "implement",
+      "agent": "codex",
+      "role": "implementation_test_and_qa_worker",
+      "task_id": "MIL-001"
+    },
+    {
+      "action": "test",
+      "agent": "codex",
+      "role": "implementation_test_and_qa_worker",
+      "task_id": "MIL-001"
+    },
+    {
+      "action": "review",
+      "agent": "auggie",
+      "role": "advisory_review_and_diagnosis_worker",
+      "task_id": "MIL-001"
+    }
+  ],
+  "artifacts": {
+    "required_checks": [
+      "python3 -m unittest discover -s tests -v",
+      "git diff --check"
+    ],
+    "summary": "plan_to_pr completed for MIL-001"
+  },
+  "blocking": false,
+  "decision": "PR_READY_FOR_GATE",
+  "flow": "plan_to_pr",
+  "task_id": "MIL-001"
+}

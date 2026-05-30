@@ -60,7 +60,42 @@ The check name should be:
 ai-gate/final-review
 ```
 
+## Local Flow Harness
+
+Before importing or changing Windmill flows, run the local executable contract:
+
+```bash
+python scripts/agent-flow/mil_flow.py --self-test
+```
+
+To produce a dry-run artifact for one flow:
+
+```bash
+python scripts/agent-flow/mil_flow.py \
+  --flow issue_to_plan \
+  --task tests/fixtures/agent_task.json \
+  --out .ai-factory/gates/sample_issue_to_plan.json
+```
+
+The harness verifies expected routing:
+
+```text
+issue_to_plan -> codex.plan -> auggie.validate_plan
+plan_to_pr -> codex.implement -> codex.test -> auggie.review
+pr_quality_gate -> codex.qa
+fix_ci_or_review -> auggie.diagnose -> codex.fix
+```
+
+In Windmill, the dry-run adapter should be replaced by worker scripts that call the actual Codex and Auggie CLIs or SDKs with least-privilege credentials.
+
+To check whether the local machine has the worker CLIs installed:
+
+```bash
+python scripts/agent-flow/check_agent_tools.py
+```
+
+This check is intentionally not required in GitHub Actions because cloud runners do not have the local Codex/Auggie worker setup.
+
 ## Temporary Fallback
 
 Until branch protection is available for the private repo, Windmill should still comment gate decisions and label PRs. Treat `BLOCKED_NEEDS_HUMAN`, `REQUEST_CHANGES`, and `REJECT` as hard stops by convention.
-

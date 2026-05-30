@@ -1,0 +1,45 @@
+{
+  "agent_calls": [
+    {
+      "action": "plan",
+      "agent": "codex",
+      "role": "implementation_test_and_qa_worker",
+      "task_id": "MIL-001"
+    },
+    {
+      "action": "validate_plan",
+      "agent": "auggie",
+      "role": "advisory_review_and_diagnosis_worker",
+      "task_id": "MIL-001"
+    }
+  ],
+  "artifacts": {
+    "plan": {
+      "acceptance_criteria": [
+        "Issue templates exist",
+        "Windmill setup is documented",
+        "Gate result can be converted to a GitHub Check payload",
+        "Local flow harness proves agent routing"
+      ],
+      "allowed_files": [
+        ".github/**",
+        ".windmill/**",
+        ".ai-factory/**",
+        "docs/**",
+        "scripts/**",
+        "tests/**"
+      ],
+      "goal": "Complete the first operational pass of the MIL agent factory workflow.",
+      "task_id": "MIL-001"
+    },
+    "required_checks": [
+      "python3 -m unittest discover -s tests -v",
+      "git diff --check"
+    ],
+    "summary": "issue_to_plan completed for MIL-001"
+  },
+  "blocking": false,
+  "decision": "PLAN_READY_FOR_APPROVAL",
+  "flow": "issue_to_plan",
+  "task_id": "MIL-001"
+}
