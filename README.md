@@ -15,6 +15,6 @@ Start here:
 - [Agent workflow](AGENTS.md)
 - [Operating model](docs/agent-operating-model.md)
 - [Branch protection guide](docs/branch-protection.md)
+- [External blockers](docs/external-blockers.md)
 - [AI Factory rules](.ai-factory/RULES.md)
 - [Windmill cockpit notes](.windmill/README.md)
-
