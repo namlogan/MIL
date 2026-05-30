@@ -1,0 +1,79 @@
+project: MIL
+version: 1
+
+source_of_truth:
+  issue: GitHub Issue
+  pr: GitHub Pull Request
+  ci: GitHub Actions
+  cockpit: Windmill
+
+paths:
+  description: .ai-factory/DESCRIPTION.md
+  architecture: .ai-factory/ARCHITECTURE.md
+  rules: .ai-factory/RULES.md
+  rules_dir: .ai-factory/rules
+  plans: .ai-factory/plans
+  qa: .ai-factory/qa
+  gates: .ai-factory/gates
+  windmill: .windmill
+  docs: docs
+
+workflow:
+  base_branch: main
+  branch_prefix: agent/
+  fix_branch_prefix: fix/
+  max_auto_fix_iterations: 2
+  gate_result_block: aif-gate-result
+  require_pull_request: true
+  require_human_for_release: true
+  require_human_for_restricted_changes: true
+
+agents:
+  codex:
+    role: implementation_and_test_worker
+    allowed_default_actions:
+      - plan
+      - implement_scoped_issue
+      - generate_tests
+      - fix_ci
+      - write_pr_evidence
+    forbidden_default_actions:
+      - merge_main
+      - read_production_secrets
+      - deploy_production
+  auggie:
+    role: advisory_review_and_diagnosis_worker
+    allowed_default_actions:
+      - validate_plan
+      - review_diff
+      - diagnose_ci_failure
+      - identify_risks
+    forbidden_default_actions:
+      - final_merge_approval
+      - merge_main
+      - deploy_production
+  windmill:
+    role: cockpit_and_orchestrator
+    allowed_default_actions:
+      - receive_webhook
+      - run_agent_worker
+      - create_status_check
+      - request_human_approval
+      - comment_on_issue_or_pr
+    forbidden_default_actions:
+      - bypass_branch_protection
+      - reinterpret_gate_policy
+
+gate:
+  allowed_decisions:
+    - APPROVE_MERGE
+    - REQUEST_CHANGES
+    - REJECT
+    - BLOCKED_NEEDS_HUMAN
+  approval_requires:
+    - ci_passed
+    - ai_gate_passed
+    - scope_satisfied
+    - evidence_present
+    - restricted_check_clear
+

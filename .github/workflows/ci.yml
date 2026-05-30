@@ -1,0 +1,23 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  control-plane:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile Python scripts
+        run: python -m compileall -q scripts
+      - name: Test gate extraction
+        run: python scripts/agent-gate/extract_aif_gate_result.py --self-test
+      - name: Test final gate check
+        run: python scripts/agent-gate/final_gate_check.py --self-test
+
