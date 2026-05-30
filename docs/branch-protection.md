@@ -27,6 +27,8 @@ ci / control-plane
 ai-gate/final-review
 ```
 
+`ai-gate/final-review` should be written by Windmill through the GitHub Checks API after it parses the final `aif-gate-result`.
+
 Add application-specific checks after the product stack exists:
 
 ```text
