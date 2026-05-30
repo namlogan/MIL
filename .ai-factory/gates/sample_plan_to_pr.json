@@ -1,6 +1,18 @@
 {
   "agent_calls": [
     {
+      "action": "dispatch_coding_agent",
+      "agent": "windmill",
+      "role": "cockpit_and_orchestrator",
+      "task_id": "MIL-001"
+    },
+    {
+      "action": "create_branch",
+      "agent": "codex",
+      "role": "implementation_test_and_qa_worker",
+      "task_id": "MIL-001"
+    },
+    {
       "action": "implement",
       "agent": "codex",
       "role": "implementation_test_and_qa_worker",
@@ -13,6 +25,12 @@
       "task_id": "MIL-001"
     },
     {
+      "action": "open_pr",
+      "agent": "codex",
+      "role": "implementation_test_and_qa_worker",
+      "task_id": "MIL-001"
+    },
+    {
       "action": "review",
       "agent": "auggie",
       "role": "advisory_review_and_diagnosis_worker",
@@ -20,6 +38,12 @@
     }
   ],
   "artifacts": {
+    "dispatch": {
+      "branch": "agent/mil-001",
+      "developer_agent": "codex",
+      "requires_pull_request": true,
+      "supervised": false
+    },
     "required_checks": [
       "python3 -m unittest discover -s tests -v",
       "git diff --check"
