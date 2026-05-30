@@ -10,13 +10,18 @@ Tracking issue: https://github.com/namlogan/MIL/issues/5
 
 Current state:
 
+- Repository visibility is public by Product Owner approval.
 - `main` exists and CI runs.
-- `ai-gate/final-review` can be published through the commit status API.
-- GitHub branch protection API returned HTTP 403 because this private repository requires GitHub Pro or public visibility for branch protection on the current account.
+- Branch protection is enabled for `main`.
+- `control-plane` is required and branches must be up to date.
+- Pull requests are required with zero required approvals for the solo-owner pilot.
+- Force pushes and branch deletion are disabled.
+- Conversation resolution is required.
+- `ai-gate/final-review` can be published through the commit status API, but is not required yet because Windmill is not provisioned.
 
 Required decision:
 
-- Upgrade the GitHub plan, move the repo under an org/plan with branch protection, or explicitly approve making the repo public.
+- After Windmill is provisioned, add `ai-gate/final-review` as a required status check.
 
 ## Auggie Automated Worker
 
