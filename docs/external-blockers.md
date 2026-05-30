@@ -27,6 +27,8 @@ Current state:
 - Auggie CLI is installed.
 - `auggie --version` works.
 - Non-interactive `auggie --print` execution is blocked by account policy.
+- Local Augment credential config can be validated with `scripts/agent-flow/check_augment_config.py`.
+- Augment MCP can be started with credentials, but Codex may still require MCP tool-call approval depending on the client/session.
 
 Required decision:
 
@@ -46,4 +48,3 @@ Current state:
 Required decision:
 
 - Provision Windmill, add least-privilege secrets, and connect GitHub webhooks to the documented flows.
-
