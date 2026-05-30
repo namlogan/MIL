@@ -1,0 +1,6 @@
+{
+  "context": "ai-gate/final-review",
+  "description": "APPROVE_MERGE: local AI gate passed.",
+  "state": "success",
+  "target_url": "https://github.com/namlogan/MIL/pull/2"
+}

@@ -60,6 +60,23 @@ The check name should be:
 ai-gate/final-review
 ```
 
+GitHub Checks API note:
+
+- `POST /repos/{owner}/{repo}/check-runs` requires GitHub App authentication.
+- If Windmill only has a regular GitHub token, use commit statuses as a fallback:
+
+```bash
+python scripts/agent-gate/github_status_payload.py \
+  --target-url "$PR_URL" \
+  .ai-factory/gates/final_gate_result.json
+```
+
+Then publish it with:
+
+```text
+POST /repos/{owner}/{repo}/statuses/{sha}
+```
+
 ## Local Flow Harness
 
 Before importing or changing Windmill flows, run the local executable contract:

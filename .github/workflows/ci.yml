@@ -24,6 +24,8 @@ jobs:
         run: python scripts/agent-gate/final_gate_check.py --self-test
       - name: Test GitHub check payload
         run: python scripts/agent-gate/github_check_payload.py --self-test
+      - name: Test GitHub status payload
+        run: python scripts/agent-gate/github_status_payload.py --self-test
       - name: Test agent flow harness
         run: python scripts/agent-flow/mil_flow.py --self-test
       - name: Test local agent tool checker
