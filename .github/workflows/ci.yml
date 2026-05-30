@@ -33,4 +33,4 @@ jobs:
       - name: Test Augment config checker
         run: python scripts/agent-flow/check_augment_config.py --self-test
       - name: Check shell wrappers
-        run: bash -n scripts/agent-flow/auggie_mcp_server.sh scripts/agent-flow/run_codex_with_mil_env.sh
+        run: bash -n scripts/agent-flow/auggie_mcp_server.sh scripts/agent-flow/run_codex_with_mil_env.sh scripts/agent-flow/auggie_interactive.sh

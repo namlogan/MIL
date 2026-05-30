@@ -10,6 +10,7 @@ Purpose:
 - plan validation
 - diff review
 - QA review
+- supervised Auggie advisory queue records
 
 Permissions:
 
@@ -22,6 +23,7 @@ Must not:
 - push branches
 - access production secrets
 - merge PRs
+- fake Auggie advisory output without a real supervised Auggie session
 
 ## agent-write
 
@@ -74,4 +76,3 @@ Permissions:
 - deployment credentials only after approval
 
 Must require human approval before production deployment.
-

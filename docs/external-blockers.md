@@ -29,6 +29,7 @@ Current state:
 - Non-interactive `auggie --print` execution is blocked by account policy.
 - Local Augment credential config can be validated with `scripts/agent-flow/check_augment_config.py`.
 - Augment MCP can be started with credentials, but Codex may still require MCP tool-call approval depending on the client/session.
+- Supervised Auggie interactive review works through `scripts/agent-flow/auggie_interactive.sh`; Windmill should queue and record this lane rather than call `auggie --print`.
 
 Required decision:
 

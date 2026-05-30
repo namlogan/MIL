@@ -17,5 +17,6 @@ Start here:
 - [Branch protection guide](docs/branch-protection.md)
 - [External blockers](docs/external-blockers.md)
 - [Augment setup](docs/augment-setup.md)
+- [Auggie supervised loop](docs/auggie-human-loop-runbook.md)
 - [AI Factory rules](.ai-factory/RULES.md)
 - [Windmill cockpit notes](.windmill/README.md)

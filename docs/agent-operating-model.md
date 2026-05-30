@@ -20,6 +20,25 @@ Windmill is the cockpit that routes work, captures logs, manages retries, and re
 
 GitHub is the system of record.
 
+## Auggie Supervised Lane
+
+While Auggie CLI non-interactive mode is blocked, Auggie runs through a supervised interactive TTY operated by Codex.
+
+```text
+Windmill queues advisory request -> Codex starts Auggie interactive -> Auggie reviews/diagnoses -> Codex verifies -> GitHub records evidence
+```
+
+Auggie advisory verdicts are limited to:
+
+```text
+AUGMENT_REVIEW_PASS
+AUGMENT_REVIEW_NOTES
+AUGMENT_REVIEW_CHANGES_RECOMMENDED
+AUGMENT_REVIEW_BLOCKED
+```
+
+Auggie output is advisory evidence only. It does not replace Codex QA, CI, branch protection, human restricted approval, or the final merge gate.
+
 ## Gate Philosophy
 
 The gate is intentionally layered:
@@ -30,4 +49,3 @@ The gate is intentionally layered:
 4. human approval for restricted changes
 
 No single LLM decision is enough to merge critical code.
-

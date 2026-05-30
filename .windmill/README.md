@@ -17,3 +17,6 @@ Initial implementation should import these flow contracts into Windmill after th
 
 See [Windmill setup](../docs/windmill-setup.md) for required secrets, webhooks, and GitHub Check payload handling.
 
+## Auggie Supervised Advisory
+
+Until Auggie non-interactive CLI mode is enabled, Windmill should use `flows/auggie_supervised_advisory.md` as a queue and audit contract. A local Codex operator starts Auggie through `scripts/agent-flow/auggie_interactive.sh`, verifies the output, and posts evidence back to GitHub.

@@ -86,6 +86,26 @@ CLI non-interactive mode access has been disabled for your account.
 
 If this remains true, use the Auggie SDK/API route for Windmill advisory review, or keep Auggie as a manual advisory lane until non-interactive access is enabled.
 
+## Supervised Interactive Lane
+
+Until non-interactive mode is enabled, MIL uses a supervised Auggie lane:
+
+```bash
+scripts/agent-flow/auggie_interactive.sh
+```
+
+Codex operates the interactive terminal session and runs workspace commands from `.augment/commands/`:
+
+```text
+/command mil-morning-triage
+/command mil-plan-review issue #<id>
+/command mil-pr-review PR #<id>
+/command mil-ci-diagnose PR #<id>
+/command mil-handoff PR #<id>
+```
+
+Windmill may queue and record this work through `.windmill/flows/auggie_supervised_advisory.md`, but it must not pretend this is unattended Auggie automation.
+
 ## Windmill Secrets
 
 Configure these in Windmill secrets, not in repo:
