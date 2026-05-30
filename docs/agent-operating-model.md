@@ -5,7 +5,7 @@ MIL uses a controlled AI software factory model.
 ## Default Flow
 
 ```text
-issue intake -> plan -> implementation branch -> pull request -> CI -> AI gate -> human or bot merge
+issue intake -> plan -> coding-agent dispatch -> implementation branch -> pull request -> CI -> Auggie advisory review -> Codex QA gate -> human or bot merge
 ```
 
 Agents may do planning, implementation, review, and CI fixes. They may not bypass branch protection or merge restricted changes without human approval.
@@ -15,6 +15,8 @@ Agents may do planning, implementation, review, and CI fixes. They may not bypas
 Codex is the default implementation worker for scoped code changes, tests, refactors, and small CI fixes.
 
 Auggie is the advisory reviewer and diagnosis worker for repository-context review, plan validation, hard CI failures, and risk analysis.
+
+Auggie may also act as a supervised developer worker only when an issue explicitly routes implementation to Auggie. In that case Codex operates the interactive Auggie terminal, then independently verifies the resulting diff, tests, and evidence.
 
 Windmill is the cockpit that routes work, captures logs, manages retries, and requests human approval.
 

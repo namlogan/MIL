@@ -5,6 +5,7 @@ This directory describes the Windmill cockpit layer for MIL.
 Windmill responsibilities:
 
 - receive GitHub webhooks
+- dispatch exactly one coding agent for approved implementation work
 - run planning, implementation, review, QA, and fix flows
 - route jobs to least-privilege worker groups
 - store logs and artifacts

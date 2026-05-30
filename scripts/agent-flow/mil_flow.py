@@ -21,8 +21,11 @@ FLOW_STEPS: dict[str, list[tuple[str, str]]] = {
         ("auggie", "validate_plan"),
     ],
     "plan_to_pr": [
-        ("codex", "implement"),
-        ("codex", "test"),
+        ("windmill", "dispatch_coding_agent"),
+        ("developer", "create_branch"),
+        ("developer", "implement"),
+        ("developer", "test"),
+        ("developer", "open_pr"),
         ("auggie", "review"),
     ],
     "pr_quality_gate": [
@@ -74,6 +77,7 @@ class DryRunAgentAdapter:
 
     roles = {
         "codex": "implementation_test_and_qa_worker",
+        "auggie_supervised": "supervised_interactive_developer_worker",
         "auggie": "advisory_review_and_diagnosis_worker",
         "windmill": "cockpit_and_orchestrator",
     }
@@ -82,6 +86,8 @@ class DryRunAgentAdapter:
         self.calls: list[AgentCall] = []
 
     def call(self, agent: str, action: str, task: dict[str, Any]) -> AgentCall:
+        if agent == "developer":
+            agent = _developer_agent_for_task(task)
         if agent not in self.roles:
             raise ValueError(f"unknown agent: {agent}")
         task_id = str(task.get("task_id") or "UNKNOWN")
@@ -106,6 +112,20 @@ def load_task(path: str | Path) -> dict[str, Any]:
 
 def _has_restricted_changes(task: dict[str, Any]) -> bool:
     return bool(task.get("restricted_changes"))
+
+
+def _developer_agent_for_task(task: dict[str, Any]) -> str:
+    configured = str(task.get("developer_agent") or "codex").strip()
+    allowed = {"codex", "auggie_supervised"}
+    if configured not in allowed:
+        raise ValueError(
+            f"unsupported developer_agent: {configured}; expected one of {sorted(allowed)}"
+        )
+    if configured == "auggie_supervised" and not task.get("allow_auggie_implementation"):
+        raise ValueError(
+            "developer_agent auggie_supervised requires allow_auggie_implementation=true"
+        )
+    return configured
 
 
 def _decision_for_flow(flow: str, task: dict[str, Any]) -> tuple[str, bool]:
@@ -141,6 +161,15 @@ def _artifacts_for_flow(
             "goal": task.get("goal", ""),
             "acceptance_criteria": task.get("acceptance_criteria", []),
             "allowed_files": task.get("allowed_files", []),
+        }
+
+    if flow == "plan_to_pr":
+        developer = _developer_agent_for_task(task)
+        artifacts["dispatch"] = {
+            "developer_agent": developer,
+            "branch": f"agent/{task_id.lower()}",
+            "requires_pull_request": True,
+            "supervised": developer == "auggie_supervised",
         }
 
     if flow == "pr_quality_gate":
@@ -186,7 +215,14 @@ def run_self_test() -> None:
     }
     expected_calls = {
         "issue_to_plan": [("codex", "plan"), ("auggie", "validate_plan")],
-        "plan_to_pr": [("codex", "implement"), ("codex", "test"), ("auggie", "review")],
+        "plan_to_pr": [
+            ("windmill", "dispatch_coding_agent"),
+            ("codex", "create_branch"),
+            ("codex", "implement"),
+            ("codex", "test"),
+            ("codex", "open_pr"),
+            ("auggie", "review"),
+        ],
         "pr_quality_gate": [("codex", "qa")],
         "fix_ci_or_review": [("auggie", "diagnose"), ("codex", "fix")],
     }

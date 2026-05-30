@@ -18,5 +18,6 @@ Start here:
 - [External blockers](docs/external-blockers.md)
 - [Augment setup](docs/augment-setup.md)
 - [Auggie supervised loop](docs/auggie-human-loop-runbook.md)
+- [Windmill coding dispatch](.windmill/flows/coding_agent_dispatch.md)
 - [AI Factory rules](.ai-factory/RULES.md)
 - [Windmill cockpit notes](.windmill/README.md)
