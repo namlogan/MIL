@@ -15,3 +15,5 @@ Windmill must not become the source of truth for issue scope, PR state, or merge
 
 Initial implementation should import these flow contracts into Windmill after the GitHub remote and tokens exist.
 
+See [Windmill setup](../docs/windmill-setup.md) for required secrets, webhooks, and GitHub Check payload handling.
+

@@ -1,0 +1,25 @@
+{
+  "ok": true,
+  "tools": {
+    "auggie": {
+      "available": true,
+      "command": [
+        "auggie",
+        "--version"
+      ],
+      "error": "",
+      "returncode": 0,
+      "version": "0.28.0 (commit 63537d73)"
+    },
+    "codex": {
+      "available": true,
+      "command": [
+        "codex",
+        "--version"
+      ],
+      "error": "",
+      "returncode": 0,
+      "version": "codex-cli 0.134.0"
+    }
+  }
+}

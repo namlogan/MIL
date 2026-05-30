@@ -16,8 +16,17 @@ jobs:
           python-version: "3.12"
       - name: Compile Python scripts
         run: python -m compileall -q scripts
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
       - name: Test gate extraction
         run: python scripts/agent-gate/extract_aif_gate_result.py --self-test
       - name: Test final gate check
         run: python scripts/agent-gate/final_gate_check.py --self-test
-
+      - name: Test GitHub check payload
+        run: python scripts/agent-gate/github_check_payload.py --self-test
+      - name: Test GitHub status payload
+        run: python scripts/agent-gate/github_status_payload.py --self-test
+      - name: Test agent flow harness
+        run: python scripts/agent-flow/mil_flow.py --self-test
+      - name: Test local agent tool checker
+        run: python scripts/agent-flow/check_agent_tools.py --self-test

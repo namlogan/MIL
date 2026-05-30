@@ -1,0 +1,26 @@
+{
+  "task_id": "MIL-001",
+  "issue": 1,
+  "title": "Bootstrap agent factory merge gate",
+  "goal": "Complete the first operational pass of the MIL agent factory workflow.",
+  "acceptance_criteria": [
+    "Issue templates exist",
+    "Windmill setup is documented",
+    "Gate result can be converted to a GitHub Check payload",
+    "Local flow harness proves agent routing"
+  ],
+  "allowed_files": [
+    ".github/**",
+    ".windmill/**",
+    ".ai-factory/**",
+    "docs/**",
+    "scripts/**",
+    "tests/**"
+  ],
+  "restricted_changes": [],
+  "checks": [
+    "python3 -m unittest discover -s tests -v",
+    "git diff --check"
+  ]
+}
+

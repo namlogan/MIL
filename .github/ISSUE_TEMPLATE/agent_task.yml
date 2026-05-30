@@ -1,0 +1,75 @@
+name: Agent Task
+description: Request scoped work for Codex, Auggie, or Windmill automation.
+title: "MIL-000: "
+labels:
+  - agent:plan
+body:
+  - type: input
+    id: task_id
+    attributes:
+      label: Task ID
+      description: Use the GitHub issue number or a MIL task ID.
+      placeholder: MIL-001
+    validations:
+      required: true
+  - type: textarea
+    id: goal
+    attributes:
+      label: User or business goal
+      description: What outcome should this task produce?
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: List concrete checks that define done.
+      placeholder: |
+        - ...
+        - ...
+    validations:
+      required: true
+  - type: textarea
+    id: files
+    attributes:
+      label: Allowed files and out-of-scope files
+      description: Be explicit about what agents may edit.
+      placeholder: |
+        Allowed:
+        - ...
+
+        Out of scope:
+        - ...
+    validations:
+      required: true
+  - type: textarea
+    id: checks
+    attributes:
+      label: Required checks
+      description: Commands, CI jobs, manual checks, or evidence required.
+      placeholder: |
+        - python -m unittest discover -s tests -v
+        - git diff --check
+    validations:
+      required: true
+  - type: checkboxes
+    id: restricted
+    attributes:
+      label: Restricted change check
+      options:
+        - label: production deployment behavior
+        - label: secrets or credentials
+        - label: billing, payments, or entitlements
+        - label: customer data retention or deletion
+        - label: authentication or authorization boundary
+        - label: destructive migration
+        - label: legal, compliance, or safety-critical behavior
+        - label: none of the above
+  - type: textarea
+    id: rollback
+    attributes:
+      label: Rollback note
+      description: How should this change be reverted or disabled?
+    validations:
+      required: true
+
