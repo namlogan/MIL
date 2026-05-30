@@ -27,6 +27,7 @@ workflow:
   require_pull_request: true
   require_human_for_release: true
   require_human_for_restricted_changes: true
+  require_coding_agent_dispatch: true
 
 agents:
   codex:
@@ -41,6 +42,17 @@ agents:
       - merge_main
       - read_production_secrets
       - deploy_production
+  auggie_supervised:
+    role: supervised_interactive_developer_worker
+    allowed_default_actions:
+      - implement_scoped_issue_when_explicitly_routed
+      - run_focused_tests
+      - write_pr_evidence
+    forbidden_default_actions:
+      - final_merge_approval
+      - merge_main
+      - deploy_production
+      - read_production_secrets
   auggie:
     role: advisory_review_and_diagnosis_worker
     allowed_default_actions:
@@ -76,4 +88,3 @@ gate:
     - scope_satisfied
     - evidence_present
     - restricted_check_clear
-

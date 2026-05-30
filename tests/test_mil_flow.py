@@ -41,12 +41,45 @@ class MilFlowTests(unittest.TestCase):
         self.assertEqual(
             calls,
             [
+                ("windmill", "dispatch_coding_agent"),
+                ("codex", "create_branch"),
                 ("codex", "implement"),
                 ("codex", "test"),
+                ("codex", "open_pr"),
                 ("auggie", "review"),
             ],
         )
         self.assertEqual(result.decision, "PR_READY_FOR_GATE")
+        self.assertEqual(result.artifacts["dispatch"]["developer_agent"], "codex")
+
+    def test_plan_to_pr_can_route_to_supervised_auggie_developer(self) -> None:
+        task = {
+            **self.task,
+            "developer_agent": "auggie_supervised",
+            "allow_auggie_implementation": True,
+        }
+
+        result = mil_flow.run_flow("plan_to_pr", task)
+
+        calls = [(call.agent, call.action) for call in result.agent_calls]
+        self.assertEqual(
+            calls,
+            [
+                ("windmill", "dispatch_coding_agent"),
+                ("auggie_supervised", "create_branch"),
+                ("auggie_supervised", "implement"),
+                ("auggie_supervised", "test"),
+                ("auggie_supervised", "open_pr"),
+                ("auggie", "review"),
+            ],
+        )
+        self.assertTrue(result.artifacts["dispatch"]["supervised"])
+
+    def test_plan_to_pr_blocks_auggie_developer_without_explicit_permission(self) -> None:
+        task = {**self.task, "developer_agent": "auggie_supervised"}
+
+        with self.assertRaisesRegex(ValueError, "allow_auggie_implementation"):
+            mil_flow.run_flow("plan_to_pr", task)
 
     def test_pr_quality_gate_routes_to_codex_qa_and_approves_clean_task(self) -> None:
         result = mil_flow.run_flow("pr_quality_gate", self.task)
@@ -87,4 +120,3 @@ class MilFlowTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

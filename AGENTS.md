@@ -24,7 +24,7 @@ Windmill is an orchestrator, not the source of truth. AI Factory is the SDLC pro
 | Product Owner | Business goal, release approval, restricted decisions | No direct code by role |
 | Merge Controller | Final gate decision, scope and evidence review | Only for emergency/unblock tasks |
 | Codex Developer | Plan, implement, tests, small fixes | Yes, within issue scope |
-| Auggie Reviewer | Codebase-aware advisory review, diagnosis, risk notes | No by default |
+| Auggie Reviewer / Supervised Developer | Codebase-aware advisory review, diagnosis, risk notes; implementation only when explicitly routed | No by default; yes only with explicit issue routing |
 | Codex QA | Final AI QA review and gate evidence | Review/test only |
 | Windmill Bot | Run flows, write comments/checks/labels, request approval | No app-code authorship |
 | GitHub Bot | Create status checks and merge only when protections pass | No app-code authorship |
@@ -68,6 +68,24 @@ Before review, the developer agent must attach or reference:
 - residual risks
 - rollback note
 
+## Coding Agent Dispatch
+
+Approved implementation work must dispatch exactly one coding agent before a PR exists.
+
+Default lane:
+
+```text
+Windmill coding_agent_dispatch -> Codex Developer -> agent/<issue-id>-<slug> -> PR
+```
+
+Optional lane:
+
+```text
+Windmill coding_agent_dispatch -> Auggie supervised developer -> agent/<issue-id>-<slug> -> PR
+```
+
+The Auggie supervised developer lane is allowed only when the issue explicitly permits Auggie implementation. Codex must operate the Auggie interactive TTY, then independently verify the diff, tests, evidence, and scope before PR gate review.
+
 ## Gate Decisions
 
 Final AI gate decisions must use exactly one of:
@@ -91,4 +109,3 @@ The gate decision is advisory until GitHub branch protection and required status
 6. Every gate result must include decision, reasons, tests, and residual risks.
 7. Restricted areas require human approval before merge: production deploy, secrets, billing, customer data, destructive migrations, legal/compliance behavior, security boundaries.
 8. If issue instructions conflict with this file or `.ai-factory/RULES.md`, the stricter rule wins unless the Product Owner approves an exception in writing.
-
