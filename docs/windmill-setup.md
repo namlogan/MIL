@@ -98,12 +98,57 @@ The harness verifies expected routing:
 
 ```text
 issue_to_plan -> codex.plan -> auggie.validate_plan
-plan_to_pr -> codex.implement -> codex.test -> auggie.review
+plan_to_pr -> windmill.dispatch_coding_agent -> codex.implement -> codex.test -> auggie.review
 pr_quality_gate -> codex.qa
 fix_ci_or_review -> auggie.diagnose -> codex.fix
 ```
 
 In Windmill, the dry-run adapter should be replaced by worker scripts that call the actual Codex and Auggie CLIs or SDKs with least-privilege credentials.
+
+## CLI Project Setup
+
+Windmill CLI is installed with:
+
+```bash
+npm install -g windmill-cli
+wmill --version
+```
+
+MIL now includes a Windmill CLI project:
+
+```text
+wmill.yaml
+wmill-lock.yaml
+f/mil/*.py
+f/mil/*.script.yaml
+```
+
+Validate the deployable project files without workspace credentials:
+
+```bash
+python3 scripts/windmill/validate_windmill_project.py --self-test
+wmill lint .
+```
+
+Preview a local script without deploying after a workspace profile is configured:
+
+```bash
+wmill script preview f/mil/plan_to_pr \
+  -d '{"task":{"task_id":"MIL-LOCAL","checks":["git diff --check"],"restricted_changes":[]}}'
+```
+
+With `wmill` CLI 1.712.0, `script preview` still requires an active workspace profile even though it does not deploy.
+
+After a real Windmill workspace exists, bind and dry-run the sync:
+
+```bash
+export WINDMILL_TOKEN="..."
+export WINDMILL_WORKSPACE_ID="..."
+export WINDMILL_BASE_URL="https://app.windmill.dev"
+scripts/windmill/bootstrap_workspace.sh
+```
+
+Only run `wmill sync push` after the dry-run diff is reviewed and the workspace secrets below are present.
 
 To check whether the local machine has the worker CLIs installed:
 

@@ -16,6 +16,7 @@ Runner = Callable[[list[str]], tuple[int, str, str]]
 TOOLS = {
     "codex": ["codex", "--version"],
     "auggie": ["auggie", "--version"],
+    "wmill": ["wmill", "--version"],
 }
 
 
@@ -84,4 +85,3 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

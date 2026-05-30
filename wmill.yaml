@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=wmill.schema.json
+# Windmill CLI project configuration for MIL.
+
+defaultTs: bun
+
+includes:
+  - "f/**"
+
+excludes: []
+
+skipVariables: false
+skipResources: false
+skipResourceTypes: false
+skipSecrets: true
+skipScripts: false
+skipFlows: false
+skipApps: false
+skipFolders: false
+skipWorkspaceDependencies: false
+
+locksRequired: false
+lint: true
+nonDottedPaths: true
+syncBehavior: v1
+

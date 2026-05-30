@@ -81,6 +81,19 @@ class MilFlowTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "allow_auggie_implementation"):
             mil_flow.run_flow("plan_to_pr", task)
 
+    def test_plan_to_pr_blocks_restricted_changes_before_dispatch(self) -> None:
+        task = {
+            **self.task,
+            "restricted_changes": ["production deployment behavior"],
+        }
+
+        result = mil_flow.run_flow("plan_to_pr", task)
+
+        self.assertEqual(result.decision, "BLOCKED_NEEDS_HUMAN")
+        self.assertTrue(result.blocking)
+        self.assertEqual(result.agent_calls, [])
+        self.assertNotIn("dispatch", result.artifacts)
+
     def test_pr_quality_gate_routes_to_codex_qa_and_approves_clean_task(self) -> None:
         result = mil_flow.run_flow("pr_quality_gate", self.task)
 

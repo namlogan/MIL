@@ -1,0 +1,13 @@
+summary: MIL PR quality gate
+description: Produce final AI Factory gate evidence for a pull request.
+lock: ''
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    task:
+      type: object
+      description: MIL task payload.
+  required:
+    - task

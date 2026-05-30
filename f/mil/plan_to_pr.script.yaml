@@ -1,0 +1,13 @@
+summary: MIL plan to PR
+description: Dispatch exactly one coding agent and prepare a PR-ready artifact.
+lock: ''
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    task:
+      type: object
+      description: MIL task payload.
+  required:
+    - task

@@ -34,6 +34,7 @@ class AgentToolCheckTests(unittest.TestCase):
         self.assertTrue(result["ok"])
         self.assertTrue(result["tools"]["codex"]["available"])
         self.assertTrue(result["tools"]["auggie"]["available"])
+        self.assertTrue(result["tools"]["wmill"]["available"])
 
     def test_tool_check_reports_missing_tools(self) -> None:
         def fake_runner(command: list[str]) -> tuple[int, str, str]:
@@ -46,8 +47,8 @@ class AgentToolCheckTests(unittest.TestCase):
         self.assertFalse(result["ok"])
         self.assertTrue(result["tools"]["codex"]["available"])
         self.assertFalse(result["tools"]["auggie"]["available"])
+        self.assertTrue(result["tools"]["wmill"]["available"])
 
 
 if __name__ == "__main__":
     unittest.main()
-

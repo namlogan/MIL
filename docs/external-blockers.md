@@ -46,10 +46,13 @@ Tracking issue: https://github.com/namlogan/MIL/issues/4
 
 Current state:
 
+- Windmill CLI is installed locally as `wmill` and reports version `1.712.0`.
 - Repo flow contracts exist under `.windmill/flows/`.
+- Deployable Windmill CLI project files exist in `wmill.yaml`, `wmill-lock.yaml`, and `f/mil/**`.
+- `scripts/windmill/validate_windmill_project.py --self-test` validates the Windmill project files without credentials.
 - Local dry-run harness exists under `scripts/agent-flow/`.
 - Required secret names are documented.
-- No Windmill workspace URL, route, webhook, or secret has been configured yet.
+- No active Windmill workspace profile, route, webhook, or secret has been configured yet.
 
 Required decision:
 

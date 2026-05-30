@@ -163,7 +163,7 @@ def _artifacts_for_flow(
             "allowed_files": task.get("allowed_files", []),
         }
 
-    if flow == "plan_to_pr":
+    if flow == "plan_to_pr" and not blocking:
         developer = _developer_agent_for_task(task)
         artifacts["dispatch"] = {
             "developer_agent": developer,
@@ -192,11 +192,21 @@ def run_flow(
     if flow not in FLOW_STEPS:
         raise ValueError(f"unknown flow: {flow}")
 
+    decision, blocking = _decision_for_flow(flow, task)
+    if blocking:
+        return FlowResult(
+            flow=flow,
+            task_id=str(task["task_id"]),
+            decision=decision,
+            blocking=blocking,
+            agent_calls=[],
+            artifacts=_artifacts_for_flow(flow, task, decision, blocking),
+        )
+
     agent_adapter = adapter or DryRunAgentAdapter()
     for agent, action in FLOW_STEPS[flow]:
         agent_adapter.call(agent, action, task)
 
-    decision, blocking = _decision_for_flow(flow, task)
     return FlowResult(
         flow=flow,
         task_id=str(task["task_id"]),
