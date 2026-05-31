@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "required_tools": [
+    "git",
+    "gh",
+    "python3",
+    "wmill"
+  ],
+  "required_github_contexts": [
+    "control-plane",
+    "ai-gate/final-review"
+  ],
+  "windmill": {
+    "workspace_profile": "mil-local",
+    "workspace_id": "admins",
+    "scoped_sync_include": "f/mil/**",
+    "required_scripts": [
+      "f/mil/issue_to_plan",
+      "f/mil/plan_to_pr",
+      "f/mil/pr_quality_gate",
+      "f/mil/fix_ci_or_review",
+      "f/mil/auggie_supervised_advisory",
+      "f/mil/github_commit_status"
+    ],
+    "required_secret_references": [
+      "f/mil/github_status_token"
+    ]
+  },
+  "local_checks": [
+    "python3 -m unittest discover -s tests -v",
+    "python3 scripts/agent-gate/validate_ai_factory.py --self-test",
+    "python3 scripts/windmill/validate_windmill_project.py --self-test",
+    "python3 -m compileall -q scripts tests f",
+    "git diff --check"
+  ]
+}

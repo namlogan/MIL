@@ -12,11 +12,17 @@ paths:
   architecture: .ai-factory/ARCHITECTURE.md
   rules: .ai-factory/RULES.md
   rules_dir: .ai-factory/rules
+  runtime_agents: .ai-factory/runtime/agents.json
+  runtime_workflows: .ai-factory/runtime/workflows.json
+  runtime_evidence: .ai-factory/runtime/evidence.json
+  runtime_environment: .ai-factory/runtime/environment.json
   plans: .ai-factory/plans
   qa: .ai-factory/qa
   gates: .ai-factory/gates
   windmill: .windmill
   docs: docs
+  setup_doc: docs/ai-factory-setup.md
+  runtime_bootstrap: scripts/ai-factory/bootstrap_runtime.py
 
 workflow:
   base_branch: main
@@ -28,6 +34,10 @@ workflow:
   require_human_for_release: true
   require_human_for_restricted_changes: true
   require_coding_agent_dispatch: true
+  runtime_check_command: python3 scripts/ai-factory/bootstrap_runtime.py --check
+  required_status_contexts:
+    - control-plane
+    - ai-gate/final-review
 
 agents:
   codex:

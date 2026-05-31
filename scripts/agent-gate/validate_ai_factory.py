@@ -23,11 +23,17 @@ REQUIRED_PATHS = [
     ".ai-factory/ARCHITECTURE.md",
     ".ai-factory/RULES.md",
     ".ai-factory/rules",
+    ".ai-factory/runtime/agents.json",
+    ".ai-factory/runtime/workflows.json",
+    ".ai-factory/runtime/evidence.json",
+    ".ai-factory/runtime/environment.json",
     ".ai-factory/plans",
     ".ai-factory/qa",
     ".ai-factory/gates",
     ".windmill",
     "docs",
+    "docs/ai-factory-setup.md",
+    "scripts/ai-factory/bootstrap_runtime.py",
 ]
 
 REQUIRED_CONTROLS = [
@@ -36,6 +42,8 @@ REQUIRED_CONTROLS = [
     "require_human_for_restricted_changes: true",
     "require_coding_agent_dispatch: true",
     "max_auto_fix_iterations: 2",
+    "runtime_check_command: python3 scripts/ai-factory/bootstrap_runtime.py --check",
+    "ai-gate/final-review",
 ]
 
 ALLOWED_GATE_DECISIONS = {
@@ -93,7 +101,16 @@ def validate(repo_root: Path) -> list[str]:
             "final_gate_check",
             "scripts/agent-gate/final_gate_check.py",
         )
+        bootstrap_runtime = _load_module(
+            repo_root,
+            "bootstrap_runtime",
+            "scripts/ai-factory/bootstrap_runtime.py",
+        )
         task = mil_flow.load_task(repo_root / "tests/fixtures/agent_task.json")
+
+        runtime_errors = bootstrap_runtime.validate(repo_root)
+        if runtime_errors:
+            errors.extend(f"runtime install invalid: {error}" for error in runtime_errors)
 
         for flow, relative_path in FLOW_SAMPLE_FILES.items():
             sample = _read_json(repo_root, relative_path)
