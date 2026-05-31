@@ -28,5 +28,6 @@ pnpm-debug.log*
 .windmill/runtime/
 .ai-factory/tmp/
 .ai-factory/queue/
+.ai-factory/qa/codex_worker/
 .ai-factory/memory/*.jsonl
 .ai-factory/memory/*.db
