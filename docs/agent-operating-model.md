@@ -48,6 +48,12 @@ instead of dispatching a worker. The GitHub webhook route for `agent:build`
 preloads a bundled rulepack snapshot before calling `plan_to_pr`, which keeps
 hosted Windmill usable even when the repository is not mounted.
 
+When unattended execution is enabled, `scripts/agent-flow/auto_dispatcher.py`
+runs on the local control station and invokes `scripts/agent-flow/codex_worker.py`
+with `--execute-agent --push --open-pr`. It is opt-in per event: use
+`agent:auto-build` or `/agent autobuild`. `agent:build` remains a command-pack
+route.
+
 `plan_to_pr` always prepares a read-only Augment MCP `codebase-retrieval`
 request for the task and passes preloaded Augment context into the Codex worker
 prompt when available. Augment remains context-only; Codex still owns the

@@ -37,6 +37,7 @@
   },
   "codex_worker": {
     "runner_script": "scripts/agent-flow/codex_worker.py",
+    "auto_dispatcher_script": "scripts/agent-flow/auto_dispatcher.py",
     "windmill_script": "f/mil/codex_worker",
     "contract_script": "f/mil/codex_worker_contract",
     "worktree_root": ".ai-factory/tmp/worktrees",
@@ -46,9 +47,12 @@
     "execute_agent_default": false,
     "push_default": false,
     "open_pr_default": false,
+    "auto_dispatch_default": false,
+    "auto_dispatch_required_label": "agent:auto-build",
+    "auto_dispatch_queue": ".ai-factory/queue/webhooks",
     "requires_allowed_files": true,
     "requires_restricted_change_empty": true,
-    "notes": "Windmill returns a command pack by default. Actual codex exec, push, and PR creation require explicit flags."
+    "notes": "Windmill returns a command pack by default. Local auto dispatch can execute Codex, push, and open PRs only when MIL_AUTO_DISPATCH_ENABLED=1 and the GitHub request explicitly uses agent:auto-build or /agent autobuild."
   },
   "augment": {
     "context_provider": "augment_mcp",

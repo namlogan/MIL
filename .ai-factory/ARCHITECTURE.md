@@ -35,6 +35,10 @@ then calls `f/mil/codex_worker` to build the Windmill command pack.
 when execution is explicitly enabled. It writes code and tests only inside
 issue-approved scope.
 
+Local auto execution is owned by `scripts/agent-flow/auto_dispatcher.py`. The
+public relay can launch it only when `MIL_AUTO_DISPATCH_ENABLED=1` and the
+GitHub task explicitly uses `agent:auto-build` or `/agent autobuild`.
+
 Rules follow the AI Factory 2.x hierarchy: `paths.rules_file` for universal
 axioms, `rules.base` for project conventions, and named `rules.<area>` files for
 implementation, quality gates, security, memory, and Windmill behavior.

@@ -113,6 +113,24 @@ python3 scripts/agent-flow/codex_worker.py \
   --open-pr
 ```
 
+## Auto Dispatcher
+
+`scripts/agent-flow/auto_dispatcher.py` is the local control-station bridge from
+a routed GitHub webhook request to the real worker runner. It is what the public
+relay launches in background when `MIL_AUTO_DISPATCH_ENABLED=1`.
+
+```bash
+python3 scripts/agent-flow/auto_dispatcher.py \
+  --request .ai-factory/queue/webhooks/<delivery>.json \
+  --repo /Users/mac/Documents/MIL \
+  --execute-agent \
+  --push \
+  --open-pr
+```
+
+The dispatcher requires `agent:auto-build` or `/agent autobuild`. Plain
+`agent:build` remains a non-executing command-pack path.
+
 ## Windmill Entrypoints
 
 Windmill-safe command pack:

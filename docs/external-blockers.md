@@ -61,6 +61,7 @@ Current state:
 - `f/mil/github_webhook_router` and `f/mil/github_webhook.http_trigger.yaml` define the repo-local GitHub webhook ingress.
 - `f/mil/github_webhook_router` routes `agent:build` issue events into real `plan_to_pr` dispatch and passes a bundled AI Factory rulepack for hosted Windmill runtimes without a mounted repo.
 - `scripts/windmill/github_webhook_public_relay.py` exposes only `POST /mil/github-webhook`, verifies GitHub HMAC signatures before forwarding, and forwards signed deliveries to local Windmill.
+- `scripts/agent-flow/auto_dispatcher.py` can launch local Codex worker execution for explicit `agent:auto-build` or `/agent autobuild` requests when `MIL_AUTO_DISPATCH_ENABLED=1`.
 - `scripts/windmill/setup_cloudflare_named_tunnel.py` can create or reuse a Cloudflare named tunnel, route DNS, and write the local cloudflared config for the signed relay.
 - `scripts/windmill/run_github_webhook_relay_from_windmill_secret.sh` starts the relay by reading `f/mil/github_webhook_secret` from Windmill without storing the secret in repo files.
 - `scripts/windmill/setup_ngrok_static_endpoint.py` supports the no-custom-domain fallback with an ngrok account static/dev domain such as `<assigned-name>.ngrok-free.app`.

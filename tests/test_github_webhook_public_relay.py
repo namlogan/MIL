@@ -4,6 +4,7 @@ import hashlib
 import hmac
 import importlib.util
 import json
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -135,22 +136,23 @@ class GitHubWebhookPublicRelayTests(unittest.TestCase):
             "X-GitHub-Delivery": "delivery-1",
         }
 
-        disabled = self.relay.maybe_launch_auto_dispatch(
-            headers=headers,
-            body=body,
-            enabled=False,
-            repo_root=str(REPO_ROOT),
-            queue_root=REPO_ROOT / ".ai-factory" / "tmp" / "test-queue",
-            launcher=lambda **kwargs: calls.append(kwargs),
-        )
-        enabled = self.relay.maybe_launch_auto_dispatch(
-            headers=headers,
-            body=body,
-            enabled=True,
-            repo_root=str(REPO_ROOT),
-            queue_root=REPO_ROOT / ".ai-factory" / "tmp" / "test-queue",
-            launcher=lambda **kwargs: calls.append(kwargs),
-        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            disabled = self.relay.maybe_launch_auto_dispatch(
+                headers=headers,
+                body=body,
+                enabled=False,
+                repo_root=str(REPO_ROOT),
+                queue_root=Path(tmpdir),
+                launcher=lambda **kwargs: calls.append(kwargs),
+            )
+            enabled = self.relay.maybe_launch_auto_dispatch(
+                headers=headers,
+                body=body,
+                enabled=True,
+                repo_root=str(REPO_ROOT),
+                queue_root=Path(tmpdir),
+                launcher=lambda **kwargs: calls.append(kwargs),
+            )
 
         self.assertFalse(disabled["launched"])
         self.assertTrue(enabled["launched"])

@@ -465,8 +465,8 @@ def _route_issue_event(
 
     if "agent:plan" in label_names:
         return _matched("issue_to_plan", task, github, "issue has agent:plan label")
-    if "agent:build" in label_names:
-        return _matched("plan_to_pr", task, github, "issue has agent:build label")
+    if "agent:build" in label_names or "agent:auto-build" in label_names:
+        return _matched("plan_to_pr", task, github, "issue has build routing label")
     return _ignored(github, "issue has no agent routing label")
 
 
@@ -528,13 +528,19 @@ def _route_issue_comment_event(
     comment = payload.get("comment") or {}
     body = str(comment.get("body") or "").strip().lower()
     title = str(issue.get("title") or "")
-    task_id = _task_id_from_title(title, f"MIL-{int(issue.get('number') or 0):03d}")
-    task = _base_task(task_id, title)
+    issue_body = str(issue.get("body") or "")
+    parsed_fields = _parse_issue_form_task_fields(issue_body)
+    task_id = str(
+        parsed_fields.get("task_id")
+        or _task_id_from_title(title, f"MIL-{int(issue.get('number') or 0):03d}")
+    )
+    task = _base_task(task_id, title, issue_body)
+    task.update(parsed_fields)
     task["issue_number"] = issue.get("number")
 
     if "/agent plan" in body:
         return _matched("issue_to_plan", task, github, "comment requested plan")
-    if "/agent build" in body:
+    if "/agent build" in body or "/agent autobuild" in body or "/agent auto-build" in body:
         return _matched("plan_to_pr", task, github, "comment requested build")
     if "/agent qa" in body or "/agent gate" in body:
         return _matched("pr_quality_gate", task, github, "comment requested QA gate")
