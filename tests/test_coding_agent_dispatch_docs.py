@@ -15,7 +15,8 @@ class CodingAgentDispatchDocsTests(unittest.TestCase):
 
         self.assertIn("Select and launch the coding agent", flow)
         self.assertIn("codex", flow)
-        self.assertIn("auggie_supervised", flow)
+        self.assertIn("only supported coding lane", flow)
+        self.assertNotIn("auggie_supervised", flow)
         self.assertIn("agent/<issue-id>-<slug>", flow)
         self.assertIn("do not auto-merge", flow)
 
@@ -32,7 +33,8 @@ class CodingAgentDispatchDocsTests(unittest.TestCase):
         )
 
         self.assertIn("require_coding_agent_dispatch: true", config)
-        self.assertIn("auggie_supervised:", config)
+        self.assertIn("augment_context:", config)
+        self.assertNotIn("auggie_supervised:", config)
 
 
 if __name__ == "__main__":

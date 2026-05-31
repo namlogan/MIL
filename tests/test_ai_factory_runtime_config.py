@@ -37,8 +37,8 @@ class AIFactoryRuntimeConfigTests(unittest.TestCase):
         for agent in [
             "codex_developer",
             "codex_qa",
+            "augment_context_provider",
             "auggie_advisory",
-            "auggie_supervised_developer",
             "windmill_orchestrator",
             "github_merge_gate",
         ]:
@@ -46,6 +46,18 @@ class AIFactoryRuntimeConfigTests(unittest.TestCase):
                 self.assertIn(agent, agents["agents"])
                 self.assertIn("allowed_actions", agents["agents"][agent])
                 self.assertIn("forbidden_actions", agents["agents"][agent])
+
+        self.assertNotIn("auggie_supervised_developer", agents["agents"])
+        augment = agents["agents"]["augment_context_provider"]
+        self.assertEqual(augment["runtime"], "augment_mcp")
+        self.assertIn("provide_codebase_context", augment["allowed_actions"])
+        for forbidden in [
+            "implement_scoped_issue",
+            "create_branch",
+            "open_pr",
+            "write_pr_evidence",
+        ]:
+            self.assertIn(forbidden, augment["forbidden_actions"])
 
         default_flow = workflows["workflows"]["default_issue_to_merge"]["stages"]
         stage_names = [stage["name"] for stage in default_flow]
