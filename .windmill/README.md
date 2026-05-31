@@ -30,6 +30,18 @@ f/mil/*.py
 f/mil/*.script.yaml
 ```
 
+Memory-specific Windmill entrypoints:
+
+```text
+f/mil/memory_contract
+f/mil/mem0_retrieve
+f/mil/mem0_writeback
+```
+
+`mem0_retrieve` builds strict scoped filters and a compact context pack.
+`mem0_writeback` validates provenance, redacts secrets, enforces approval
+policy, and emits a Mem0 add payload.
+
 The Markdown files in this directory remain the human-readable cockpit contracts. The `f/mil/**` scripts are the deployable Windmill entrypoints and are validated by `scripts/windmill/validate_windmill_project.py`.
 
 ## Auggie Supervised Advisory

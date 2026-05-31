@@ -1,0 +1,14 @@
+summary: MIL memory contract
+description: Validate scoped Mem0 memory policy and expose the deployable helper contract.
+lock: '!inline f/mil/memory_contract.script.lock'
+has_on_behalf_of: false
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    request:
+      type: object
+      description: Optional self-test request.
+      default: null
+  required: []

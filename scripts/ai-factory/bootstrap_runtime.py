@@ -196,6 +196,9 @@ def _validate_environment(
     )
     if "f/mil/github_commit_status" not in scripts:
         errors.append("environment.windmill.required_scripts missing f/mil/github_commit_status")
+    for script in ["f/mil/memory_contract", "f/mil/mem0_retrieve", "f/mil/mem0_writeback"]:
+        if script not in scripts:
+            errors.append(f"environment.windmill.required_scripts missing {script}")
     if windmill.get("scoped_sync_include") != "f/mil/**":
         errors.append("environment.windmill.scoped_sync_include must be f/mil/**")
 
@@ -213,6 +216,29 @@ def _validate_environment(
         errors.append("environment.memory.store_secrets must be false")
     if not memory.get("local_fallback_store"):
         errors.append("environment.memory.local_fallback_store is required")
+    if memory.get("windmill_retrieve_script") != "f/mil/mem0_retrieve":
+        errors.append("environment.memory.windmill_retrieve_script must be f/mil/mem0_retrieve")
+    if memory.get("windmill_writeback_script") != "f/mil/mem0_writeback":
+        errors.append("environment.memory.windmill_writeback_script must be f/mil/mem0_writeback")
+    required_metadata = set(
+        _require_list(
+            memory.get("required_metadata_fields"),
+            "environment.memory.required_metadata_fields",
+            errors,
+        )
+    )
+    for field in ["tenant_id", "repo_id", "source_uri", "confidence", "status", "visibility"]:
+        if field not in required_metadata:
+            errors.append(f"environment.memory.required_metadata_fields missing {field}")
+    entity_fields = set(
+        _require_list(
+            memory.get("required_entity_scope_fields_any_of"),
+            "environment.memory.required_entity_scope_fields_any_of",
+            errors,
+        )
+    )
+    if not {"user_id", "agent_id", "run_id"}.issubset(entity_fields):
+        errors.append("environment.memory must define Mem0 entity scope fields")
 
 
 def validate(

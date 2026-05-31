@@ -45,7 +45,9 @@ Auggie output is advisory evidence only. Augment context retrieval is input cont
 
 ## Memory Layer
 
-Mem0-backed memory is scoped by project and task ID. MIL stores only concise operational facts such as accepted plan summaries, developer handoff summaries, QA gate notes, CI failure patterns, and merge rationale. Raw tokens, customer data, raw transcripts, production credentials, and deployment secrets must not be stored in memory.
+Mem0-backed memory is scoped by project, task ID, repo ID, tenant ID, and at least one Mem0 entity (`user_id`, `agent_id`, `app_id`, or `run_id`). MIL stores only concise operational facts such as accepted plan summaries, developer handoff summaries, QA gate notes, CI failure patterns, and merge rationale. Raw tokens, customer data, raw transcripts, production credentials, and deployment secrets must not be stored in memory.
+
+Retrieval must use strict filters. Writeback must include source provenance and confidence. Architecture decisions, team preferences, repo conventions, review rules, and security policy memories require human approval and must point back to the source artifact.
 
 ## Gate Philosophy
 

@@ -37,10 +37,18 @@
     ],
     "memory_record": [
       "task_id",
+      "tenant_id",
+      "repo_id",
       "memory_type",
       "sanitized_summary",
-      "source_artifact",
+      "source_uri",
+      "entity_scope",
       "retention_scope",
+      "confidence",
+      "status",
+      "visibility",
+      "write_policy",
+      "approval_if_required",
       "secret_redaction_check"
     ],
     "merge_gate": [

@@ -13,10 +13,13 @@ from typing import Any
 
 FLOW_NAMES = (
     "flow_contract",
+    "memory_contract",
     "issue_to_plan",
     "plan_to_pr",
     "pr_quality_gate",
     "fix_ci_or_review",
+    "mem0_retrieve",
+    "mem0_writeback",
     "auggie_supervised_advisory",
     "github_commit_status",
     "github_webhook_router",
@@ -78,6 +81,9 @@ def validate(repo_root: Path) -> list[str]:
         for flow in FLOW_NAMES:
             if flow in {
                 "flow_contract",
+                "memory_contract",
+                "mem0_retrieve",
+                "mem0_writeback",
                 "auggie_supervised_advisory",
                 "github_commit_status",
                 "github_webhook_router",

@@ -1,0 +1,15 @@
+summary: MIL mem0 memory retrieval
+description: Build strict scoped memory filters and return a compact context pack.
+lock: '!inline f/mil/mem0_retrieve.script.lock'
+has_on_behalf_of: false
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    request:
+      type: object
+      description: Scoped memory retrieval request.
+      default: null
+  required:
+    - request
