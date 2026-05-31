@@ -47,7 +47,10 @@ windmill       -> .ai-factory/rules/windmill.md
 ```
 
 `codex_worker` resolves these files from `.ai-factory/config.yaml` and embeds
-the active rule sources into the worker prompt before implementation.
+the active rule sources into the worker prompt before implementation. The
+worker fails closed when no rule source is available. Hosted Windmill runtimes
+must either mount the MIL repo at `options.repo_root` or receive pre-resolved
+`options.rule_sources` from the local relay/control-plane request.
 
 ## Check Install
 

@@ -41,7 +41,9 @@ The runner converts an approved task into:
 
 By default it only returns the command pack. Real `codex exec`, push, and PR
 creation require explicit flags. It still cannot merge or approve restricted
-changes.
+changes. If the AI Factory 2.x rule hierarchy cannot be resolved from the repo
+or from preloaded `options.rule_sources`, it returns `CODEX_WORKER_BLOCKED`
+instead of dispatching a worker.
 
 ## Auggie Supervised Lane
 

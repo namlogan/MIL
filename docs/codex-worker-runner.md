@@ -17,6 +17,33 @@ Before coding, the runner resolves the AI Factory 2.x rule hierarchy from
 .ai-factory/rules/windmill.md
 ```
 
+If those files cannot be resolved, the worker returns
+`CODEX_WORKER_BLOCKED` and does not build a `codex exec` command. Hosted
+Windmill runs that do not mount the repo must pass the full pre-resolved
+rule list as `options.rule_sources`:
+
+```json
+{
+  "options": {
+    "rule_sources": [
+      {
+        "name": "paths.rules_file",
+        "path": ".ai-factory/RULES.md",
+        "content": "## Rules\n..."
+      },
+      {
+        "name": "rules.base",
+        "path": ".ai-factory/rules/base.md",
+        "content": "# Base Rules\n..."
+      }
+    ]
+  }
+}
+```
+
+The full required list is the seven files shown above; partial rulepacks are
+blocked.
+
 Safe defaults:
 
 - `execute_agent=false`
@@ -105,8 +132,11 @@ wmill script preview f/mil/codex_worker.py \
   -d '{"request":{"task":{"task_id":"MIL-LOCAL","goal":"Prepare a scoped worker run.","acceptance_criteria":["Evidence is produced"],"allowed_files":["docs/**"],"checks":["git diff --check"],"restricted_changes":[]},"options":{"repo_root":"/Users/mac/Documents/MIL"}}}'
 ```
 
-Windmill should call this before implementation dispatch to produce the exact
-prompt, branch, worktree path, evidence path, and `codex exec` command.
+That preview is valid only when the Windmill runtime can read
+`/Users/mac/Documents/MIL`. Otherwise, pass `options.rule_sources` from the
+local relay/control plane. Windmill should call this before implementation
+dispatch to produce the exact prompt, branch, worktree path, evidence path, and
+`codex exec` command.
 
 ## Evidence
 

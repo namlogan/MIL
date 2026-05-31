@@ -120,6 +120,56 @@ class CodexWorkerContractTests(unittest.TestCase):
         self.assertEqual(plan["codex_command"], [])
         self.assertIn("AI Factory rule sources", plan["reasons"][0])
 
+    def test_worker_accepts_preloaded_ai_factory_rule_sources(self) -> None:
+        preloaded_rules = [
+            {
+                "name": "paths.rules_file",
+                "path": ".ai-factory/RULES.md",
+                "content": "## Rules\nAI Factory 2.x baseline.",
+            },
+            {
+                "name": "rules.base",
+                "path": ".ai-factory/rules/base.md",
+                "content": "Base AI Factory worker boundaries.",
+            },
+            {
+                "name": "rules.implementation",
+                "path": ".ai-factory/rules/implementation.md",
+                "content": "Run implementation through plan/checkpoint discipline.",
+            },
+            {
+                "name": "rules.quality_gates",
+                "path": ".ai-factory/rules/quality-gates.md",
+                "content": "Emit schema_version and gate evidence.",
+            },
+            {
+                "name": "rules.security",
+                "path": ".ai-factory/rules/security.md",
+                "content": "Do not expose secrets.",
+            },
+            {
+                "name": "rules.memory",
+                "path": ".ai-factory/rules/memory.md",
+                "content": "Memory writeback must be scoped.",
+            },
+            {
+                "name": "rules.windmill",
+                "path": ".ai-factory/rules/windmill.md",
+                "content": "Windmill must not bypass gates.",
+            },
+        ]
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            plan = codex_worker_contract.build_worker_plan(
+                sample_task(),
+                repo_root=Path(tmpdir),
+                rule_sources=preloaded_rules,
+            )
+
+        self.assertEqual(plan["decision"], "CODEX_WORKER_READY")
+        self.assertIn(".ai-factory/rules/implementation.md", plan["prompt"])
+        self.assertIn("plan/checkpoint discipline", plan["prompt"])
+
     def test_restricted_changes_block_before_command_build(self) -> None:
         plan = codex_worker_contract.build_worker_plan(
             {
