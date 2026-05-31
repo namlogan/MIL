@@ -11,16 +11,17 @@ Steps:
 
 1. Resolve the approved plan and issue scope.
 2. Dispatch exactly one coding agent:
-   - default: Codex developer worker
-   - optional: supervised Auggie developer worker only when the issue explicitly allows Auggie implementation
+   - Codex developer worker is the only supported coding lane.
+   - Augment may provide codebase context, but it must not create branches, edit files, commit, or open PRs.
 3. Create branch `agent/<issue-id>-<slug>`.
 4. Run the selected developer worker with the approved plan.
 5. Run focused tests.
 6. Commit scoped changes.
 7. Push branch.
 8. Open pull request using `.github/PULL_REQUEST_TEMPLATE.md`.
-9. Run Auggie advisory review when useful.
-10. Attach plan, implementation evidence, tests, risks, and rollback note.
+9. Request Augment review context for the changed scope.
+10. Queue supervised Auggie advisory notes only when explicitly requested.
+11. Attach plan, implementation evidence, tests, risks, and rollback note.
 
 Stop conditions:
 

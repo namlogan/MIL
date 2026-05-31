@@ -7,8 +7,9 @@ Current scaffold:
 - GitHub is the source of truth for issues, PRs, CI, and merge history.
 - Windmill is the cockpit for webhook handling, approvals, logs, retries, and worker routing.
 - AI Factory artifacts define rules, plans, QA evidence, and final gate results.
-- Codex is the default implementation and test worker.
-- Auggie is the advisory review and diagnosis worker.
+- Codex is the only implementation and test worker.
+- Augment provides codebase index/context to Codex sessions.
+- Auggie is optional supervised advisory support only; it does not write code.
 
 Start here:
 

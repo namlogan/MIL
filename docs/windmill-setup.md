@@ -115,13 +115,13 @@ python scripts/agent-flow/mil_flow.py \
 The harness verifies expected routing:
 
 ```text
-issue_to_plan -> codex.plan -> auggie.validate_plan
-plan_to_pr -> windmill.dispatch_coding_agent -> codex.implement -> codex.test -> auggie.review
-pr_quality_gate -> codex.qa
-fix_ci_or_review -> auggie.diagnose -> codex.fix
+issue_to_plan -> augment_context.provide_issue_context -> codex.plan
+plan_to_pr -> windmill.dispatch_coding_agent -> codex.implement -> codex.test -> codex.open_pr -> augment_context.provide_review_context
+pr_quality_gate -> augment_context.provide_gate_context -> codex.qa
+fix_ci_or_review -> augment_context.provide_ci_context -> codex.fix
 ```
 
-In Windmill, the dry-run adapter should be replaced by worker scripts that call the actual Codex and Auggie CLIs or SDKs with least-privilege credentials.
+In Windmill, the dry-run adapter should be replaced by worker scripts that call Codex for implementation/QA and Augment MCP for codebase context with least-privilege credentials. Auggie remains a supervised read-only advisory lane when explicitly requested; it is not a coding worker.
 
 ## CLI Project Setup
 
@@ -211,7 +211,7 @@ To check whether the local machine has the worker CLIs installed:
 python scripts/agent-flow/check_agent_tools.py
 ```
 
-This check is intentionally not required in GitHub Actions because cloud runners do not have the local Codex/Auggie worker setup.
+This check is intentionally not required in GitHub Actions because cloud runners do not have the local Codex/Augment worker setup.
 
 ## Temporary Fallback
 
