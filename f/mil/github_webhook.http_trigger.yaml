@@ -2,13 +2,16 @@ script_path: f/mil/github_webhook_router
 is_flow: false
 route_path: mil/github-webhook
 http_method: post
-is_async: true
 request_type: async
 authentication_method: none
+authentication_resource_path: null
+has_permissioned_as: false
 is_static_website: false
+static_asset_config: null
 workspaced_route: true
 wrap_body: false
 raw_string: true
+route_path_key: mil/github-webhook
 summary: MIL GitHub webhook ingress
 description: Public GitHub webhook ingress. The script preprocessor verifies the GitHub HMAC signature using f/mil/github_webhook_secret before routing.
 mode: enabled
