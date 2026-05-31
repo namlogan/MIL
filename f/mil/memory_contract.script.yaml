@@ -11,3 +11,4 @@ schema:
       type: object
       description: Optional self-test request.
       default: null
+  required: []
