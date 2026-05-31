@@ -63,6 +63,31 @@ codex mcp add mil-auggie-local -- /Users/mac/Documents/MIL/scripts/agent-flow/au
 
 This wrapper is useful when you do not want the Codex process itself to carry the Augment token globally.
 
+## MIL-Scoped Runtime Check
+
+Use this checker to verify that Codex sees the MIL local MCP wrapper and that
+the Auggie MCP server indexes `/Users/mac/Documents/MIL`, not another repo:
+
+```bash
+python3 scripts/agent-flow/check_mil_mcp_runtime.py --mcp-smoke
+```
+
+Expected passing fields:
+
+```text
+codex_mcp_list.server_present=true
+codex_mcp_list.command_matches_repo=true
+mcp_smoke.tool_available=true
+mcp_smoke.mil_workspace_indexed=true
+```
+
+Current Codex CLI sessions can start `mil-auggie-local/codebase-retrieval`, but
+tool-call approval may still cancel the actual retrieval inside nested Codex
+sessions. The direct MCP smoke above proves the wrapper, token, tool list, and
+MIL workspace index. If nested Codex reports `user cancelled MCP tool call`,
+the remaining issue is Codex client/tool approval behavior, not Augment's MIL
+workspace scope.
+
 ## Auggie Non-Interactive Worker
 
 The old unattended worker smoke command is kept only as blocker evidence:

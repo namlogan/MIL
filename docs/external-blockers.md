@@ -34,12 +34,13 @@ Current state:
 - Non-interactive `auggie --print` execution is blocked by account policy, but this is no longer a blocker for coding because MIL uses Codex as the only coding worker.
 - Local Augment credential config can be validated with `scripts/agent-flow/check_augment_config.py`.
 - Augment MCP is the desired codebase index/context provider for Codex sessions.
-- Codex may still require MCP tool-call approval depending on the client/session.
+- `scripts/agent-flow/check_mil_mcp_runtime.py --mcp-smoke` verifies that Codex has a `mil-auggie-local` server and that Auggie MCP indexes `/Users/mac/Documents/MIL`.
+- Nested Codex sessions may still cancel the actual `codebase-retrieval` call depending on Codex client/tool approval behavior.
 - Supervised Auggie interactive review remains optional advisory evidence only; Windmill should queue and record this lane rather than call `auggie --print`.
 
 Required decision:
 
-- Verify the Augment MCP context provider path in Codex sessions and document the exact command/config to expose codebase index safely.
+- Resolve Codex client/tool approval behavior for nested automatic `codebase-retrieval` calls, or keep direct MCP smoke plus Codex file inspection as the fallback.
 - Keep Auggie non-interactive as optional future read-only advisory capability, not as a coding worker.
 
 ## Windmill Cockpit
@@ -57,8 +58,10 @@ Current state:
 - A local Windmill workspace profile `mil-local` targets workspace `admins`.
 - `f/mil/github_commit_status` has been imported and has published real `ai-gate/final-review` commit statuses.
 - `f/mil/github_webhook_router` and `f/mil/github_webhook.http_trigger.yaml` define the repo-local GitHub webhook ingress.
+- `scripts/windmill/github_webhook_public_relay.py` exposes only `POST /mil/github-webhook`, verifies GitHub HMAC signatures before forwarding, and forwards signed deliveries to local Windmill.
 
 Required decision:
 
-- Expose Windmill through a secure public URL or hosted workspace, then add the GitHub webhook for `issues`, `pull_request`, `workflow_run`, and `issue_comment`.
-- Keep local-only tunnels disabled unless they can expose only the signed webhook route rather than the whole local Windmill UI/API.
+- Choose a stable public endpoint: hosted Windmill, a reverse proxy, a reserved tunnel domain, or a Cloudflare named tunnel pointed at the relay route.
+- Add the GitHub webhook for `issues`, `pull_request`, `workflow_run`, and `issue_comment` once a stable public URL exists.
+- Do not expose the whole local Windmill UI/API through an unauthenticated tunnel.

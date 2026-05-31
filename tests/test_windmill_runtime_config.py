@@ -117,6 +117,22 @@ class WindmillRuntimeConfigTests(unittest.TestCase):
         self.assertIn('wmill sync push --dry-run --includes "${WMILL_SYNC_INCLUDE_PATTERN}"', script)
         self.assertNotIn("WINDMILL_TOKEN=", script)
 
+    def test_public_webhook_relay_is_documented_and_scoped(self) -> None:
+        relay = REPO_ROOT / "scripts" / "windmill" / "github_webhook_public_relay.py"
+        env_example = (REPO_ROOT / ".windmill" / "env.example").read_text(
+            encoding="utf-8"
+        )
+        docs = (REPO_ROOT / "docs" / "windmill-setup.md").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertTrue(relay.exists())
+        self.assertIn("MIL_GITHUB_WEBHOOK_SECRET=", env_example)
+        self.assertIn("MIL_WEBHOOK_PUBLIC_ROUTE=/mil/github-webhook", env_example)
+        self.assertIn("github_webhook_public_relay.py", docs)
+        self.assertIn("accepts only `POST /mil/github-webhook`", docs)
+        self.assertIn("Do not expose the full Windmill UI/API", docs)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -45,6 +45,39 @@ GitHub webhook settings:
 
 The route itself uses `authentication_method: none` so GitHub can call it directly. The Python preprocessor verifies `X-Hub-Signature-256` against the raw body before any MIL flow is routed.
 
+If Windmill is running only on the local control station, do not expose the
+full Windmill UI/API through a tunnel. Do not expose the full Windmill UI/API.
+Use the repo-local relay instead:
+
+```bash
+export MIL_GITHUB_WEBHOOK_SECRET="<same value as Windmill f/mil/github_webhook_secret>"
+python3 scripts/windmill/github_webhook_public_relay.py
+```
+
+Then point the public tunnel or reverse proxy only at:
+
+```text
+http://127.0.0.1:18090/mil/github-webhook
+```
+
+The relay:
+
+- accepts only `POST /mil/github-webhook`;
+- rejects unsigned or incorrectly signed GitHub deliveries before forwarding;
+- forwards only a small allowlist of GitHub webhook headers;
+- forwards to local Windmill at `http://localhost:8090/api/r/admins/mil/github-webhook`.
+
+Check non-secret relay configuration:
+
+```bash
+MIL_GITHUB_WEBHOOK_SECRET="..." \
+  python3 scripts/windmill/github_webhook_public_relay.py --describe
+```
+
+For durable automation, use a stable hosted Windmill URL, a stable reverse
+proxy, a reserved tunnel domain, or a Cloudflare named tunnel. Ephemeral tunnel
+URLs are useful for smoke tests only because GitHub webhooks need a stable URL.
+
 Implemented routing:
 
 - `issues` with label `agent:plan` -> `issue_to_plan`
