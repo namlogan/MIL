@@ -197,8 +197,9 @@ class WindmillRuntimeConfigTests(unittest.TestCase):
             "mil-demo.ngrok-free.app",
         )
         self.assertEqual(setup.validate_domain("mil-demo.ngrok-free.app"), [])
+        self.assertEqual(setup.validate_domain("mil-demo.ngrok-free.dev"), [])
         self.assertIn(
-            "expected an ngrok-managed static/dev domain such as <name>.ngrok-free.app",
+            "expected an ngrok-managed static/dev domain such as <name>.ngrok-free.app or <name>.ngrok-free.dev",
             setup.validate_domain("mil-demo.example.com"),
         )
         self.assertEqual(setup.validate_relay_url("http://127.0.0.1:18090"), [])
@@ -216,6 +217,7 @@ class WindmillRuntimeConfigTests(unittest.TestCase):
         self.assertIn("MIL_NGROK_DOMAIN=", env_example)
         self.assertIn("setup_ngrok_static_endpoint.py", docs)
         self.assertIn("ngrok-free.app", docs)
+        self.assertIn("ngrok-free.dev", docs)
 
 
 if __name__ == "__main__":
