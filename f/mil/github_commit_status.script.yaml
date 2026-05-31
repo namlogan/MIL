@@ -1,0 +1,15 @@
+summary: MIL GitHub commit status publisher
+description: Publish the AI Factory final gate result to the GitHub commit status API.
+lock: '!inline f/mil/github_commit_status.script.lock'
+has_on_behalf_of: false
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    status:
+      type: object
+      description: GitHub status publish request.
+      default: null
+  required:
+    - status

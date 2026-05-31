@@ -160,6 +160,32 @@ Override `WMILL_SYNC_INCLUDE_PATTERN` only when intentionally deploying a wider 
 
 Only run `wmill sync push` after the dry-run diff is reviewed and the workspace secrets below are present.
 
+## GitHub Commit Status Publisher
+
+MIL includes `f/mil/github_commit_status.py` for publishing `ai-gate/final-review` to the GitHub commit status API from a Windmill worker.
+
+Required Windmill secret variable:
+
+```text
+f/mil/github_status_token
+```
+
+The variable must be created as `is_secret=true`. For local development, the token must have permission to write commit statuses for `namlogan/MIL`; production should use a least-privilege GitHub App or fine-grained token instead of a broad developer token.
+
+Smoke run without touching GitHub:
+
+```bash
+wmill script run f/mil/github_commit_status \
+  -d '{"status":{"owner":"namlogan","repo":"MIL","sha":"<sha>","state":"pending","description":"dry run","target_url":"https://github.com/namlogan/MIL/pull/<n>","dry_run":true}}'
+```
+
+Real publish after the secret exists:
+
+```bash
+wmill script run f/mil/github_commit_status \
+  -d '{"status":{"owner":"namlogan","repo":"MIL","sha":"<sha>","state":"success","description":"APPROVE_MERGE: Windmill gate passed","target_url":"https://github.com/namlogan/MIL/pull/<n>"}}'
+```
+
 To check whether the local machine has the worker CLIs installed:
 
 ```bash
