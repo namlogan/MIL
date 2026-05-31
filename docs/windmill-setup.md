@@ -282,13 +282,13 @@ python scripts/agent-flow/mil_flow.py \
 The harness verifies expected routing:
 
 ```text
-issue_to_plan -> augment_context.provide_issue_context -> codex.plan
-plan_to_pr -> windmill.dispatch_coding_agent -> codex.implement -> codex.test -> codex.open_pr -> augment_context.provide_review_context
-pr_quality_gate -> augment_context.provide_gate_context -> codex.qa
-fix_ci_or_review -> augment_context.provide_ci_context -> codex.fix
+issue_to_plan -> augment_context.provide_issue_context -> mem0_memory.retrieve_project_memory -> codex.plan -> mem0_memory.store_plan_memory
+plan_to_pr -> mem0_memory.retrieve_plan_memory -> windmill.dispatch_coding_agent -> codex.implement -> codex.test -> codex.open_pr -> augment_context.provide_review_context -> mem0_memory.store_handoff_memory
+pr_quality_gate -> augment_context.provide_gate_context -> mem0_memory.retrieve_gate_memory -> codex.qa -> mem0_memory.store_qa_memory
+fix_ci_or_review -> augment_context.provide_ci_context -> mem0_memory.retrieve_ci_patterns -> codex.fix -> mem0_memory.store_fix_memory
 ```
 
-In Windmill, the dry-run adapter should be replaced by worker scripts that call Codex for implementation/QA and Augment MCP for codebase context with least-privilege credentials. Auggie remains a supervised read-only advisory lane when explicitly requested; it is not a coding worker.
+In Windmill, the dry-run adapter should be replaced by worker scripts that call Codex for implementation/QA, Augment MCP for codebase context, and mem0 for sanitized memory with least-privilege credentials. Auggie remains a supervised read-only advisory lane when explicitly requested; it is not a coding worker.
 
 ## CLI Project Setup
 

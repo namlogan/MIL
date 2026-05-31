@@ -3,11 +3,19 @@
   "workflows": {
     "default_issue_to_merge": {
       "source_of_truth": "github_issue_and_pull_request",
+      "memory_provider": "mem0_memory",
+      "memory_checkpoints": [
+        "issue_to_plan",
+        "plan_to_pr",
+        "codex_qa_gate",
+        "protected_merge"
+      ],
       "stages": [
         {
           "name": "issue_to_plan",
           "owner": "codex_developer",
           "context_provider": "augment_context_provider",
+          "memory_provider": "mem0_memory",
           "windmill_script": "f/mil/issue_to_plan",
           "required_inputs": [
             "issue_id",
@@ -31,6 +39,7 @@
           "default_developer_agent": "codex_developer",
           "only_supported_developer_agent": "codex_developer",
           "context_provider": "augment_context_provider",
+          "memory_provider": "mem0_memory",
           "outputs": [
             "branch",
             "pull_request",
@@ -47,6 +56,7 @@
           "name": "augment_context_review",
           "owner": "augment_context_provider",
           "purpose": "provide indexed codebase context and risk-relevant references to Codex QA",
+          "memory_provider": "mem0_memory",
           "allowed_actions": [
             "retrieve_code_context",
             "summarize_symbols",
@@ -64,6 +74,7 @@
           "name": "codex_qa_gate",
           "owner": "codex_qa",
           "context_provider": "augment_context_provider",
+          "memory_provider": "mem0_memory",
           "windmill_script": "f/mil/pr_quality_gate",
           "publishes_status_with": "f/mil/github_commit_status",
           "required_context": "ai-gate/final-review",
@@ -77,6 +88,7 @@
         {
           "name": "protected_merge",
           "owner": "github_merge_gate",
+          "memory_provider": "mem0_memory",
           "requires_status_contexts": [
             "control-plane",
             "ai-gate/final-review"
@@ -89,6 +101,7 @@
     },
     "ci_or_review_fix": {
       "source_of_truth": "github_pull_request",
+      "memory_provider": "mem0_memory",
       "stages": [
         {
           "name": "fix_ci_or_review",
@@ -96,11 +109,13 @@
           "windmill_script": "f/mil/fix_ci_or_review",
           "max_iterations": 2,
           "context_provider": "augment_context_provider",
+          "memory_provider": "mem0_memory",
           "fix_agent": "codex_developer"
         },
         {
           "name": "codex_qa_gate",
           "owner": "codex_qa",
+          "memory_provider": "mem0_memory",
           "windmill_script": "f/mil/pr_quality_gate"
         }
       ]

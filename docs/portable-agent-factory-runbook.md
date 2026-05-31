@@ -21,14 +21,18 @@ flowchart TD
     Router --> PRGate["pr_quality_gate"]
     Router --> FixCI["fix_ci_or_review"]
     IssuePlan --> Augment["Augment MCP context\ncodebase retrieval"]
+    Augment --> Memory["mem0 project memory\nsanitized task facts"]
     PlanPR --> Dispatch["Codex coding worker"]
     FixCI --> Dispatch
+    FixCI --> Memory
     Dispatch --> Branch["Task branch"]
     Branch --> PR["GitHub PR"]
     PR --> CI["GitHub Actions\ncontrol-plane"]
     CI --> PRGate
-    PRGate --> CodexQA["Codex QA / final gate"]
-    CodexQA --> Status["GitHub status\nai-gate/final-review"]
+    PRGate --> Memory
+    Memory --> CodexQA["Codex QA / final gate"]
+    CodexQA --> MemoryWrite["sanitized memory writeback"]
+    MemoryWrite --> Status["GitHub status\nai-gate/final-review"]
     Status --> Protection["Branch protection"]
     Protection --> Merge["Protected merge"]
 ```
@@ -48,6 +52,7 @@ flowchart TD
   - `f/mil/github_webhook_secret`
 - Codex MCP server: `mil-auggie-local`
 - Augment role: codebase context provider, not a coding worker
+- Mem0 role: optional long-term project/task memory through `mem0_memory`
 - Coding/QA worker: Codex
 
 ## What To Back Up
@@ -63,6 +68,7 @@ These paths are the portable source of the framework:
 f/mil/**
 scripts/agent-flow/**
 scripts/agent-gate/**
+scripts/agent-memory/**
 scripts/ai-factory/**
 scripts/windmill/**
 tests/**
@@ -74,7 +80,8 @@ wmill-lock.yaml
 ```
 
 Do not commit runtime folders, local env files, tunnel credentials, tokens, or
-logs.
+logs. Runtime memory files such as `.ai-factory/memory/*.jsonl` are ignored by
+git and must not be used as source-controlled evidence.
 
 ### Non-Secret Snapshot
 
@@ -123,6 +130,7 @@ Windmill f/mil/github_webhook_secret
 Windmill f/mil/github_status_token
 ngrok authtoken
 Augment / Auggie local credentials
+Mem0 API key or self-host credentials, if mem0 Platform/self-host is enabled
 OpenAI / Codex credentials, if not handled by the local app
 GitHub token or GitHub App credentials for status publishing
 ```
@@ -154,6 +162,7 @@ brew install cloudflared
 ```bash
 python3 -m unittest discover -s tests -v
 python3 scripts/ai-factory/bootstrap_runtime.py --check --check-tools
+python3 scripts/agent-memory/memory_contract.py --self-test
 python3 scripts/agent-gate/validate_ai_factory.py --self-test
 python3 scripts/windmill/validate_windmill_project.py --self-test
 python3 scripts/agent-flow/check_mil_mcp_runtime.py --mcp-smoke
@@ -252,14 +261,16 @@ Windmill job created_by -> HTTP-f/mil/github_webhook
 3. Replace GitHub owner/repo references.
 4. Create new Windmill secret values. Do not reuse the MIL webhook secret.
 5. Register a project-scoped MCP wrapper so Augment indexes the new repo path.
-6. Configure branch protection with required checks:
+6. Configure a project-scoped mem0 namespace or keep the local JSONL adapter for
+   dry-runs. Do not reuse MIL runtime memory files in another repo.
+7. Configure branch protection with required checks:
    - `control-plane`
    - `ai-gate/final-review`
-7. Create a new public webhook endpoint and GitHub hook.
-8. Run the full verification suite.
-9. Open one real issue and trigger `/agent plan`.
-10. Confirm the Windmill job routes to `issue_to_plan` and the agent sequence is
-    `augment_context` then `codex`.
+8. Create a new public webhook endpoint and GitHub hook.
+9. Run the full verification suite.
+10. Open one real issue and trigger `/agent plan`.
+11. Confirm the Windmill job routes to `issue_to_plan` and the agent sequence is
+    `augment_context`, `mem0_memory`, `codex`, then `mem0_memory`.
 
 ## Current Readiness
 

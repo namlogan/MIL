@@ -1,6 +1,12 @@
 {
   "agent_calls": [
     {
+      "action": "retrieve_plan_memory",
+      "agent": "mem0_memory",
+      "role": "sanitized_long_term_agent_memory_layer",
+      "task_id": "MIL-001"
+    },
+    {
       "action": "dispatch_coding_agent",
       "agent": "windmill",
       "role": "cockpit_and_orchestrator",
@@ -35,6 +41,12 @@
       "agent": "augment_context",
       "role": "codebase_index_and_context_provider",
       "task_id": "MIL-001"
+    },
+    {
+      "action": "store_handoff_memory",
+      "agent": "mem0_memory",
+      "role": "sanitized_long_term_agent_memory_layer",
+      "task_id": "MIL-001"
     }
   ],
   "artifacts": {
@@ -43,6 +55,18 @@
       "context_provider": "augment_context",
       "developer_agent": "codex",
       "requires_pull_request": true
+    },
+    "memory": {
+      "provider": "mem0_memory",
+      "records": [
+        "developer_handoff",
+        "review_note"
+      ],
+      "sanitization_required": true,
+      "scope": {
+        "project": "MIL",
+        "task_id": "MIL-001"
+      }
     },
     "required_checks": [
       "python3 -m unittest discover -s tests -v",

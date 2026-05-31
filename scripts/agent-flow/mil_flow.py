@@ -18,23 +18,31 @@ from typing import Any, NamedTuple
 FLOW_STEPS: dict[str, list[tuple[str, str]]] = {
     "issue_to_plan": [
         ("augment_context", "provide_issue_context"),
+        ("mem0_memory", "retrieve_project_memory"),
         ("codex", "plan"),
+        ("mem0_memory", "store_plan_memory"),
     ],
     "plan_to_pr": [
+        ("mem0_memory", "retrieve_plan_memory"),
         ("windmill", "dispatch_coding_agent"),
         ("developer", "create_branch"),
         ("developer", "implement"),
         ("developer", "test"),
         ("developer", "open_pr"),
         ("augment_context", "provide_review_context"),
+        ("mem0_memory", "store_handoff_memory"),
     ],
     "pr_quality_gate": [
         ("augment_context", "provide_gate_context"),
+        ("mem0_memory", "retrieve_gate_memory"),
         ("codex", "qa"),
+        ("mem0_memory", "store_qa_memory"),
     ],
     "fix_ci_or_review": [
         ("augment_context", "provide_ci_context"),
+        ("mem0_memory", "retrieve_ci_patterns"),
         ("codex", "fix"),
+        ("mem0_memory", "store_fix_memory"),
     ],
 }
 
@@ -80,6 +88,7 @@ class DryRunAgentAdapter:
         "codex": "implementation_test_and_qa_worker",
         "augment_context": "codebase_index_and_context_provider",
         "auggie": "supervised_advisory_context_reviewer",
+        "mem0_memory": "sanitized_long_term_agent_memory_layer",
         "windmill": "cockpit_and_orchestrator",
     }
 
@@ -149,6 +158,15 @@ def _artifacts_for_flow(
     artifacts: dict[str, Any] = {
         "summary": f"{flow} completed for {task_id}",
         "required_checks": task.get("checks", []),
+        "memory": {
+            "provider": "mem0_memory",
+            "scope": {
+                "project": "MIL",
+                "task_id": task_id,
+            },
+            "sanitization_required": True,
+            "records": [] if blocking else _memory_records_for_flow(flow),
+        },
     }
 
     if flow == "issue_to_plan":
@@ -178,6 +196,18 @@ def _artifacts_for_flow(
         }
 
     return artifacts
+
+
+def _memory_records_for_flow(flow: str) -> list[str]:
+    if flow == "issue_to_plan":
+        return ["plan"]
+    if flow == "plan_to_pr":
+        return ["developer_handoff", "review_note"]
+    if flow == "pr_quality_gate":
+        return ["qa_gate"]
+    if flow == "fix_ci_or_review":
+        return ["ci_pattern", "review_note"]
+    raise ValueError(f"unknown flow: {flow}")
 
 
 def run_flow(
@@ -220,17 +250,34 @@ def run_self_test() -> None:
         "restricted_changes": [],
     }
     expected_calls = {
-        "issue_to_plan": [("augment_context", "provide_issue_context"), ("codex", "plan")],
+        "issue_to_plan": [
+            ("augment_context", "provide_issue_context"),
+            ("mem0_memory", "retrieve_project_memory"),
+            ("codex", "plan"),
+            ("mem0_memory", "store_plan_memory"),
+        ],
         "plan_to_pr": [
+            ("mem0_memory", "retrieve_plan_memory"),
             ("windmill", "dispatch_coding_agent"),
             ("codex", "create_branch"),
             ("codex", "implement"),
             ("codex", "test"),
             ("codex", "open_pr"),
             ("augment_context", "provide_review_context"),
+            ("mem0_memory", "store_handoff_memory"),
         ],
-        "pr_quality_gate": [("augment_context", "provide_gate_context"), ("codex", "qa")],
-        "fix_ci_or_review": [("augment_context", "provide_ci_context"), ("codex", "fix")],
+        "pr_quality_gate": [
+            ("augment_context", "provide_gate_context"),
+            ("mem0_memory", "retrieve_gate_memory"),
+            ("codex", "qa"),
+            ("mem0_memory", "store_qa_memory"),
+        ],
+        "fix_ci_or_review": [
+            ("augment_context", "provide_ci_context"),
+            ("mem0_memory", "retrieve_ci_patterns"),
+            ("codex", "fix"),
+            ("mem0_memory", "store_fix_memory"),
+        ],
     }
 
     for flow, expected in expected_calls.items():

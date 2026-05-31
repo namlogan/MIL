@@ -95,8 +95,10 @@ class WindmillRuntimeConfigTests(unittest.TestCase):
         )
 
         self.assertEqual(result["flow"], "plan_to_pr")
-        self.assertEqual(result["agent_calls"][0]["agent"], "windmill")
-        self.assertEqual(result["agent_calls"][0]["action"], "dispatch_coding_agent")
+        calls = [f"{call['agent']}.{call['action']}" for call in result["agent_calls"]]
+        self.assertEqual(calls[0], "mem0_memory.retrieve_plan_memory")
+        self.assertIn("windmill.dispatch_coding_agent", calls)
+        self.assertLess(calls.index("windmill.dispatch_coding_agent"), calls.index("codex.implement"))
 
     def test_windmill_validator_self_test_succeeds(self) -> None:
         validator = load_module(

@@ -23,6 +23,7 @@ REQUIRED_AGENT_IDS = {
     "codex_qa",
     "augment_context_provider",
     "auggie_advisory",
+    "mem0_memory",
     "windmill_orchestrator",
     "github_merge_gate",
 }
@@ -79,6 +80,25 @@ def _validate_agents(agents: dict[str, Any], errors: list[str]) -> None:
         _require_list(spec.get("allowed_actions"), f"agent {agent_id}.allowed_actions", errors)
         _require_list(spec.get("forbidden_actions"), f"agent {agent_id}.forbidden_actions", errors)
 
+    memory = configured.get("mem0_memory")
+    if isinstance(memory, dict):
+        if memory.get("runtime") != "mem0_optional":
+            errors.append("mem0_memory.runtime must be mem0_optional")
+        if memory.get("requires_sanitization") is not True:
+            errors.append("mem0_memory must require sanitization")
+        if memory.get("writes_code") is not False:
+            errors.append("mem0_memory must not write code")
+        forbidden = set(
+            _require_list(
+                memory.get("forbidden_actions"),
+                "agent mem0_memory.forbidden_actions",
+                errors,
+            )
+        )
+        for action in ["implement_scoped_issue", "final_merge_approval", "merge_main"]:
+            if action not in forbidden:
+                errors.append(f"mem0_memory must forbid {action}")
+
 
 def _validate_workflows(workflows: dict[str, Any], errors: list[str]) -> None:
     configured = workflows.get("workflows")
@@ -92,6 +112,17 @@ def _validate_workflows(workflows: dict[str, Any], errors: list[str]) -> None:
         return
 
     stages = _require_list(default.get("stages"), "default_issue_to_merge.stages", errors)
+    if default.get("memory_provider") != "mem0_memory":
+        errors.append("default_issue_to_merge.memory_provider must be mem0_memory")
+    memory_checkpoints = set(
+        _require_list(
+            default.get("memory_checkpoints"),
+            "default_issue_to_merge.memory_checkpoints",
+            errors,
+        )
+    )
+    if "issue_to_plan" not in memory_checkpoints or "codex_qa_gate" not in memory_checkpoints:
+        errors.append("default_issue_to_merge must define memory checkpoints")
     stage_names = [stage.get("name") for stage in stages if isinstance(stage, dict)]
     if stage_names != REQUIRED_DEFAULT_STAGES:
         errors.append(
@@ -126,7 +157,7 @@ def _validate_evidence(evidence: dict[str, Any], errors: list[str]) -> None:
     if not isinstance(configured, dict):
         errors.append("evidence.json missing required_evidence object")
         return
-    for section in ["issue_intake", "developer_handoff", "qa_gate", "merge_gate"]:
+    for section in ["issue_intake", "developer_handoff", "qa_gate", "memory_record", "merge_gate"]:
         values = _require_list(configured.get(section), f"required_evidence.{section}", errors)
         if not values:
             errors.append(f"required_evidence.{section} must not be empty")
@@ -167,6 +198,21 @@ def _validate_environment(
         errors.append("environment.windmill.required_scripts missing f/mil/github_commit_status")
     if windmill.get("scoped_sync_include") != "f/mil/**":
         errors.append("environment.windmill.scoped_sync_include must be f/mil/**")
+
+    memory = environment.get("memory")
+    if not isinstance(memory, dict):
+        errors.append("environment.memory must be an object")
+        return
+    if memory.get("provider") != "mem0_optional":
+        errors.append("environment.memory.provider must be mem0_optional")
+    if memory.get("runtime_agent") != "mem0_memory":
+        errors.append("environment.memory.runtime_agent must be mem0_memory")
+    if memory.get("must_sanitize_before_write") is not True:
+        errors.append("environment.memory must sanitize before write")
+    if memory.get("store_secrets") is not False:
+        errors.append("environment.memory.store_secrets must be false")
+    if not memory.get("local_fallback_store"):
+        errors.append("environment.memory.local_fallback_store is required")
 
 
 def validate(
