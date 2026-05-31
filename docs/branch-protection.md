@@ -2,13 +2,13 @@
 
 Configure this after the GitHub remote exists.
 
-Status as of 2026-05-30:
+Status as of 2026-05-31:
 
 - Remote exists at `https://github.com/namlogan/MIL`.
 - Repository visibility is public by Product Owner approval.
 - Initial CI passes on `main`.
 - Branch protection is enabled for `main`.
-- Required status check: `control-plane`.
+- Required status checks: `control-plane` and `ai-gate/final-review`.
 - Pull requests are required with zero required approvals for the solo-owner pilot.
 - Force pushes and branch deletion are disabled.
 - Conversation resolution is required.
@@ -24,13 +24,14 @@ Recommended protection for `main`:
 - restrict who can bypass protections
 - require signed commits if the project needs stronger provenance
 
-Initial required checks:
+Required checks for the current control-plane gate:
 
 ```text
 control-plane
+ai-gate/final-review
 ```
 
-`ai-gate/final-review` should be added as a required check after Windmill is provisioned and consistently writes the status through the GitHub Checks API or commit status API.
+`ai-gate/final-review` is published through Windmill's `f/mil/github_commit_status` script using the GitHub commit status API. A PR must have both required contexts on the head commit before protected merge is allowed.
 
 Add application-specific checks after the product stack exists:
 
