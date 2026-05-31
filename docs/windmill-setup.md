@@ -157,6 +157,7 @@ as:
 
 ```text
 <assigned-name>.ngrok-free.app
+<assigned-name>.ngrok-free.dev
 ```
 
 This still gives GitHub a stable URL, but it does not require buying or moving a
@@ -187,6 +188,19 @@ Run the ngrok endpoint in another terminal:
 ```bash
 ngrok http --url https://<assigned-name>.ngrok-free.app 18090
 ```
+
+For a longer-running macOS control station, run both processes inside detached
+`tmux` sessions:
+
+```bash
+tmux new-session -d -s mil-webhook-relay \
+  'cd /Users/mac/Documents/MIL && scripts/windmill/run_github_webhook_relay_from_windmill_secret.sh'
+tmux new-session -d -s mil-webhook-ngrok \
+  'cd /Users/mac/Documents/MIL && ngrok http --url https://<assigned-name>.ngrok-free.app 18090'
+tmux ls
+```
+
+Use the actual assigned domain; `ngrok-free.dev` works the same way.
 
 Then configure the GitHub webhook URL:
 

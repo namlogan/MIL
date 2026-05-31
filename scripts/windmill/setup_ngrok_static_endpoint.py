@@ -40,12 +40,13 @@ def validate_domain(domain: str) -> list[str]:
         errors.append("ngrok domain contains invalid DNS characters")
     if not (
         domain.endswith(".ngrok-free.app")
+        or domain.endswith(".ngrok-free.dev")
         or domain.endswith(".ngrok.app")
         or domain.endswith(".ngrok.dev")
         or domain.endswith(".ngrok.io")
     ):
         errors.append(
-            "expected an ngrok-managed static/dev domain such as <name>.ngrok-free.app"
+            "expected an ngrok-managed static/dev domain such as <name>.ngrok-free.app or <name>.ngrok-free.dev"
         )
     return errors
 
