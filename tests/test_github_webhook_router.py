@@ -161,6 +161,62 @@ class GitHubWebhookRouterTests(unittest.TestCase):
             result["route"]["task"]["allowed_files"],
         )
 
+    def test_issue_agent_build_works_when_windmill_repo_is_not_mounted(self) -> None:
+        payload = {
+            "action": "labeled",
+            "repository": {"full_name": "namlogan/MIL"},
+            "issue": {
+                "number": 32,
+                "title": "MIL-032 Hosted Windmill build dispatch",
+                "body": "\n".join(
+                    [
+                        "### Task ID",
+                        "MIL-032",
+                        "",
+                        "### User or business goal",
+                        "Dispatch build requests from hosted Windmill without repo mounts.",
+                        "",
+                        "### Acceptance criteria",
+                        "- Router calls real plan_to_pr orchestration.",
+                        "- Worker prompt includes AI Factory rules.",
+                        "",
+                        "### Allowed files and out-of-scope files",
+                        "Allowed:",
+                        "- f/mil/github_webhook_router.py",
+                        "- tests/test_github_webhook_router.py",
+                        "",
+                        "Out of scope:",
+                        "- secrets/**",
+                        "",
+                        "### Required checks",
+                        "- python3 -m unittest tests.test_github_webhook_router -v",
+                        "",
+                        "### Restricted change check",
+                        "- [x] none of the above",
+                        "",
+                        "### Rollback note",
+                        "Revert the webhook router change.",
+                    ]
+                ),
+                "labels": [{"name": "agent:build"}],
+            },
+        }
+
+        request = self.preprocess("issues", payload)["request"]
+        request["options"] = {"repo_root": "/tmp/mil-hosted-windmill-no-repo"}
+        result = self.router.main(request)
+
+        self.assertEqual(
+            result["result"]["decision"],
+            "PLAN_TO_PR_COMMAND_PACK_READY",
+        )
+        rule_paths = {
+            source["path"]
+            for source in result["result"]["artifacts"]["codex_worker"]["rule_sources"]
+        }
+        self.assertIn(".ai-factory/RULES.md", rule_paths)
+        self.assertIn(".ai-factory/rules/windmill.md", rule_paths)
+
     def test_pull_request_event_routes_to_codex_quality_gate(self) -> None:
         payload = {
             "action": "synchronize",
