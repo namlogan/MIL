@@ -18,6 +18,7 @@
     "required_scripts": [
       "f/mil/codex_worker_contract",
       "f/mil/codex_worker",
+      "f/mil/plan_to_pr_contract",
       "f/mil/issue_to_plan",
       "f/mil/plan_to_pr",
       "f/mil/pr_quality_gate",

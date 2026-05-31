@@ -14,6 +14,7 @@ from typing import Any
 FLOW_NAMES = (
     "codex_worker_contract",
     "codex_worker",
+    "plan_to_pr_contract",
     "flow_contract",
     "memory_contract",
     "issue_to_plan",
@@ -84,6 +85,7 @@ def validate(repo_root: Path) -> list[str]:
             if flow in {
                 "codex_worker_contract",
                 "codex_worker",
+                "plan_to_pr_contract",
                 "flow_contract",
                 "memory_contract",
                 "mem0_retrieve",

@@ -88,6 +88,27 @@ MIL workspace index. If nested Codex reports `user cancelled MCP tool call`,
 the remaining issue is Codex client/tool approval behavior, not Augment's MIL
 workspace scope.
 
+## Plan-To-PR Context Use
+
+`f/mil/plan_to_pr` now creates an Augment context request before Codex worker
+dispatch. The request is read-only and targets:
+
+```text
+server: mil-auggie-local
+tool: codebase-retrieval
+```
+
+The orchestrator injects two things into the Codex worker prompt:
+
+- any preloaded `augment_context` supplied by Windmill or the local control
+  plane;
+- a read-only Augment MCP query telling Codex what codebase context to retrieve
+  before editing.
+
+This lets Codex exploit Augment's codebase index while preserving the MIL role
+boundary: Augment/Auggie may inspect and summarize code, but only Codex writes
+implementation patches.
+
 ## Auggie Non-Interactive Worker
 
 The old unattended worker smoke command is kept only as blocker evidence:

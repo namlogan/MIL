@@ -37,6 +37,7 @@ class WindmillRuntimeConfigTests(unittest.TestCase):
         for name in [
             "codex_worker_contract",
             "codex_worker",
+            "plan_to_pr_contract",
             "issue_to_plan",
             "plan_to_pr",
             "pr_quality_gate",
@@ -72,7 +73,7 @@ class WindmillRuntimeConfigTests(unittest.TestCase):
                     encoding="utf-8"
                 )
 
-                self.assertRegex(script, r"from f\.mil\.(codex_worker_contract|flow_contract|memory_contract) import")
+                self.assertRegex(script, r"from f\.mil\.(codex_worker_contract|flow_contract|memory_contract|plan_to_pr_contract) import")
                 self.assertNotIn("from codex_worker_contract import", script)
                 self.assertNotIn("from flow_contract import", script)
                 self.assertNotIn("from memory_contract import", script)
