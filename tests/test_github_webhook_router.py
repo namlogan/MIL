@@ -96,7 +96,7 @@ class GitHubWebhookRouterTests(unittest.TestCase):
         self.assertEqual(result["route"]["task"]["task_id"], "MIL-004")
         self.assertEqual(result["result"]["flow"], "issue_to_plan")
         self.assertEqual(result["result"]["agent_calls"][0]["agent"], "augment_context")
-        self.assertEqual(result["result"]["agent_calls"][-1]["agent"], "codex")
+        self.assertEqual(result["result"]["agent_calls"][-1]["agent"], "mem0_memory")
 
     def test_pull_request_event_routes_to_codex_quality_gate(self) -> None:
         payload = {
@@ -117,7 +117,7 @@ class GitHubWebhookRouterTests(unittest.TestCase):
         self.assertEqual(result["route"]["task"]["task_id"], "MIL-004")
         self.assertEqual(result["route"]["github"]["pr_number"], 18)
         self.assertEqual(result["result"]["agent_calls"][0]["action"], "provide_gate_context")
-        self.assertEqual(result["result"]["agent_calls"][-1]["action"], "qa")
+        self.assertEqual(result["result"]["agent_calls"][-1]["action"], "store_qa_memory")
 
     def test_failed_workflow_run_routes_to_fix_flow(self) -> None:
         payload = {
@@ -136,7 +136,7 @@ class GitHubWebhookRouterTests(unittest.TestCase):
         self.assertEqual(result["route"]["flow"], "fix_ci_or_review")
         self.assertEqual(
             [call["agent"] for call in result["result"]["agent_calls"]],
-            ["augment_context", "codex"],
+            ["augment_context", "mem0_memory", "codex", "mem0_memory"],
         )
 
     def test_issue_comment_commands_route_to_requested_flow(self) -> None:

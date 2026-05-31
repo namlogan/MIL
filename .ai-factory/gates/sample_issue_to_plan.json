@@ -7,13 +7,36 @@
       "task_id": "MIL-001"
     },
     {
+      "action": "retrieve_project_memory",
+      "agent": "mem0_memory",
+      "role": "sanitized_long_term_agent_memory_layer",
+      "task_id": "MIL-001"
+    },
+    {
       "action": "plan",
       "agent": "codex",
       "role": "implementation_test_and_qa_worker",
       "task_id": "MIL-001"
+    },
+    {
+      "action": "store_plan_memory",
+      "agent": "mem0_memory",
+      "role": "sanitized_long_term_agent_memory_layer",
+      "task_id": "MIL-001"
     }
   ],
   "artifacts": {
+    "memory": {
+      "provider": "mem0_memory",
+      "records": [
+        "plan"
+      ],
+      "sanitization_required": true,
+      "scope": {
+        "project": "MIL",
+        "task_id": "MIL-001"
+      }
+    },
     "plan": {
       "acceptance_criteria": [
         "Issue templates exist",

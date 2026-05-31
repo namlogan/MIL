@@ -31,8 +31,17 @@ class MilFlowTests(unittest.TestCase):
         result = mil_flow.run_flow("issue_to_plan", self.task)
 
         calls = [(call.agent, call.action) for call in result.agent_calls]
-        self.assertEqual(calls, [("augment_context", "provide_issue_context"), ("codex", "plan")])
+        self.assertEqual(
+            calls,
+            [
+                ("augment_context", "provide_issue_context"),
+                ("mem0_memory", "retrieve_project_memory"),
+                ("codex", "plan"),
+                ("mem0_memory", "store_plan_memory"),
+            ],
+        )
         self.assertEqual(result.decision, "PLAN_READY_FOR_APPROVAL")
+        self.assertEqual(result.artifacts["memory"]["records"], ["plan"])
 
     def test_plan_to_pr_routes_to_implementation_review_and_tests(self) -> None:
         result = mil_flow.run_flow("plan_to_pr", self.task)
@@ -41,17 +50,20 @@ class MilFlowTests(unittest.TestCase):
         self.assertEqual(
             calls,
             [
+                ("mem0_memory", "retrieve_plan_memory"),
                 ("windmill", "dispatch_coding_agent"),
                 ("codex", "create_branch"),
                 ("codex", "implement"),
                 ("codex", "test"),
                 ("codex", "open_pr"),
                 ("augment_context", "provide_review_context"),
+                ("mem0_memory", "store_handoff_memory"),
             ],
         )
         self.assertEqual(result.decision, "PR_READY_FOR_GATE")
         self.assertEqual(result.artifacts["dispatch"]["developer_agent"], "codex")
         self.assertEqual(result.artifacts["dispatch"]["context_provider"], "augment_context")
+        self.assertIn("developer_handoff", result.artifacts["memory"]["records"])
 
     def test_plan_to_pr_rejects_auggie_as_developer(self) -> None:
         task = {
@@ -81,20 +93,38 @@ class MilFlowTests(unittest.TestCase):
         self.assertTrue(result.blocking)
         self.assertEqual(result.agent_calls, [])
         self.assertNotIn("dispatch", result.artifacts)
+        self.assertEqual(result.artifacts["memory"]["records"], [])
 
     def test_pr_quality_gate_routes_to_codex_qa_and_approves_clean_task(self) -> None:
         result = mil_flow.run_flow("pr_quality_gate", self.task)
 
         calls = [(call.agent, call.action) for call in result.agent_calls]
-        self.assertEqual(calls, [("augment_context", "provide_gate_context"), ("codex", "qa")])
+        self.assertEqual(
+            calls,
+            [
+                ("augment_context", "provide_gate_context"),
+                ("mem0_memory", "retrieve_gate_memory"),
+                ("codex", "qa"),
+                ("mem0_memory", "store_qa_memory"),
+            ],
+        )
         self.assertEqual(result.decision, "APPROVE_MERGE")
         self.assertFalse(result.blocking)
+        self.assertEqual(result.artifacts["memory"]["records"], ["qa_gate"])
 
     def test_fix_ci_or_review_routes_to_context_before_codex_fix(self) -> None:
         result = mil_flow.run_flow("fix_ci_or_review", self.task)
 
         calls = [(call.agent, call.action) for call in result.agent_calls]
-        self.assertEqual(calls, [("augment_context", "provide_ci_context"), ("codex", "fix")])
+        self.assertEqual(
+            calls,
+            [
+                ("augment_context", "provide_ci_context"),
+                ("mem0_memory", "retrieve_ci_patterns"),
+                ("codex", "fix"),
+                ("mem0_memory", "store_fix_memory"),
+            ],
+        )
         self.assertEqual(result.decision, "FIX_PUSH_READY")
 
     def test_cli_writes_flow_artifact(self) -> None:
@@ -116,7 +146,7 @@ class MilFlowTests(unittest.TestCase):
             self.assertEqual(artifact["flow"], "pr_quality_gate")
             self.assertEqual(artifact["decision"], "APPROVE_MERGE")
             self.assertEqual(artifact["agent_calls"][0]["agent"], "augment_context")
-            self.assertEqual(artifact["agent_calls"][-1]["agent"], "codex")
+            self.assertEqual(artifact["agent_calls"][-1]["agent"], "mem0_memory")
             self.assertIn("aif_gate_result", artifact["artifacts"])
 
 

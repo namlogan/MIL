@@ -36,8 +36,32 @@
     "coding_allowed": false,
     "notes": "Augment exposes codebase index/context to Codex sessions. It is not a MIL coding worker."
   },
+  "memory": {
+    "provider": "mem0_optional",
+    "runtime_agent": "mem0_memory",
+    "mode": "local_jsonl_default",
+    "local_fallback_store": ".ai-factory/memory/local_memory.jsonl",
+    "required_local_env": [],
+    "optional_local_env": [
+      "MEM0_API_KEY",
+      "MEM0_BASE_URL",
+      "MEM0_ORG_ID",
+      "MEM0_PROJECT_ID"
+    ],
+    "must_sanitize_before_write": true,
+    "store_secrets": false,
+    "store_raw_customer_data": false,
+    "allowed_scopes": [
+      "project",
+      "task_id",
+      "agent",
+      "run"
+    ],
+    "notes": "Mem0 is the optional long-term memory provider. Local JSONL is the deterministic test adapter until a Mem0 Platform or self-hosted endpoint is configured."
+  },
   "local_checks": [
     "python3 -m unittest discover -s tests -v",
+    "python3 scripts/agent-memory/memory_contract.py --self-test",
     "python3 scripts/agent-gate/validate_ai_factory.py --self-test",
     "python3 scripts/windmill/validate_windmill_project.py --self-test",
     "python3 -m compileall -q scripts tests f",

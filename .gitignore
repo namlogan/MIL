@@ -27,4 +27,5 @@ pnpm-debug.log*
 # Agent/runtime artifacts
 .windmill/runtime/
 .ai-factory/tmp/
-
+.ai-factory/memory/*.jsonl
+.ai-factory/memory/*.db

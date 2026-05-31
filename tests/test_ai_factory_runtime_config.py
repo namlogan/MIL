@@ -39,6 +39,7 @@ class AIFactoryRuntimeConfigTests(unittest.TestCase):
             "codex_qa",
             "augment_context_provider",
             "auggie_advisory",
+            "mem0_memory",
             "windmill_orchestrator",
             "github_merge_gate",
         ]:
@@ -59,6 +60,19 @@ class AIFactoryRuntimeConfigTests(unittest.TestCase):
         ]:
             self.assertIn(forbidden, augment["forbidden_actions"])
 
+        memory = agents["agents"]["mem0_memory"]
+        self.assertEqual(memory["runtime"], "mem0_optional")
+        self.assertFalse(memory["writes_code"])
+        self.assertTrue(memory["requires_sanitization"])
+        self.assertIn("retrieve_project_memory", memory["allowed_actions"])
+        for forbidden in [
+            "store_secrets",
+            "implement_scoped_issue",
+            "final_merge_approval",
+            "merge_main",
+        ]:
+            self.assertIn(forbidden, memory["forbidden_actions"])
+
         default_flow = workflows["workflows"]["default_issue_to_merge"]["stages"]
         stage_names = [stage["name"] for stage in default_flow]
         self.assertEqual(
@@ -76,9 +90,19 @@ class AIFactoryRuntimeConfigTests(unittest.TestCase):
             stage_names.index("plan_to_pr"),
             stage_names.index("control_plane_ci"),
         )
+        self.assertEqual(
+            workflows["workflows"]["default_issue_to_merge"]["memory_provider"],
+            "mem0_memory",
+        )
+        self.assertIn(
+            "codex_qa_gate",
+            workflows["workflows"]["default_issue_to_merge"]["memory_checkpoints"],
+        )
 
         self.assertIn("developer_handoff", evidence["required_evidence"])
         self.assertIn("qa_gate", evidence["required_evidence"])
+        self.assertIn("memory_record", evidence["required_evidence"])
+        self.assertEqual(evidence["artifact_paths"]["memory"], ".ai-factory/memory")
         self.assertIn("wmill", environment["required_tools"])
         self.assertIn(
             "f/mil/github_status_token",
@@ -87,9 +111,17 @@ class AIFactoryRuntimeConfigTests(unittest.TestCase):
         self.assertEqual(environment["augment"]["context_provider"], "augment_mcp")
         self.assertFalse(environment["augment"]["coding_allowed"])
         self.assertIn("AUGMENT_MCP_TOKEN", environment["augment"]["required_local_env"])
+        self.assertEqual(environment["memory"]["provider"], "mem0_optional")
+        self.assertEqual(environment["memory"]["runtime_agent"], "mem0_memory")
+        self.assertTrue(environment["memory"]["must_sanitize_before_write"])
+        self.assertFalse(environment["memory"]["store_secrets"])
+        self.assertEqual(
+            environment["memory"]["local_fallback_store"],
+            ".ai-factory/memory/local_memory.jsonl",
+        )
         self.assertIsNone(
             re.search(
-                r"(gho_|ghp_|github_pat_|accessToken)",
+                r"(gho_|ghp_|github_pat_|accessToken|sk-)",
                 json.dumps(environment),
             )
         )

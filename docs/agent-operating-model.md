@@ -5,7 +5,7 @@ MIL uses a controlled AI software factory model.
 ## Default Flow
 
 ```text
-issue intake -> Augment context lookup -> plan -> Codex coding-agent dispatch -> implementation branch -> pull request -> CI -> Augment context/advisory review -> Codex QA gate -> human or bot merge
+issue intake -> Augment context lookup -> mem0 memory lookup -> plan -> Codex coding-agent dispatch -> implementation branch -> pull request -> CI -> Augment context/advisory review -> Codex QA gate -> sanitized memory writeback -> human or bot merge
 ```
 
 Agents may do planning, implementation, review, and CI fixes. They may not bypass branch protection or merge restricted changes without human approval.
@@ -15,6 +15,8 @@ Agents may do planning, implementation, review, and CI fixes. They may not bypas
 Codex is the only implementation worker for scoped code changes, tests, refactors, and small CI fixes.
 
 Augment is the codebase context provider for Codex sessions. It exposes indexed repository context, symbol summaries, and retrieval results so Codex can plan, implement, and QA with better local context.
+
+Mem0 is the optional long-term memory provider for sanitized project/task facts. It can retrieve prior plans, gate notes, CI patterns, and review lessons, then store sanitized summaries after each step. It is not allowed to write code, approve merge, bypass branch protection, or store secrets.
 
 Auggie may provide supervised advisory review, diagnosis, and risk notes when a human/Codex operator starts an interactive session. It is not a developer worker in MIL and must not create branches, edit files, write commits, open PRs, or approve merges.
 
@@ -40,6 +42,10 @@ AUGMENT_REVIEW_BLOCKED
 ```
 
 Auggie output is advisory evidence only. Augment context retrieval is input context only. Neither replaces Codex implementation, Codex QA, CI, branch protection, human restricted approval, or the final merge gate.
+
+## Memory Layer
+
+Mem0-backed memory is scoped by project and task ID. MIL stores only concise operational facts such as accepted plan summaries, developer handoff summaries, QA gate notes, CI failure patterns, and merge rationale. Raw tokens, customer data, raw transcripts, production credentials, and deployment secrets must not be stored in memory.
 
 ## Gate Philosophy
 

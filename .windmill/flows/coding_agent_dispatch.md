@@ -16,18 +16,22 @@ Developer lanes:
 
 - `codex`: the only supported coding lane for implementation, tests, scoped fixes, and PR creation.
 - `augment_context`: context/index provider only. It may expose indexed codebase context to a Codex session, but it must not create branches, edit files, write commits, or open PRs.
+- `mem0_memory`: sanitized project/task memory provider only. It may retrieve prior lessons and store summaries, but it must not create branches, edit files, write commits, open PRs, or approve merges.
 
 Steps:
 
 1. Read issue scope, approved plan, labels, and restricted-change notes.
-2. Choose the Codex developer lane.
-3. Write dispatch evidence with selected agent, branch name, allowed files, tests, and rollback note.
-4. Start the selected local worker:
+2. Retrieve scoped memory for relevant prior plans, review notes, and CI patterns.
+3. Choose the Codex developer lane.
+4. Write dispatch evidence with selected agent, branch name, allowed files, tests, and rollback note.
+5. Start the selected local worker:
    - Codex worker: local Codex implementation session.
    - Augment context provider: MCP/index lookup only when the Codex session needs codebase context.
-5. Require Codex to create or update `agent/<issue-id>-<slug>`.
-6. Require a PR before review/gate.
-7. Stop after PR readiness; do not auto-merge.
+   - mem0 memory provider: sanitized memory lookup/writeback only.
+6. Require Codex to create or update `agent/<issue-id>-<slug>`.
+7. Require a PR before review/gate.
+8. Store sanitized handoff/review memory after PR readiness.
+9. Stop after PR readiness; do not auto-merge.
 
 Stop conditions:
 
@@ -37,5 +41,6 @@ Stop conditions:
 - Codex attempts to touch out-of-scope files
 - Codex cannot produce test/evidence output
 - Augment context provider attempts to act as a coding worker
+- mem0 memory provider attempts to store secrets or act as a coding worker
 
 This flow is the missing coding step between planning and PR review.

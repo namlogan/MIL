@@ -2,7 +2,7 @@
 
 Project: MIL
 Workflow version: 1
-Current mode: GitHub + Windmill cockpit + AI Factory protocol + Codex workers + Augment context
+Current mode: GitHub + Windmill cockpit + AI Factory protocol + Codex workers + Augment context + mem0 memory
 
 ## Source Of Truth
 
@@ -25,6 +25,7 @@ Windmill is an orchestrator, not the source of truth. AI Factory is the SDLC pro
 | Merge Controller | Final gate decision, scope and evidence review | Only for emergency/unblock tasks |
 | Codex Developer | Plan, implement, tests, small fixes | Yes, within issue scope |
 | Augment Context Provider | Expose codebase index, retrieval, symbol summaries, and context to Codex sessions | No |
+| Mem0 Memory Layer | Retrieve and store sanitized project/task memory | No |
 | Auggie Advisory Reviewer | Supervised advisory review, diagnosis, and risk notes when explicitly requested | No |
 | Codex QA | Final AI QA review and gate evidence | Review/test only |
 | Windmill Bot | Run flows, write comments/checks/labels, request approval | No app-code authorship |
@@ -83,9 +84,10 @@ Augment/Auggie is not a coding lane:
 
 ```text
 Codex session -> Augment MCP/codebase index -> retrieved context -> Codex plan/implementation/QA
+Codex session -> mem0 project/task memory -> sanitized facts -> Codex plan/implementation/QA
 ```
 
-Codex remains the only implementation worker. Augment may provide indexed codebase context and Auggie may provide supervised advisory notes, but neither may create branches, edit files, write commits, open PRs, or approve merges.
+Codex remains the only implementation worker. Augment may provide indexed codebase context, mem0 may provide sanitized long-term project/task memory, and Auggie may provide supervised advisory notes, but none of those context/review lanes may create branches, edit files, write commits, open PRs, or approve merges.
 
 ## Gate Decisions
 
@@ -109,4 +111,5 @@ The gate decision is advisory until GitHub branch protection and required status
 5. Auto-fix loops are limited to two iterations before human review.
 6. Every gate result must include decision, reasons, tests, and residual risks.
 7. Restricted areas require human approval before merge: production deploy, secrets, billing, customer data, destructive migrations, legal/compliance behavior, security boundaries.
-8. If issue instructions conflict with this file or `.ai-factory/RULES.md`, the stricter rule wins unless the Product Owner approves an exception in writing.
+8. Memory must store sanitized operational summaries only; never store raw tokens, secrets, customer data, or raw transcripts.
+9. If issue instructions conflict with this file or `.ai-factory/RULES.md`, the stricter rule wins unless the Product Owner approves an exception in writing.

@@ -30,6 +30,7 @@ REQUIRED_PATHS = [
     ".ai-factory/plans",
     ".ai-factory/qa",
     ".ai-factory/gates",
+    ".ai-factory/memory",
     ".windmill",
     "docs",
     "docs/ai-factory-setup.md",
@@ -123,10 +124,14 @@ def validate(repo_root: Path) -> list[str]:
             f"{call['agent']}.{call['action']}"
             for call in plan_to_pr.get("agent_calls", [])
         ]
-        if not calls or calls[0] != "windmill.dispatch_coding_agent":
-            errors.append("sample_plan_to_pr must start with windmill.dispatch_coding_agent")
+        if "windmill.dispatch_coding_agent" not in calls:
+            errors.append("sample_plan_to_pr must include windmill.dispatch_coding_agent")
         elif "codex.implement" in calls and calls.index("windmill.dispatch_coding_agent") > calls.index("codex.implement"):
             errors.append("sample_plan_to_pr dispatch must occur before codex.implement")
+        if "mem0_memory.retrieve_plan_memory" not in calls:
+            errors.append("sample_plan_to_pr must retrieve scoped memory before implementation")
+        elif "codex.implement" in calls and calls.index("mem0_memory.retrieve_plan_memory") > calls.index("codex.implement"):
+            errors.append("sample_plan_to_pr memory retrieval must occur before codex.implement")
 
         pr_quality_gate = _read_json(repo_root, FLOW_SAMPLE_FILES["pr_quality_gate"])
         gate = pr_quality_gate.get("artifacts", {}).get("aif_gate_result")

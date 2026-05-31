@@ -9,6 +9,7 @@
 5. Record evidence in the PR and `.ai-factory/qa/` when useful.
 6. Emit a final `aif-gate-result` JSON block for automated gates.
 7. Do not merge, deploy, or approve restricted work without human approval.
+8. Store only sanitized operational summaries in project memory; never store secrets, raw tokens, raw customer data, or raw transcripts.
 
 ## Required Gate Result
 

@@ -35,6 +35,14 @@
       "tests",
       "residual_risks"
     ],
+    "memory_record": [
+      "task_id",
+      "memory_type",
+      "sanitized_summary",
+      "source_artifact",
+      "retention_scope",
+      "secret_redaction_check"
+    ],
     "merge_gate": [
       "control-plane",
       "ai-gate/final-review",
@@ -46,6 +54,7 @@
     "plans": ".ai-factory/plans",
     "qa": ".ai-factory/qa",
     "gates": ".ai-factory/gates",
+    "memory": ".ai-factory/memory",
     "windmill_runs": ".ai-factory/qa"
   }
 }
