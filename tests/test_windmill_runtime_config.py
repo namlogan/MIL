@@ -39,6 +39,8 @@ class WindmillRuntimeConfigTests(unittest.TestCase):
             "plan_to_pr",
             "pr_quality_gate",
             "fix_ci_or_review",
+            "mem0_retrieve",
+            "mem0_writeback",
             "auggie_supervised_advisory",
             "github_commit_status",
             "github_webhook_router",
@@ -57,6 +59,8 @@ class WindmillRuntimeConfigTests(unittest.TestCase):
             "plan_to_pr",
             "pr_quality_gate",
             "fix_ci_or_review",
+            "mem0_retrieve",
+            "mem0_writeback",
             "auggie_supervised_advisory",
             "github_webhook_router",
         ]:
@@ -65,8 +69,9 @@ class WindmillRuntimeConfigTests(unittest.TestCase):
                     encoding="utf-8"
                 )
 
-                self.assertIn("from f.mil.flow_contract import", script)
+                self.assertRegex(script, r"from f\.mil\.(flow_contract|memory_contract) import")
                 self.assertNotIn("from flow_contract import", script)
+                self.assertNotIn("from memory_contract import", script)
 
     def test_github_webhook_http_trigger_is_versioned(self) -> None:
         trigger = REPO_ROOT / "f" / "mil" / "github_webhook.http_trigger.yaml"
@@ -99,6 +104,96 @@ class WindmillRuntimeConfigTests(unittest.TestCase):
         self.assertEqual(calls[0], "mem0_memory.retrieve_plan_memory")
         self.assertIn("windmill.dispatch_coding_agent", calls)
         self.assertLess(calls.index("windmill.dispatch_coding_agent"), calls.index("codex.implement"))
+
+    def test_windmill_memory_scripts_enforce_scope_and_policy(self) -> None:
+        mem0_retrieve = load_module("mem0_retrieve", "f/mil/mem0_retrieve.py")
+        mem0_writeback = load_module("mem0_writeback", "f/mil/mem0_writeback.py")
+
+        with self.assertRaisesRegex(ValueError, "tenant_id is required"):
+            mem0_retrieve.main(
+                {
+                    "query": "how to fix tests",
+                    "repo_id": "github:namlogan/MIL",
+                    "memory_types": ["ci_pattern"],
+                    "user_id": "repo:github:namlogan/MIL",
+                }
+            )
+
+        retrieved = mem0_retrieve.main(
+            {
+                "query": "Windmill secret",
+                "tenant_id": "org_mil",
+                "repo_id": "github:namlogan/MIL",
+                "memory_types": ["ci_pattern"],
+                "user_id": "repo:github:namlogan/MIL",
+                "records": [
+                    {
+                        "project": "MIL",
+                        "task_id": "MEM-001",
+                        "memory_type": "ci_pattern",
+                        "memory": "Windmill secret caused prior CI failure.",
+                        "metadata": {
+                            "tenant_id": "org_mil",
+                            "repo_id": "github:namlogan/MIL",
+                            "status": "active",
+                            "visibility": "repo",
+                        },
+                    }
+                ],
+            }
+        )
+
+        self.assertEqual(retrieved["decision"], "MEMORY_CONTEXT_READY")
+        self.assertEqual(retrieved["filters"]["AND"][0]["tenant_id"], "org_mil")
+        self.assertEqual(retrieved["context_pack"][0]["memory_id"], "local-1")
+
+        with self.assertRaisesRegex(ValueError, "requires approval"):
+            mem0_writeback.main(
+                {
+                    "project": "MIL",
+                    "task_id": "MEM-001",
+                    "memory_type": "architecture_decision",
+                    "text": "Billing must use PaymentGateway only.",
+                    "metadata": {
+                        "tenant_id": "org_mil",
+                        "workspace_id": "engineering",
+                        "repo": "MIL",
+                        "repo_id": "github:namlogan/MIL",
+                        "user_id": "repo:github:namlogan/MIL",
+                        "source_uri": "https://github.com/namlogan/MIL/pull/26",
+                        "confidence": 0.82,
+                        "status": "active",
+                        "visibility": "repo",
+                        "created_by": "agent",
+                    },
+                }
+            )
+
+        writeback = mem0_writeback.main(
+            {
+                "project": "MIL",
+                "task_id": "MEM-001",
+                "memory_type": "failure_pattern",
+                "text": "CI token: ghp_123456789012345678901234567890123456 failed.",
+                "metadata": {
+                    "tenant_id": "org_mil",
+                    "workspace_id": "engineering",
+                    "repo": "MIL",
+                    "repo_id": "github:namlogan/MIL",
+                    "user_id": "repo:github:namlogan/MIL",
+                    "source_uri": "https://github.com/namlogan/MIL/pull/26",
+                    "confidence": 0.82,
+                    "status": "active",
+                    "visibility": "repo",
+                    "created_by": "agent",
+                },
+            }
+        )
+
+        serialized = str(writeback)
+        self.assertEqual(writeback["decision"], "MEMORY_WRITE_RECORDED")
+        self.assertIn("[REDACTED_GITHUB_TOKEN]", serialized)
+        self.assertNotIn("ghp_123456789012345678901234567890123456", serialized)
 
     def test_windmill_validator_self_test_succeeds(self) -> None:
         validator = load_module(
