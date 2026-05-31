@@ -40,6 +40,7 @@ class WindmillRuntimeConfigTests(unittest.TestCase):
             "pr_quality_gate",
             "fix_ci_or_review",
             "auggie_supervised_advisory",
+            "github_commit_status",
         ]:
             with self.subTest(name=name):
                 script = REPO_ROOT / "f" / "mil" / f"{name}.py"

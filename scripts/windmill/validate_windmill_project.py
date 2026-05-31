@@ -18,6 +18,7 @@ FLOW_NAMES = (
     "pr_quality_gate",
     "fix_ci_or_review",
     "auggie_supervised_advisory",
+    "github_commit_status",
 )
 
 
@@ -74,7 +75,11 @@ def validate(repo_root: Path) -> list[str]:
         )
         task = _load_json(repo_root / "tests" / "fixtures" / "agent_task.json")
         for flow in FLOW_NAMES:
-            if flow in {"flow_contract", "auggie_supervised_advisory"}:
+            if flow in {
+                "flow_contract",
+                "auggie_supervised_advisory",
+                "github_commit_status",
+            }:
                 continue
             expected = mil_flow.run_flow(flow, task).to_dict()
             observed = contract.run_flow(flow, task)
