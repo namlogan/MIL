@@ -146,6 +146,10 @@ class AutoDispatcherTests(unittest.TestCase):
         self.assertIn("already claimed", second["reason"])
         self.assertEqual(len(calls), 1)
 
+    def test_self_test_is_repeatable(self) -> None:
+        self.dispatcher._self_test()
+        self.dispatcher._self_test()
+
     def test_blocks_when_plan_to_pr_is_not_ready(self) -> None:
         request = auto_build_issue_payload()
         request["payload"]["issue"]["body"] = "\n".join(

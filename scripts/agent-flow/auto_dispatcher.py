@@ -9,6 +9,7 @@ import json
 import os
 import re
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any, Callable
 
@@ -252,7 +253,13 @@ def _self_test() -> None:
             },
         },
     }
-    result = dispatch_request(request, repo_root=REPO_ROOT, dry_run=True)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        result = dispatch_request(
+            request,
+            repo_root=REPO_ROOT,
+            dry_run=True,
+            lock_root=Path(tmpdir),
+        )
     assert result["decision"] == "AUTO_DISPATCH_COMPLETED"
 
 
