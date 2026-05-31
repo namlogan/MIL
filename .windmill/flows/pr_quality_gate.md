@@ -11,13 +11,14 @@ manual rerun
 Steps:
 
 1. Checkout the PR branch.
-2. Run required CI commands locally if configured.
-3. Run AI Factory verify/review/security gates.
-4. Parse the last `aif-gate-result` block.
-5. Run `scripts/agent-gate/final_gate_check.py`.
-6. Publish a GitHub status check named `ai-gate/final-review`.
-7. Comment the decision and reasons on the PR.
-8. Add `agent:fix`, `blocked`, or `ready-for-human-review` labels as appropriate.
+2. Request Augment codebase context for the PR diff and affected files.
+3. Run required CI commands locally if configured.
+4. Run Codex QA with AI Factory verify/review/security gates.
+5. Parse the last `aif-gate-result` block.
+6. Run `scripts/agent-gate/final_gate_check.py`.
+7. Publish a GitHub status check named `ai-gate/final-review`.
+8. Comment the decision and reasons on the PR.
+9. Add `agent:fix`, `blocked`, or `ready-for-human-review` labels as appropriate.
 
 Stop conditions:
 
@@ -25,4 +26,3 @@ Stop conditions:
 - blocking risks are present
 - required CI checks fail
 - restricted change lacks approval
-

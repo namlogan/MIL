@@ -36,6 +36,35 @@ class CodingAgentDispatchDocsTests(unittest.TestCase):
         self.assertIn("augment_context:", config)
         self.assertNotIn("auggie_supervised:", config)
 
+    def test_active_docs_match_augmented_codex_only_model(self) -> None:
+        active_docs = [
+            REPO_ROOT / "README.md",
+            REPO_ROOT / ".windmill" / "flows" / "issue_to_plan.md",
+            REPO_ROOT / ".windmill" / "flows" / "plan_to_pr.md",
+            REPO_ROOT / ".windmill" / "flows" / "fix_ci_or_review.md",
+            REPO_ROOT / ".windmill" / "flows" / "pr_quality_gate.md",
+            REPO_ROOT / "docs" / "windmill-setup.md",
+        ]
+        forbidden_phrases = [
+            "Auggie is the advisory review and diagnosis worker",
+            "auggie.validate_plan",
+            "auggie.review",
+            "auggie.diagnose",
+            "supervised Auggie developer worker",
+            "actual Codex and Auggie CLIs or SDKs",
+        ]
+
+        for path in active_docs:
+            with self.subTest(path=path):
+                contents = path.read_text(encoding="utf-8")
+                self.assertNotIn("auggie_supervised_developer", contents)
+                for phrase in forbidden_phrases:
+                    self.assertNotIn(phrase, contents)
+
+        readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+        self.assertIn("Codex is the only implementation and test worker", readme)
+        self.assertIn("Augment provides codebase index/context", readme)
+
 
 if __name__ == "__main__":
     unittest.main()
