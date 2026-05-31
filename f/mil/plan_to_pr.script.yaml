@@ -7,10 +7,25 @@ schema:
   $schema: https://json-schema.org/draft/2020-12/schema
   type: object
   properties:
+    augment_context:
+      type: array
+      description: Preloaded read-only Augment codebase context.
+      default: null
+    memory_context:
+      type: array
+      description: Preloaded scoped Mem0 memory context.
+      default: null
+    options:
+      type: object
+      description: Plan-to-PR orchestration options.
+      default: null
+    request:
+      type: object
+      description: Full Plan-to-PR orchestration request.
+      default: null
     task:
       type: object
       description: MIL task payload.
       default: null
       properties: {}
-  required:
-    - task
+  required: []

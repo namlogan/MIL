@@ -139,6 +139,7 @@ class AIFactoryRuntimeConfigTests(unittest.TestCase):
         for script in [
             "f/mil/codex_worker_contract",
             "f/mil/codex_worker",
+            "f/mil/plan_to_pr_contract",
             "f/mil/memory_contract",
             "f/mil/mem0_retrieve",
             "f/mil/mem0_writeback",

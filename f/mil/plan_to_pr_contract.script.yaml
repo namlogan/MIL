@@ -1,0 +1,14 @@
+summary: MIL plan to PR orchestration contract
+description: Build a real Codex worker command pack with Mem0 and Augment context.
+lock: '!inline f/mil/plan_to_pr_contract.script.lock'
+has_on_behalf_of: false
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    request:
+      type: object
+      description: Plan-to-PR orchestration request.
+      default: null
+  required: []
