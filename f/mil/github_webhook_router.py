@@ -14,6 +14,7 @@ except ImportError:  # pragma: no cover - local unit tests inject the secret.
     wmill = None  # type: ignore
 
 from f.mil.flow_contract import run_flow
+from f.mil.plan_to_pr_contract import run_plan_to_pr
 
 
 DEFAULT_WEBHOOK_SECRET_VARIABLE_PATH = "f/mil/github_webhook_secret"
@@ -125,13 +126,133 @@ def _base_task(task_id: str, goal: str, body: str = "") -> dict[str, Any]:
     return {
         "task_id": task_id,
         "goal": goal,
+        "title": goal,
         "body": body,
         "acceptance_criteria": [],
         "allowed_files": [],
+        "out_of_scope_files": [],
         "checks": DEFAULT_CHECKS,
         "restricted_changes": [],
         "residual_risks": [],
     }
+
+
+def _normalize_section_title(title: str) -> str:
+    return re.sub(r"\s+", " ", title.strip().lower())
+
+
+def _issue_form_sections(body: str) -> dict[str, list[str]]:
+    sections: dict[str, list[str]] = {}
+    current = ""
+    for raw_line in body.splitlines():
+        line = raw_line.rstrip()
+        heading = re.match(r"^###\s+(.+?)\s*$", line)
+        if heading:
+            current = _normalize_section_title(heading.group(1))
+            sections.setdefault(current, [])
+            continue
+        if current:
+            sections[current].append(line)
+    return sections
+
+
+def _section_text(sections: dict[str, list[str]], *names: str) -> str:
+    for name in names:
+        lines = sections.get(_normalize_section_title(name))
+        if lines is not None:
+            return "\n".join(lines).strip()
+    return ""
+
+
+def _first_non_empty_line(text: str) -> str:
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped:
+            return stripped
+    return ""
+
+
+def _markdown_list_items(text: str) -> list[str]:
+    items: list[str] = []
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        match = re.match(r"^[-*]\s+(?:\[[ xX]\]\s*)?(.+?)\s*$", line)
+        if match:
+            item = match.group(1).strip()
+            if item:
+                items.append(item)
+    if items:
+        return items
+    return [line.strip() for line in text.splitlines() if line.strip()]
+
+
+def _file_scope_items(text: str) -> tuple[list[str], list[str]]:
+    allowed: list[str] = []
+    out_of_scope: list[str] = []
+    target: list[str] | None = None
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        lowered = line.lower().rstrip(":")
+        if lowered in {"allowed", "allowed files"}:
+            target = allowed
+            continue
+        if lowered in {"out of scope", "out-of-scope", "out of scope files"}:
+            target = out_of_scope
+            continue
+        match = re.match(r"^[-*]\s+(.+?)\s*$", line)
+        if match and target is not None:
+            target.append(match.group(1).strip())
+    return allowed, out_of_scope
+
+
+def _restricted_items(text: str) -> list[str]:
+    restricted: list[str] = []
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        match = re.match(r"^[-*]\s+\[[xX]\]\s+(.+?)\s*$", line)
+        if not match:
+            continue
+        item = match.group(1).strip()
+        if item and item.lower() != "none of the above":
+            restricted.append(item)
+    return restricted
+
+
+def _parse_issue_form_task_fields(body: str) -> dict[str, Any]:
+    sections = _issue_form_sections(body)
+    if not sections:
+        return {}
+
+    task_id = _first_non_empty_line(_section_text(sections, "Task ID"))
+    goal = _section_text(sections, "User or business goal", "Goal")
+    acceptance = _markdown_list_items(_section_text(sections, "Acceptance criteria"))
+    allowed, out_of_scope = _file_scope_items(
+        _section_text(sections, "Allowed files and out-of-scope files", "Allowed files")
+    )
+    checks = _markdown_list_items(_section_text(sections, "Required checks", "Checks"))
+    restricted = _restricted_items(
+        _section_text(sections, "Restricted change check", "Restricted changes")
+    )
+    rollback = _section_text(sections, "Rollback note", "Rollback")
+
+    parsed: dict[str, Any] = {}
+    if re.fullmatch(r"MIL-\d+", task_id, flags=re.IGNORECASE):
+        parsed["task_id"] = task_id.upper()
+    if goal:
+        parsed["goal"] = goal
+    if acceptance:
+        parsed["acceptance_criteria"] = acceptance
+    if allowed:
+        parsed["allowed_files"] = allowed
+    if out_of_scope:
+        parsed["out_of_scope_files"] = out_of_scope
+    if checks:
+        parsed["checks"] = checks
+    if restricted:
+        parsed["restricted_changes"] = restricted
+    if rollback:
+        parsed["rollback_note"] = rollback
+    return parsed
 
 
 def _github_context(
@@ -195,8 +316,14 @@ def _route_issue_event(
 
     label_names = _labels(issue)
     title = str(issue.get("title") or "")
-    task_id = _task_id_from_title(title, f"MIL-{int(issue.get('number') or 0):03d}")
-    task = _base_task(task_id, title, str(issue.get("body") or ""))
+    body = str(issue.get("body") or "")
+    parsed_fields = _parse_issue_form_task_fields(body)
+    task_id = str(
+        parsed_fields.get("task_id")
+        or _task_id_from_title(title, f"MIL-{int(issue.get('number') or 0):03d}")
+    )
+    task = _base_task(task_id, title, body)
+    task.update(parsed_fields)
 
     if "agent:plan" in label_names:
         return _matched("issue_to_plan", task, github, "issue has agent:plan label")
@@ -304,8 +431,23 @@ def main(request: dict[str, Any]) -> dict[str, Any]:
             "route": route,
         }
 
+    if route["flow"] == "plan_to_pr":
+        options = request.get("options") or {}
+        if not isinstance(options, dict):
+            options = {}
+        result = run_plan_to_pr(
+            {
+                "task": route["task"],
+                "options": options,
+                "memory_context": request.get("memory_context", []),
+                "augment_context": request.get("augment_context", []),
+            }
+        )
+    else:
+        result = run_flow(route["flow"], route["task"])
+
     return {
         "decision": "ROUTED_TO_FLOW",
         "route": route,
-        "result": run_flow(route["flow"], route["task"]),
+        "result": result,
     }
