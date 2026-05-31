@@ -21,6 +21,20 @@
       "residual_risks",
       "rollback_note"
     ],
+    "codex_worker_run": [
+      "task_id",
+      "branch",
+      "base_branch",
+      "worktree_path",
+      "allowed_files",
+      "checks",
+      "codex_command",
+      "prompt_path",
+      "result_path",
+      "execute_agent",
+      "changed_files",
+      "status"
+    ],
     "auggie_advisory": [
       "target_pr",
       "verdict",
@@ -61,6 +75,7 @@
   "artifact_paths": {
     "plans": ".ai-factory/plans",
     "qa": ".ai-factory/qa",
+    "codex_worker": ".ai-factory/qa/codex_worker",
     "gates": ".ai-factory/gates",
     "memory": ".ai-factory/memory",
     "windmill_runs": ".ai-factory/qa"

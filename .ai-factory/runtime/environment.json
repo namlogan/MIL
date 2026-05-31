@@ -3,6 +3,7 @@
   "required_tools": [
     "git",
     "gh",
+    "codex",
     "python3",
     "wmill"
   ],
@@ -15,6 +16,8 @@
     "workspace_id": "admins",
     "scoped_sync_include": "f/mil/**",
     "required_scripts": [
+      "f/mil/codex_worker_contract",
+      "f/mil/codex_worker",
       "f/mil/issue_to_plan",
       "f/mil/plan_to_pr",
       "f/mil/pr_quality_gate",
@@ -30,6 +33,21 @@
       "f/mil/github_status_token",
       "f/mil/github_webhook_secret"
     ]
+  },
+  "codex_worker": {
+    "runner_script": "scripts/agent-flow/codex_worker.py",
+    "windmill_script": "f/mil/codex_worker",
+    "contract_script": "f/mil/codex_worker_contract",
+    "worktree_root": ".ai-factory/tmp/worktrees",
+    "evidence_root": ".ai-factory/qa/codex_worker",
+    "default_sandbox": "workspace-write",
+    "default_approval": "never",
+    "execute_agent_default": false,
+    "push_default": false,
+    "open_pr_default": false,
+    "requires_allowed_files": true,
+    "requires_restricted_change_empty": true,
+    "notes": "Windmill returns a command pack by default. Actual codex exec, push, and PR creation require explicit flags."
   },
   "augment": {
     "context_provider": "augment_mcp",

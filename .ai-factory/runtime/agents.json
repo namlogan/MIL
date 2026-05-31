@@ -8,6 +8,10 @@
       "allowed_actions": [
         "plan",
         "implement_scoped_issue",
+        "run_noninteractive_codex_worker",
+        "create_isolated_worktree",
+        "commit_scoped_changes",
+        "open_pr",
         "generate_tests",
         "fix_ci",
         "write_pr_evidence"

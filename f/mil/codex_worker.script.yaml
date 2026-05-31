@@ -1,0 +1,15 @@
+summary: MIL Codex worker
+description: Prepare a scoped Codex implementation worker run for an approved MIL task.
+lock: '!inline f/mil/codex_worker.script.lock'
+has_on_behalf_of: false
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    request:
+      type: object
+      description: Codex worker request with task and options.
+      default: null
+  required:
+    - request
