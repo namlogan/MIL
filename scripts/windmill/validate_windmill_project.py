@@ -19,6 +19,7 @@ FLOW_NAMES = (
     "fix_ci_or_review",
     "auggie_supervised_advisory",
     "github_commit_status",
+    "github_webhook_router",
 )
 
 
@@ -79,6 +80,7 @@ def validate(repo_root: Path) -> list[str]:
                 "flow_contract",
                 "auggie_supervised_advisory",
                 "github_commit_status",
+                "github_webhook_router",
             }:
                 continue
             expected = mil_flow.run_flow(flow, task).to_dict()

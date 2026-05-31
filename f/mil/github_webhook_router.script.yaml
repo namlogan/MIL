@@ -1,0 +1,15 @@
+summary: MIL GitHub webhook router
+description: Verify GitHub webhook signatures and route supported events to MIL Windmill flow contracts.
+lock: '!inline f/mil/github_webhook_router.script.lock'
+has_on_behalf_of: false
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    request:
+      type: object
+      description: Preprocessed GitHub webhook request.
+      default: null
+  required:
+    - request
