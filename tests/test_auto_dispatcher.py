@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -95,14 +96,16 @@ class AutoDispatcherTests(unittest.TestCase):
                 "git": {"pushed": True, "pr_url": "https://github.com/namlogan/MIL/pull/41"},
             }
 
-        result = self.dispatcher.dispatch_request(
-            auto_build_issue_payload(),
-            repo_root=REPO_ROOT,
-            execute_agent=True,
-            push=True,
-            open_pr=True,
-            runner=fake_runner,
-        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = self.dispatcher.dispatch_request(
+                auto_build_issue_payload(),
+                repo_root=REPO_ROOT,
+                execute_agent=True,
+                push=True,
+                open_pr=True,
+                runner=fake_runner,
+                lock_root=Path(tmpdir),
+            )
 
         self.assertEqual(result["decision"], "AUTO_DISPATCH_COMPLETED")
         self.assertTrue(captured["execute_agent"])
@@ -114,6 +117,34 @@ class AutoDispatcherTests(unittest.TestCase):
         self.assertTrue(augment_context)
         self.assertIn("augment://mcp/mil-auggie-local/codebase-retrieval", augment_context[0]["source_uri"])
         self.assertIn("git diff --check", augment_context[0]["summary"])
+
+    def test_dispatch_claims_task_once(self) -> None:
+        calls: list[dict] = []
+
+        def fake_runner(**kwargs):
+            calls.append(kwargs)
+            return {"status": "DRY_RUN", "git": {"pushed": False, "pr_url": ""}}
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            first = self.dispatcher.dispatch_request(
+                auto_build_issue_payload(),
+                repo_root=REPO_ROOT,
+                dry_run=True,
+                runner=fake_runner,
+                lock_root=Path(tmpdir),
+            )
+            second = self.dispatcher.dispatch_request(
+                auto_build_issue_payload(),
+                repo_root=REPO_ROOT,
+                dry_run=True,
+                runner=fake_runner,
+                lock_root=Path(tmpdir),
+            )
+
+        self.assertEqual(first["decision"], "AUTO_DISPATCH_COMPLETED")
+        self.assertEqual(second["decision"], "AUTO_DISPATCH_IGNORED")
+        self.assertIn("already claimed", second["reason"])
+        self.assertEqual(len(calls), 1)
 
     def test_blocks_when_plan_to_pr_is_not_ready(self) -> None:
         request = auto_build_issue_payload()
