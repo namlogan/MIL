@@ -129,7 +129,9 @@ python3 scripts/agent-flow/auto_dispatcher.py \
 ```
 
 The dispatcher requires `agent:auto-build` or `/agent autobuild`. Plain
-`agent:build` remains a non-executing command-pack path.
+`agent:build` remains a non-executing command-pack path. It writes a task lock
+under `.ai-factory/queue/locks` before invoking the runner so duplicate webhook
+deliveries do not create duplicate worktrees or branches.
 
 ## Windmill Entrypoints
 

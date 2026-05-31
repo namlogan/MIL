@@ -96,14 +96,16 @@ class AutoDispatcherTests(unittest.TestCase):
                 "git": {"pushed": True, "pr_url": "https://github.com/namlogan/MIL/pull/41"},
             }
 
-        result = self.dispatcher.dispatch_request(
-            auto_build_issue_payload(),
-            repo_root=REPO_ROOT,
-            execute_agent=True,
-            push=True,
-            open_pr=True,
-            runner=fake_runner,
-        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = self.dispatcher.dispatch_request(
+                auto_build_issue_payload(),
+                repo_root=REPO_ROOT,
+                execute_agent=True,
+                push=True,
+                open_pr=True,
+                runner=fake_runner,
+                lock_root=Path(tmpdir),
+            )
 
         self.assertEqual(result["decision"], "AUTO_DISPATCH_COMPLETED")
         self.assertTrue(captured["execute_agent"])

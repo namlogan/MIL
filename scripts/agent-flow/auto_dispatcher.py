@@ -6,6 +6,8 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import os
+import re
 import sys
 from pathlib import Path
 from typing import Any, Callable
@@ -21,6 +23,7 @@ from f.mil.plan_to_pr_contract import run_plan_to_pr
 AUTO_BUILD_LABEL = "agent:auto-build"
 AUTO_BUILD_COMMANDS = {"/agent autobuild", "/agent auto-build"}
 COMPLETED_STATUSES = {"CODEX_WORKER_COMPLETED", "DRY_RUN", "SKIPPED_AGENT_EXECUTION"}
+DEFAULT_LOCK_ROOT = ".ai-factory/queue/locks"
 
 
 def load_codex_worker_runner():
@@ -44,6 +47,10 @@ def _write_json(path: str | Path, payload: dict[str, Any]) -> None:
     output_path = Path(path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _safe_id(value: str) -> str:
+    return re.sub(r"[^a-zA-Z0-9_.-]+", "-", value.strip())[:120] or "task"
 
 
 def _labels(issue: dict[str, Any]) -> set[str]:
@@ -100,6 +107,21 @@ def _runner_task(route: dict[str, Any], plan_result: dict[str, Any]) -> dict[str
     return task
 
 
+def _claim_task(task_id: str, *, repo_root: str | Path, lock_root: str | Path) -> Path | None:
+    root = Path(lock_root)
+    if not root.is_absolute():
+        root = Path(repo_root).resolve() / root
+    root.mkdir(parents=True, exist_ok=True)
+    lock_path = root / f"{_safe_id(task_id)}.lock"
+    try:
+        fd = os.open(str(lock_path), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+    except FileExistsError:
+        return None
+    with os.fdopen(fd, "w", encoding="utf-8") as lock_file:
+        lock_file.write(json.dumps({"task_id": task_id}, sort_keys=True) + "\n")
+    return lock_path
+
+
 def dispatch_request(
     request: dict[str, Any],
     *,
@@ -113,6 +135,7 @@ def dispatch_request(
     approval: str = "never",
     worktree_root: str = ".ai-factory/tmp/worktrees",
     evidence_root: str = ".ai-factory/qa/codex_worker",
+    lock_root: str | Path = DEFAULT_LOCK_ROOT,
     runner: Callable[..., dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     if not is_auto_dispatch_requested(request):
@@ -153,6 +176,16 @@ def dispatch_request(
             "reasons": plan_result.get("reasons") or ["plan_to_pr is not ready"],
         }
 
+    task_id = str(plan_result.get("task_id") or route.get("task", {}).get("task_id") or "UNKNOWN")
+    lock_path = _claim_task(task_id, repo_root=repo_root, lock_root=lock_root)
+    if lock_path is None:
+        return {
+            "decision": "AUTO_DISPATCH_IGNORED",
+            "reason": f"task {task_id} is already claimed",
+            "route": route,
+            "plan_result": plan_result,
+        }
+
     worker_runner = runner or load_codex_worker_runner().run_worker
     worker_result = worker_runner(
         task=_runner_task(route, plan_result),
@@ -170,6 +203,7 @@ def dispatch_request(
     status = str(worker_result.get("status") or "")
     return {
         "decision": "AUTO_DISPATCH_COMPLETED" if status in COMPLETED_STATUSES else "AUTO_DISPATCH_FAILED",
+        "lock_path": str(lock_path),
         "route": route,
         "plan_result": plan_result,
         "worker_result": worker_result,
@@ -228,6 +262,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--repo", default=str(REPO_ROOT), help="Local repository root.")
     parser.add_argument("--worktree-root", default=".ai-factory/tmp/worktrees")
     parser.add_argument("--evidence-root", default=".ai-factory/qa/codex_worker")
+    parser.add_argument("--lock-root", default=DEFAULT_LOCK_ROOT)
     parser.add_argument("--execute-agent", action="store_true", help="Actually run codex exec.")
     parser.add_argument("--push", action="store_true", help="Push the worker branch after commit.")
     parser.add_argument("--open-pr", action="store_true", help="Open a PR after push.")
@@ -260,6 +295,7 @@ def main(argv: list[str] | None = None) -> int:
             approval=args.approval,
             worktree_root=args.worktree_root,
             evidence_root=args.evidence_root,
+            lock_root=args.lock_root,
         )
     except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:
         print(f"auto_dispatcher failed: {exc}", file=sys.stderr)

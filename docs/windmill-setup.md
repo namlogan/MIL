@@ -395,7 +395,9 @@ pack without launching Codex.
 The dispatcher refuses to run when issue scope is incomplete, `allowed_files` is
 missing, restricted changes are selected, AI Factory rules are unavailable, or
 the router does not resolve to `plan_to_pr`. It may push an agent branch and open
-a PR, but it cannot merge or bypass branch protection.
+a PR, but it cannot merge or bypass branch protection. It also writes a task
+lock under `.ai-factory/queue/locks` so duplicate GitHub deliveries do not start
+two workers for the same task.
 
 With `wmill` CLI 1.712.0, `script preview` still requires an active workspace profile even though it does not deploy.
 
