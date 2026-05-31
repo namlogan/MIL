@@ -1,21 +1,19 @@
 from __future__ import annotations
 
-from typing import Any
-
 from f.mil.plan_to_pr_contract import run_plan_to_pr
 
 
 def main(
-    request: dict[str, Any] | None = None,
-    task: dict[str, Any] | None = None,
-    options: dict[str, Any] | None = None,
-    memory_context: list[dict[str, Any]] | None = None,
-    augment_context: list[dict[str, Any]] | None = None,
-) -> dict[str, Any]:
+    request: dict = None,
+    task: dict = None,
+    options: dict = None,
+    memory_context: list = None,
+    augment_context: list = None,
+) -> dict:
     if request is not None:
         return run_plan_to_pr(request)
 
-    payload: dict[str, Any] = {"task": task or {}}
+    payload: dict = {"task": task or {}}
     if options is not None:
         payload["options"] = options
     if memory_context is not None:

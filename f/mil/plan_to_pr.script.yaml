@@ -19,10 +19,12 @@ schema:
       type: object
       description: Plan-to-PR orchestration options.
       default: null
+      properties: {}
     request:
       type: object
       description: Full Plan-to-PR orchestration request.
       default: null
+      properties: {}
     task:
       type: object
       description: MIL task payload.
