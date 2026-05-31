@@ -39,9 +39,32 @@
       "requires_issue_scope": true,
       "requires_pull_request": true
     },
+    "augment_context_provider": {
+      "runtime": "augment_mcp",
+      "role": "codebase_index_and_context_provider",
+      "allowed_actions": [
+        "expose_codebase_index",
+        "retrieve_code_context",
+        "summarize_symbols",
+        "answer_codebase_context_questions",
+        "provide_codebase_context"
+      ],
+      "forbidden_actions": [
+        "implement_scoped_issue",
+        "create_branch",
+        "open_pr",
+        "write_pr_evidence",
+        "final_merge_approval",
+        "merge_main",
+        "deploy_production",
+        "read_production_secrets"
+      ],
+      "requires_codex_session": true,
+      "writes_code": false
+    },
     "auggie_advisory": {
       "runtime": "auggie_supervised",
-      "role": "advisory_review_and_diagnosis_worker",
+      "role": "supervised_advisory_context_reviewer",
       "allowed_actions": [
         "validate_plan",
         "review_diff",
@@ -55,30 +78,13 @@
         "read_production_secrets"
       ],
       "requires_operator": true,
+      "writes_code": false,
       "allowed_verdicts": [
         "AUGMENT_REVIEW_PASS",
         "AUGMENT_REVIEW_NOTES",
         "AUGMENT_REVIEW_CHANGES_RECOMMENDED",
         "AUGMENT_REVIEW_BLOCKED"
       ]
-    },
-    "auggie_supervised_developer": {
-      "runtime": "auggie_supervised",
-      "role": "explicitly_routed_supervised_developer_worker",
-      "default_branch_prefix": "agent/",
-      "allowed_actions": [
-        "implement_scoped_issue_when_explicitly_routed",
-        "run_focused_tests",
-        "write_pr_evidence"
-      ],
-      "forbidden_actions": [
-        "final_merge_approval",
-        "merge_main",
-        "deploy_production",
-        "read_production_secrets"
-      ],
-      "requires_explicit_issue_permission": true,
-      "requires_codex_verification": true
     },
     "windmill_orchestrator": {
       "runtime": "windmill",

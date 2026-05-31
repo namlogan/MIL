@@ -87,8 +87,8 @@ Verdict:
 Auggie non-interactive worker execution remains blocked by account policy on 2026-05-31.
 ```
 
-Current allowed lane:
+Current allowed lane after Issue #3 rescope:
 
 ```text
-Windmill queues Auggie supervised advisory -> Codex operates scripts/agent-flow/auggie_interactive.sh -> Codex verifies diff/evidence -> GitHub records the result.
+Codex owns coding -> Augment MCP provides indexed codebase context -> optional supervised Auggie advisory stays read-only -> GitHub records evidence.
 ```

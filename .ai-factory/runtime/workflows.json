@@ -7,6 +7,7 @@
         {
           "name": "issue_to_plan",
           "owner": "codex_developer",
+          "context_provider": "augment_context_provider",
           "windmill_script": "f/mil/issue_to_plan",
           "required_inputs": [
             "issue_id",
@@ -28,6 +29,8 @@
           "windmill_script": "f/mil/plan_to_pr",
           "must_dispatch_exactly_one_coding_agent": true,
           "default_developer_agent": "codex_developer",
+          "only_supported_developer_agent": "codex_developer",
+          "context_provider": "augment_context_provider",
           "outputs": [
             "branch",
             "pull_request",
@@ -41,17 +44,26 @@
           "blocking": true
         },
         {
-          "name": "auggie_advisory_review",
-          "owner": "auggie_advisory",
-          "windmill_script": "f/mil/auggie_supervised_advisory",
-          "blocking_verdicts": [
-            "AUGMENT_REVIEW_BLOCKED",
-            "AUGMENT_REVIEW_CHANGES_RECOMMENDED"
+          "name": "augment_context_review",
+          "owner": "augment_context_provider",
+          "purpose": "provide indexed codebase context and risk-relevant references to Codex QA",
+          "allowed_actions": [
+            "retrieve_code_context",
+            "summarize_symbols",
+            "provide_codebase_context"
+          ],
+          "forbidden_actions": [
+            "create_branch",
+            "edit_files",
+            "write_commits",
+            "open_pr",
+            "approve_merge"
           ]
         },
         {
           "name": "codex_qa_gate",
           "owner": "codex_qa",
+          "context_provider": "augment_context_provider",
           "windmill_script": "f/mil/pr_quality_gate",
           "publishes_status_with": "f/mil/github_commit_status",
           "required_context": "ai-gate/final-review",
@@ -83,7 +95,7 @@
           "owner": "windmill_orchestrator",
           "windmill_script": "f/mil/fix_ci_or_review",
           "max_iterations": 2,
-          "diagnosis_agent": "auggie_advisory",
+          "context_provider": "augment_context_provider",
           "fix_agent": "codex_developer"
         },
         {

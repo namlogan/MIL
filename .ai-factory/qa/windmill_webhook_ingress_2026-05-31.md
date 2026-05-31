@@ -41,7 +41,7 @@ Signed local POST to `/api/r/admins/mil/github-webhook` completed on Windmill:
 }
 ```
 
-The smoke payload used the `issues` event, `agent:plan` label, and repository `namlogan/MIL`. The job result routed to `issue_to_plan` and produced the expected Codex plan plus Auggie advisory validation calls in the MIL flow contract.
+The smoke payload used the `issues` event, `agent:plan` label, and repository `namlogan/MIL`. At the time of the smoke, the job result routed to `issue_to_plan` and produced the then-current Codex plan plus Auggie advisory validation calls. After the Issue #3 rescope, current MIL flow contracts use Augment as a context provider for Codex rather than an Auggie worker.
 
 ## GitHub Webhook Status
 

@@ -5,18 +5,18 @@ MIL uses a controlled AI software factory model.
 ## Default Flow
 
 ```text
-issue intake -> plan -> coding-agent dispatch -> implementation branch -> pull request -> CI -> Auggie advisory review -> Codex QA gate -> human or bot merge
+issue intake -> Augment context lookup -> plan -> Codex coding-agent dispatch -> implementation branch -> pull request -> CI -> Augment context/advisory review -> Codex QA gate -> human or bot merge
 ```
 
 Agents may do planning, implementation, review, and CI fixes. They may not bypass branch protection or merge restricted changes without human approval.
 
 ## Worker Responsibilities
 
-Codex is the default implementation worker for scoped code changes, tests, refactors, and small CI fixes.
+Codex is the only implementation worker for scoped code changes, tests, refactors, and small CI fixes.
 
-Auggie is the advisory reviewer and diagnosis worker for repository-context review, plan validation, hard CI failures, and risk analysis.
+Augment is the codebase context provider for Codex sessions. It exposes indexed repository context, symbol summaries, and retrieval results so Codex can plan, implement, and QA with better local context.
 
-Auggie may also act as a supervised developer worker only when an issue explicitly routes implementation to Auggie. In that case Codex operates the interactive Auggie terminal, then independently verifies the resulting diff, tests, and evidence.
+Auggie may provide supervised advisory review, diagnosis, and risk notes when a human/Codex operator starts an interactive session. It is not a developer worker in MIL and must not create branches, edit files, write commits, open PRs, or approve merges.
 
 Windmill is the cockpit that routes work, captures logs, manages retries, and requests human approval.
 
@@ -24,10 +24,10 @@ GitHub is the system of record.
 
 ## Auggie Supervised Lane
 
-While Auggie CLI non-interactive mode is blocked, Auggie runs through a supervised interactive TTY operated by Codex.
+When a supervised Auggie advisory session is useful, Codex operates the interactive TTY and records evidence.
 
 ```text
-Windmill queues advisory request -> Codex starts Auggie interactive -> Auggie reviews/diagnoses -> Codex verifies -> GitHub records evidence
+Windmill queues advisory request -> Codex starts Auggie interactive -> Auggie reviews/diagnoses without code edits -> Codex verifies -> GitHub records evidence
 ```
 
 Auggie advisory verdicts are limited to:
@@ -39,7 +39,7 @@ AUGMENT_REVIEW_CHANGES_RECOMMENDED
 AUGMENT_REVIEW_BLOCKED
 ```
 
-Auggie output is advisory evidence only. It does not replace Codex QA, CI, branch protection, human restricted approval, or the final merge gate.
+Auggie output is advisory evidence only. Augment context retrieval is input context only. Neither replaces Codex implementation, Codex QA, CI, branch protection, human restricted approval, or the final merge gate.
 
 ## Gate Philosophy
 

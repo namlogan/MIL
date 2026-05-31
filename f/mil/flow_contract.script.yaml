@@ -9,14 +9,12 @@ schema:
   properties:
     flow:
       type: string
-      enum:
-        - issue_to_plan
-        - plan_to_pr
-        - pr_quality_gate
-        - fix_ci_or_review
+      default: null
+      originalType: string
     task:
       type: object
       description: MIL task payload.
+      default: null
   required:
     - flow
     - task

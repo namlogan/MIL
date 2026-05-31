@@ -27,11 +27,11 @@ class MilFlowTests(unittest.TestCase):
     def setUp(self) -> None:
         self.task = mil_flow.load_task(REPO_ROOT / "tests/fixtures/agent_task.json")
 
-    def test_issue_to_plan_routes_to_codex_and_auggie(self) -> None:
+    def test_issue_to_plan_routes_to_context_then_codex(self) -> None:
         result = mil_flow.run_flow("issue_to_plan", self.task)
 
         calls = [(call.agent, call.action) for call in result.agent_calls]
-        self.assertEqual(calls, [("codex", "plan"), ("auggie", "validate_plan")])
+        self.assertEqual(calls, [("augment_context", "provide_issue_context"), ("codex", "plan")])
         self.assertEqual(result.decision, "PLAN_READY_FOR_APPROVAL")
 
     def test_plan_to_pr_routes_to_implementation_review_and_tests(self) -> None:
@@ -46,39 +46,27 @@ class MilFlowTests(unittest.TestCase):
                 ("codex", "implement"),
                 ("codex", "test"),
                 ("codex", "open_pr"),
-                ("auggie", "review"),
+                ("augment_context", "provide_review_context"),
             ],
         )
         self.assertEqual(result.decision, "PR_READY_FOR_GATE")
         self.assertEqual(result.artifacts["dispatch"]["developer_agent"], "codex")
+        self.assertEqual(result.artifacts["dispatch"]["context_provider"], "augment_context")
 
-    def test_plan_to_pr_can_route_to_supervised_auggie_developer(self) -> None:
+    def test_plan_to_pr_rejects_auggie_as_developer(self) -> None:
         task = {
             **self.task,
             "developer_agent": "auggie_supervised",
             "allow_auggie_implementation": True,
         }
 
-        result = mil_flow.run_flow("plan_to_pr", task)
+        with self.assertRaisesRegex(ValueError, "Codex is the only supported coding agent"):
+            mil_flow.run_flow("plan_to_pr", task)
 
-        calls = [(call.agent, call.action) for call in result.agent_calls]
-        self.assertEqual(
-            calls,
-            [
-                ("windmill", "dispatch_coding_agent"),
-                ("auggie_supervised", "create_branch"),
-                ("auggie_supervised", "implement"),
-                ("auggie_supervised", "test"),
-                ("auggie_supervised", "open_pr"),
-                ("auggie", "review"),
-            ],
-        )
-        self.assertTrue(result.artifacts["dispatch"]["supervised"])
+    def test_plan_to_pr_rejects_unknown_developer_agent(self) -> None:
+        task = {**self.task, "developer_agent": "unknown"}
 
-    def test_plan_to_pr_blocks_auggie_developer_without_explicit_permission(self) -> None:
-        task = {**self.task, "developer_agent": "auggie_supervised"}
-
-        with self.assertRaisesRegex(ValueError, "allow_auggie_implementation"):
+        with self.assertRaisesRegex(ValueError, "Codex is the only supported coding agent"):
             mil_flow.run_flow("plan_to_pr", task)
 
     def test_plan_to_pr_blocks_restricted_changes_before_dispatch(self) -> None:
@@ -98,15 +86,15 @@ class MilFlowTests(unittest.TestCase):
         result = mil_flow.run_flow("pr_quality_gate", self.task)
 
         calls = [(call.agent, call.action) for call in result.agent_calls]
-        self.assertEqual(calls, [("codex", "qa")])
+        self.assertEqual(calls, [("augment_context", "provide_gate_context"), ("codex", "qa")])
         self.assertEqual(result.decision, "APPROVE_MERGE")
         self.assertFalse(result.blocking)
 
-    def test_fix_ci_or_review_routes_to_auggie_before_codex_fix(self) -> None:
+    def test_fix_ci_or_review_routes_to_context_before_codex_fix(self) -> None:
         result = mil_flow.run_flow("fix_ci_or_review", self.task)
 
         calls = [(call.agent, call.action) for call in result.agent_calls]
-        self.assertEqual(calls, [("auggie", "diagnose"), ("codex", "fix")])
+        self.assertEqual(calls, [("augment_context", "provide_ci_context"), ("codex", "fix")])
         self.assertEqual(result.decision, "FIX_PUSH_READY")
 
     def test_cli_writes_flow_artifact(self) -> None:
@@ -127,7 +115,8 @@ class MilFlowTests(unittest.TestCase):
             artifact = json.loads(out_path.read_text(encoding="utf-8"))
             self.assertEqual(artifact["flow"], "pr_quality_gate")
             self.assertEqual(artifact["decision"], "APPROVE_MERGE")
-            self.assertEqual(artifact["agent_calls"][0]["agent"], "codex")
+            self.assertEqual(artifact["agent_calls"][0]["agent"], "augment_context")
+            self.assertEqual(artifact["agent_calls"][-1]["agent"], "codex")
             self.assertIn("aif_gate_result", artifact["artifacts"])
 
 

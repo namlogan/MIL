@@ -28,6 +28,14 @@
       "f/mil/github_webhook_secret"
     ]
   },
+  "augment": {
+    "context_provider": "augment_mcp",
+    "required_local_env": [
+      "AUGMENT_MCP_TOKEN"
+    ],
+    "coding_allowed": false,
+    "notes": "Augment exposes codebase index/context to Codex sessions. It is not a MIL coding worker."
+  },
   "local_checks": [
     "python3 -m unittest discover -s tests -v",
     "python3 scripts/agent-gate/validate_ai_factory.py --self-test",

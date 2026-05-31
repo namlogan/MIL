@@ -1,15 +1,15 @@
 {
   "agent_calls": [
     {
-      "action": "plan",
-      "agent": "codex",
-      "role": "implementation_test_and_qa_worker",
+      "action": "provide_issue_context",
+      "agent": "augment_context",
+      "role": "codebase_index_and_context_provider",
       "task_id": "MIL-001"
     },
     {
-      "action": "validate_plan",
-      "agent": "auggie",
-      "role": "advisory_review_and_diagnosis_worker",
+      "action": "plan",
+      "agent": "codex",
+      "role": "implementation_test_and_qa_worker",
       "task_id": "MIL-001"
     }
   ],

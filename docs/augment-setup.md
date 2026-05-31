@@ -2,10 +2,10 @@
 
 MIL uses Augment in two separate ways:
 
-1. **Augment MCP context for Codex**: gives Codex a codebase retrieval tool.
-2. **Auggie advisory worker**: validates plans, reviews diffs, and diagnoses hard failures.
+1. **Augment MCP context for Codex**: gives Codex codebase index, retrieval, and symbol context.
+2. **Auggie supervised advisory**: optional human-in-the-loop review/diagnosis notes.
 
-These are related but not the same. MCP context can work even if Auggie CLI non-interactive worker mode is unavailable.
+These are related but not the same. MCP context can work even if Auggie CLI non-interactive worker mode is unavailable. MIL does not use Auggie as a coding worker.
 
 ## Local Secrets
 
@@ -63,9 +63,9 @@ codex mcp add mil-auggie-local -- /Users/mac/Documents/MIL/scripts/agent-flow/au
 
 This wrapper is useful when you do not want the Codex process itself to carry the Augment token globally.
 
-## Auggie Worker
+## Auggie Non-Interactive Worker
 
-The CLI worker smoke command is:
+The old unattended worker smoke command is kept only as blocker evidence:
 
 ```bash
 set -a
@@ -84,11 +84,11 @@ Current observed result on 2026-05-30:
 CLI non-interactive mode access has been disabled for your account.
 ```
 
-If this remains true, use the Auggie SDK/API route for Windmill advisory review, or keep Auggie as a manual advisory lane until non-interactive access is enabled.
+MIL no longer requires this mode for coding. If it is enabled later, it may be used only for read-only advisory or context workflows unless the Product Owner explicitly changes this operating model.
 
 ## Supervised Interactive Lane
 
-Until non-interactive mode is enabled, MIL uses a supervised Auggie lane:
+MIL may still use a supervised Auggie advisory lane:
 
 ```bash
 scripts/agent-flow/auggie_interactive.sh
@@ -104,7 +104,7 @@ Codex operates the interactive terminal session and runs workspace commands from
 /command mil-handoff PR #<id>
 ```
 
-Windmill may queue and record this work through `.windmill/flows/auggie_supervised_advisory.md`, but it must not pretend this is unattended Auggie automation.
+Windmill may queue and record this work through `.windmill/flows/auggie_supervised_advisory.md`, but it must not pretend this is unattended Auggie automation or coding work.
 
 ## Windmill Secrets
 
@@ -117,7 +117,7 @@ AUGMENT_API_URL
 AUGMENT_SESSION_AUTH
 ```
 
-The current credential includes `write` scope. Keep review workers read-only at the Windmill/tool-permission layer unless a separate implementation job explicitly requires write access.
+The current credential includes `write` scope. Keep Augment/Auggie usage read-only at the Windmill/tool-permission layer for MIL. Codex is the only coding worker.
 
 ## Rotation Note
 

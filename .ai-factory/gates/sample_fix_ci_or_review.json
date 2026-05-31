@@ -1,9 +1,9 @@
 {
   "agent_calls": [
     {
-      "action": "diagnose",
-      "agent": "auggie",
-      "role": "advisory_review_and_diagnosis_worker",
+      "action": "provide_ci_context",
+      "agent": "augment_context",
+      "role": "codebase_index_and_context_provider",
       "task_id": "MIL-001"
     },
     {

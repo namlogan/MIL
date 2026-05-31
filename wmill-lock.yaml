@@ -2,7 +2,7 @@ version: v2
 locks:
   f/mil/auggie_supervised_advisory: 86e44b16c712b91aaf4cbb0ac73dc2045444b3532fb542aa9c52824d299b5e03
   f/mil/fix_ci_or_review: df6eeda3f5ec4d7f9b6c122dcef50281365a90d81c37d3bfb0e136fc2709fa0c
-  f/mil/flow_contract: 57b4ff1f8c79c4e4b31957cfc9060050510ef8d0e7eec39afdd2bfb358e7c8a0
+  f/mil/flow_contract: 8e49a2a888877ee2abdd26b236d2ced40864f08ce19745eff2a42158e2dbd0d3
   f/mil/github_commit_status: 9562496afca132f4d228f64c618de395851b384e29b1940aada2866f6e3b8b4a
   f/mil/github_webhook_router: 261ab176b2f0925d541fc9ecaba6231e00e5d7aa08b462f3dc7dd7bc7fc2ce32
   f/mil/issue_to_plan: ef9d3dab0aac6c6d125b7323e021ac1ca745c2bcd15031e4a96c4ab1da3107a5
