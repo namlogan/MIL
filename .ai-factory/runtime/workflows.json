@@ -37,6 +37,8 @@
           "name": "plan_to_pr",
           "owner": "windmill_orchestrator",
           "windmill_script": "f/mil/plan_to_pr",
+          "worker_script": "f/mil/codex_worker",
+          "worker_contract": "f/mil/codex_worker_contract",
           "must_dispatch_exactly_one_coding_agent": true,
           "default_developer_agent": "codex_developer",
           "only_supported_developer_agent": "codex_developer",

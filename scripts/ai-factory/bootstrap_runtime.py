@@ -157,7 +157,14 @@ def _validate_evidence(evidence: dict[str, Any], errors: list[str]) -> None:
     if not isinstance(configured, dict):
         errors.append("evidence.json missing required_evidence object")
         return
-    for section in ["issue_intake", "developer_handoff", "qa_gate", "memory_record", "merge_gate"]:
+    for section in [
+        "issue_intake",
+        "developer_handoff",
+        "codex_worker_run",
+        "qa_gate",
+        "memory_record",
+        "merge_gate",
+    ]:
         values = _require_list(configured.get(section), f"required_evidence.{section}", errors)
         if not values:
             errors.append(f"required_evidence.{section} must not be empty")
@@ -170,6 +177,9 @@ def _validate_environment(
     tool_resolver: Any,
 ) -> None:
     tools = _require_list(environment.get("required_tools"), "environment.required_tools", errors)
+    for tool in ["git", "gh", "codex", "python3", "wmill"]:
+        if tool not in tools:
+            errors.append(f"environment.required_tools missing {tool}")
     if check_tools:
         missing_tools = [
             tool for tool in tools if isinstance(tool, str) and tool_resolver(tool) is None
@@ -194,13 +204,42 @@ def _validate_environment(
     scripts = set(
         _require_list(windmill.get("required_scripts"), "environment.windmill.required_scripts", errors)
     )
-    if "f/mil/github_commit_status" not in scripts:
-        errors.append("environment.windmill.required_scripts missing f/mil/github_commit_status")
-    for script in ["f/mil/memory_contract", "f/mil/mem0_retrieve", "f/mil/mem0_writeback"]:
+    for script in [
+        "f/mil/codex_worker_contract",
+        "f/mil/codex_worker",
+        "f/mil/github_commit_status",
+        "f/mil/memory_contract",
+        "f/mil/mem0_retrieve",
+        "f/mil/mem0_writeback",
+    ]:
         if script not in scripts:
             errors.append(f"environment.windmill.required_scripts missing {script}")
     if windmill.get("scoped_sync_include") != "f/mil/**":
         errors.append("environment.windmill.scoped_sync_include must be f/mil/**")
+
+    codex_worker = environment.get("codex_worker")
+    if not isinstance(codex_worker, dict):
+        errors.append("environment.codex_worker must be an object")
+    else:
+        expected = {
+            "runner_script": "scripts/agent-flow/codex_worker.py",
+            "windmill_script": "f/mil/codex_worker",
+            "contract_script": "f/mil/codex_worker_contract",
+            "default_sandbox": "workspace-write",
+            "default_approval": "never",
+        }
+        for field, value in expected.items():
+            if codex_worker.get(field) != value:
+                errors.append(f"environment.codex_worker.{field} must be {value}")
+        for field in [
+            "execute_agent_default",
+            "push_default",
+            "open_pr_default",
+        ]:
+            if codex_worker.get(field) is not False:
+                errors.append(f"environment.codex_worker.{field} must be false")
+        if codex_worker.get("requires_allowed_files") is not True:
+            errors.append("environment.codex_worker.requires_allowed_files must be true")
 
     memory = environment.get("memory")
     if not isinstance(memory, dict):

@@ -28,7 +28,10 @@ Windmill owns orchestration. It receives GitHub events, starts workers, records 
 
 AI Factory owns workflow artifacts. It defines runtime agent contracts, workflow stages, evidence requirements, rules, plans, QA outputs, and the final machine-readable `aif-gate-result` block.
 
-Codex owns scoped implementation. It writes code and tests only inside issue-approved scope.
+Codex owns scoped implementation. `f/mil/codex_worker` builds the Windmill
+command pack, and `scripts/agent-flow/codex_worker.py` runs `codex exec` in an
+isolated worktree when execution is explicitly enabled. It writes code and
+tests only inside issue-approved scope.
 
 Augment owns codebase index and context retrieval for Codex sessions. Auggie may provide supervised advisory review and diagnosis, but it is not a coding worker and does not replace final QA or branch protection.
 
@@ -48,6 +51,9 @@ The executable install contract lives in:
 .ai-factory/runtime/evidence.json
 .ai-factory/runtime/environment.json
 scripts/ai-factory/bootstrap_runtime.py
+scripts/agent-flow/codex_worker.py
+f/mil/codex_worker.py
+f/mil/codex_worker_contract.py
 ```
 
 Run `python3 scripts/ai-factory/bootstrap_runtime.py --check` before treating the local factory as ready.

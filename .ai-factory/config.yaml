@@ -24,6 +24,9 @@ paths:
   docs: docs
   setup_doc: docs/ai-factory-setup.md
   runtime_bootstrap: scripts/ai-factory/bootstrap_runtime.py
+  codex_worker_runner: scripts/agent-flow/codex_worker.py
+  windmill_codex_worker: f/mil/codex_worker.py
+  windmill_codex_worker_contract: f/mil/codex_worker_contract.py
 
 workflow:
   base_branch: main
@@ -46,6 +49,8 @@ agents:
     allowed_default_actions:
       - plan
       - implement_scoped_issue
+      - run_noninteractive_codex_worker
+      - create_isolated_worktree
       - generate_tests
       - fix_ci
       - write_pr_evidence

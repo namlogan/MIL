@@ -1,0 +1,14 @@
+summary: MIL Codex worker contract
+description: Build a scoped non-interactive Codex worker plan, prompt, and command pack.
+lock: '!inline f/mil/codex_worker_contract.script.lock'
+has_on_behalf_of: false
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    request:
+      type: object
+      description: Codex worker planning request.
+      default: null
+  required: []

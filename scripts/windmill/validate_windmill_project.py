@@ -12,6 +12,8 @@ from typing import Any
 
 
 FLOW_NAMES = (
+    "codex_worker_contract",
+    "codex_worker",
     "flow_contract",
     "memory_contract",
     "issue_to_plan",
@@ -80,6 +82,8 @@ def validate(repo_root: Path) -> list[str]:
         task = _load_json(repo_root / "tests" / "fixtures" / "agent_task.json")
         for flow in FLOW_NAMES:
             if flow in {
+                "codex_worker_contract",
+                "codex_worker",
                 "flow_contract",
                 "memory_contract",
                 "mem0_retrieve",

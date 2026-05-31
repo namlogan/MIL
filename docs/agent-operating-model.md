@@ -24,6 +24,24 @@ Windmill is the cockpit that routes work, captures logs, manages retries, and re
 
 GitHub is the system of record.
 
+## Codex Worker Runner
+
+The deployable implementation runner is `f/mil/codex_worker`, backed by the
+local CLI `scripts/agent-flow/codex_worker.py`.
+
+The runner converts an approved task into:
+
+- a deterministic branch name and isolated worktree
+- a scoped prompt built from issue scope, Mem0 memory, and Augment context
+- a `codex exec` command pack
+- required checks
+- file-scope validation against `allowed_files` and `out_of_scope_files`
+- PR evidence under `.ai-factory/qa/codex_worker/<TASK_ID>/`
+
+By default it only returns the command pack. Real `codex exec`, push, and PR
+creation require explicit flags. It still cannot merge or approve restricted
+changes.
+
 ## Auggie Supervised Lane
 
 When a supervised Auggie advisory session is useful, Codex operates the interactive TTY and records evidence.
