@@ -81,6 +81,60 @@ class AIFactoryContractTests(unittest.TestCase):
         ]:
             self.assertIn(control, config)
 
+    def test_config_uses_ai_factory_v2_rule_hierarchy(self) -> None:
+        config = (REPO_ROOT / ".ai-factory/config.yaml").read_text(encoding="utf-8")
+
+        for required in [
+            "language:",
+            "ui: en",
+            "artifacts: en",
+            "technical_terms: keep",
+            "rules_file: .ai-factory/RULES.md",
+            "plan: .ai-factory/PLAN.md",
+            "fix_plan: .ai-factory/FIX_PLAN.md",
+            "references: .ai-factory/references",
+            "patches: .ai-factory/patches",
+            "evolutions: .ai-factory/evolutions",
+            "evolution: .ai-factory/evolution",
+            "specs: .ai-factory/specs",
+            "rules: .ai-factory/rules",
+            "archive: .ai-factory/archive",
+            "auto_create_dirs: true",
+            "plan_id_format: slug",
+            "verify_mode: strict",
+            "git:",
+            "enabled: true",
+            "base_branch: main",
+            "create_branches: true",
+            "branch_prefix: agent/",
+            "skip_push_after_commit: true",
+            "base: .ai-factory/rules/base.md",
+            "implementation: .ai-factory/rules/implementation.md",
+            "quality_gates: .ai-factory/rules/quality-gates.md",
+            "memory: .ai-factory/rules/memory.md",
+            "windmill: .ai-factory/rules/windmill.md",
+            "security: .ai-factory/rules/security.md",
+        ]:
+            with self.subTest(required=required):
+                self.assertIn(required, config)
+
+        for relative_path in [
+            ".ai-factory/RULES.md",
+            ".ai-factory/rules/base.md",
+            ".ai-factory/rules/implementation.md",
+            ".ai-factory/rules/quality-gates.md",
+            ".ai-factory/rules/memory.md",
+            ".ai-factory/rules/windmill.md",
+            ".ai-factory/rules/security.md",
+        ]:
+            with self.subTest(path=relative_path):
+                self.assertTrue((REPO_ROOT / relative_path).exists())
+
+        rules = (REPO_ROOT / ".ai-factory/RULES.md").read_text(encoding="utf-8")
+        self.assertIn("## Rules", rules)
+        self.assertIn("AI Factory 2.x", rules)
+        self.assertIn("rules.<area> > rules/base.md > paths.rules_file", rules)
+
     def test_gate_decisions_are_aligned_between_rules_config_and_gate_evaluator(self) -> None:
         rules = (REPO_ROOT / ".ai-factory/RULES.md").read_text(encoding="utf-8")
         config = (REPO_ROOT / ".ai-factory/config.yaml").read_text(encoding="utf-8")

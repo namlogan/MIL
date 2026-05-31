@@ -80,6 +80,33 @@ class CodexWorkerContractTests(unittest.TestCase):
         self.assertIn("Runner must stay scoped", plan["prompt"])
         self.assertIn("Do not edit files outside allowed_files.", plan["prompt"])
 
+    def test_worker_prompt_loads_ai_factory_v2_rule_sources(self) -> None:
+        plan = codex_worker_contract.build_worker_plan(
+            sample_task(),
+            repo_root=REPO_ROOT,
+        )
+
+        rule_paths = [source["path"] for source in plan["rule_sources"]]
+        self.assertEqual(rule_paths[0], ".ai-factory/RULES.md")
+        for required in [
+            ".ai-factory/rules/base.md",
+            ".ai-factory/rules/implementation.md",
+            ".ai-factory/rules/quality-gates.md",
+            ".ai-factory/rules/security.md",
+            ".ai-factory/rules/memory.md",
+            ".ai-factory/rules/windmill.md",
+        ]:
+            with self.subTest(required=required):
+                self.assertIn(required, rule_paths)
+
+        prompt = plan["prompt"]
+        self.assertIn("## AI Factory v2 Rule Hierarchy", prompt)
+        self.assertIn("rules.<area> > rules/base.md > paths.rules_file", prompt)
+        self.assertIn(".ai-factory/rules/implementation.md", prompt)
+        self.assertIn("Run implementation through plan/checkpoint discipline", prompt)
+        self.assertIn("schema_version", prompt)
+        self.assertIn("gate", prompt)
+
     def test_restricted_changes_block_before_command_build(self) -> None:
         plan = codex_worker_contract.build_worker_plan(
             {
