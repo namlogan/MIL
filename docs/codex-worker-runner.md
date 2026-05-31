@@ -4,6 +4,19 @@
 approved issue/task payload into an isolated Git worktree, a scoped Codex
 prompt, required checks, local evidence, and optionally a pushed PR branch.
 
+Before coding, the runner resolves the AI Factory 2.x rule hierarchy from
+`.ai-factory/config.yaml` and injects the active sources into the prompt:
+
+```text
+.ai-factory/RULES.md
+.ai-factory/rules/base.md
+.ai-factory/rules/implementation.md
+.ai-factory/rules/quality-gates.md
+.ai-factory/rules/security.md
+.ai-factory/rules/memory.md
+.ai-factory/rules/windmill.md
+```
+
 Safe defaults:
 
 - `execute_agent=false`

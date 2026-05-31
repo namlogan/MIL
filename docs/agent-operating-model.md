@@ -33,6 +33,7 @@ The runner converts an approved task into:
 
 - a deterministic branch name and isolated worktree
 - a scoped prompt built from issue scope, Mem0 memory, and Augment context
+- the resolved AI Factory 2.x rule hierarchy from `.ai-factory/config.yaml`
 - a `codex exec` command pack
 - required checks
 - file-scope validation against `allowed_files` and `out_of_scope_files`

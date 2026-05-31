@@ -1,47 +1,20 @@
 # MIL AI Factory Rules
 
-## Operating Rules
+AI Factory 2.x-compatible top-level axioms. Area-specific rules live under
+`.ai-factory/rules/` and are registered in `.ai-factory/config.yaml`.
 
-1. Start work from a GitHub issue or approved local task file.
-2. Keep one task per branch.
-3. Keep implementation inside allowed file scope.
-4. Write tests or explain why tests are not applicable.
-5. Record evidence in the PR and `.ai-factory/qa/` when useful.
-6. Emit a final `aif-gate-result` JSON block for automated gates.
-7. Do not merge, deploy, or approve restricted work without human approval.
-8. Store only sanitized operational summaries in project memory; never store secrets, raw tokens, raw customer data, or raw transcripts.
+Rule priority: `rules.<area> > rules/base.md > paths.rules_file`.
 
-## Required Gate Result
+## Rules
 
-Gate tools and AI reviewers should end with a fenced block:
-
-````text
-```aif-gate-result
-{
-  "decision": "APPROVE_MERGE",
-  "blocking": false,
-  "reasons": [],
-  "tests": [],
-  "residual_risks": []
-}
-```
-````
-
-Allowed decisions:
-
-- `APPROVE_MERGE`
-- `REQUEST_CHANGES`
-- `REJECT`
-- `BLOCKED_NEEDS_HUMAN`
-
-## Restricted Changes
-
-Human approval is required for:
-
-- production deployment behavior
-- production secrets or credentials
-- billing, payments, or entitlement behavior
-- customer data retention or deletion
-- authentication and authorization boundaries
-- destructive database migrations
-- legal, compliance, or safety-critical behavior
+- Start work from a GitHub issue or approved local task file.
+- Keep one task per branch and keep implementation inside `allowed_files`.
+- Codex is the only implementation worker; Augment, Mem0, and Auggie are context, memory, or advisory lanes only.
+- Run implementation through the configured `codex_worker` runner or an explicitly approved local equivalent.
+- Write tests or record why tests are not applicable.
+- Record developer handoff, checks, risks, rollback note, and worker evidence in the PR or `.ai-factory/qa/`.
+- Emit the final machine-readable `aif-gate-result` block after the human summary.
+- Allowed MIL merge decisions are `APPROVE_MERGE`, `REQUEST_CHANGES`, `REJECT`, and `BLOCKED_NEEDS_HUMAN`.
+- Never merge, deploy, bypass branch protection, or approve restricted work without human approval.
+- Never store secrets, raw tokens, customer data, raw proprietary source, or raw transcripts in memory.
+- Restricted changes include production deploy behavior, production secrets, billing, customer data retention/deletion, auth boundaries, destructive migrations, legal/compliance behavior, and safety-critical behavior.

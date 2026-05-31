@@ -1,6 +1,11 @@
 project: MIL
 version: 1
 
+language:
+  ui: en
+  artifacts: en
+  technical_terms: keep
+
 source_of_truth:
   issue: GitHub Issue
   pr: GitHub Pull Request
@@ -10,18 +15,29 @@ source_of_truth:
 paths:
   description: .ai-factory/DESCRIPTION.md
   architecture: .ai-factory/ARCHITECTURE.md
-  rules: .ai-factory/RULES.md
-  rules_dir: .ai-factory/rules
+  docs: docs
+  roadmap: .ai-factory/ROADMAP.md
+  research: .ai-factory/RESEARCH.md
+  rules_file: .ai-factory/RULES.md
+  plan: .ai-factory/PLAN.md
+  plans: .ai-factory/plans
+  fix_plan: .ai-factory/FIX_PLAN.md
+  security: .ai-factory/SECURITY.md
+  references: .ai-factory/references
+  patches: .ai-factory/patches
+  evolutions: .ai-factory/evolutions
+  evolution: .ai-factory/evolution
+  specs: .ai-factory/specs
+  rules: .ai-factory/rules
+  qa: .ai-factory/qa
+  archive: .ai-factory/archive
   runtime_agents: .ai-factory/runtime/agents.json
   runtime_workflows: .ai-factory/runtime/workflows.json
   runtime_evidence: .ai-factory/runtime/evidence.json
   runtime_environment: .ai-factory/runtime/environment.json
-  plans: .ai-factory/plans
-  qa: .ai-factory/qa
   gates: .ai-factory/gates
   memory: .ai-factory/memory
   windmill: .windmill
-  docs: docs
   setup_doc: docs/ai-factory-setup.md
   runtime_bootstrap: scripts/ai-factory/bootstrap_runtime.py
   codex_worker_runner: scripts/agent-flow/codex_worker.py
@@ -29,6 +45,11 @@ paths:
   windmill_codex_worker_contract: f/mil/codex_worker_contract.py
 
 workflow:
+  auto_create_dirs: true
+  plan_id_format: slug
+  analyze_updates_architecture: true
+  architecture_updates_roadmap: true
+  verify_mode: strict
   base_branch: main
   branch_prefix: agent/
   fix_branch_prefix: fix/
@@ -42,6 +63,21 @@ workflow:
   required_status_contexts:
     - control-plane
     - ai-gate/final-review
+
+git:
+  enabled: true
+  base_branch: main
+  create_branches: true
+  branch_prefix: agent/
+  skip_push_after_commit: true
+
+rules:
+  base: .ai-factory/rules/base.md
+  implementation: .ai-factory/rules/implementation.md
+  quality_gates: .ai-factory/rules/quality-gates.md
+  security: .ai-factory/rules/security.md
+  memory: .ai-factory/rules/memory.md
+  windmill: .ai-factory/rules/windmill.md
 
 agents:
   codex:
