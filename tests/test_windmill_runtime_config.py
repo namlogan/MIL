@@ -135,6 +135,7 @@ class WindmillRuntimeConfigTests(unittest.TestCase):
                         "metadata": {
                             "tenant_id": "org_mil",
                             "repo_id": "github:namlogan/MIL",
+                            "user_id": "repo:github:namlogan/MIL",
                             "status": "active",
                             "visibility": "repo",
                         },

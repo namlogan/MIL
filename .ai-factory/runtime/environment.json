@@ -19,6 +19,9 @@
       "f/mil/plan_to_pr",
       "f/mil/pr_quality_gate",
       "f/mil/fix_ci_or_review",
+      "f/mil/memory_contract",
+      "f/mil/mem0_retrieve",
+      "f/mil/mem0_writeback",
       "f/mil/auggie_supervised_advisory",
       "f/mil/github_commit_status",
       "f/mil/github_webhook_router"
@@ -41,6 +44,46 @@
     "runtime_agent": "mem0_memory",
     "mode": "local_jsonl_default",
     "local_fallback_store": ".ai-factory/memory/local_memory.jsonl",
+    "windmill_retrieve_script": "f/mil/mem0_retrieve",
+    "windmill_writeback_script": "f/mil/mem0_writeback",
+    "required_metadata_fields": [
+      "tenant_id",
+      "workspace_id",
+      "repo",
+      "repo_id",
+      "source_uri",
+      "confidence",
+      "status",
+      "visibility",
+      "created_by"
+    ],
+    "required_entity_scope_fields_any_of": [
+      "user_id",
+      "agent_id",
+      "app_id",
+      "run_id"
+    ],
+    "auto_write_memory_types": [
+      "agent_performance",
+      "ci_pattern",
+      "developer_handoff",
+      "failure_pattern",
+      "incident_learning",
+      "merge_gate",
+      "operator_note",
+      "plan",
+      "qa_gate",
+      "review_note",
+      "run_summary",
+      "tool_failure"
+    ],
+    "approval_required_memory_types": [
+      "architecture_decision",
+      "human_preference",
+      "repo_convention",
+      "review_rule",
+      "security_policy"
+    ],
     "required_local_env": [],
     "optional_local_env": [
       "MEM0_API_KEY",

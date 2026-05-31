@@ -1,0 +1,15 @@
+summary: MIL mem0 memory writeback
+description: Validate, sanitize, and package approved operational memory for Mem0.
+lock: '!inline f/mil/mem0_writeback.script.lock'
+has_on_behalf_of: false
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    request:
+      type: object
+      description: Scoped memory writeback request.
+      default: null
+  required:
+    - request

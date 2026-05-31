@@ -119,6 +119,26 @@ class AIFactoryRuntimeConfigTests(unittest.TestCase):
             environment["memory"]["local_fallback_store"],
             ".ai-factory/memory/local_memory.jsonl",
         )
+        self.assertEqual(
+            environment["memory"]["windmill_retrieve_script"],
+            "f/mil/mem0_retrieve",
+        )
+        self.assertEqual(
+            environment["memory"]["windmill_writeback_script"],
+            "f/mil/mem0_writeback",
+        )
+        self.assertIn("tenant_id", environment["memory"]["required_metadata_fields"])
+        self.assertIn("repo_id", environment["memory"]["required_metadata_fields"])
+        self.assertIn("source_uri", environment["memory"]["required_metadata_fields"])
+        self.assertIn("user_id", environment["memory"]["required_entity_scope_fields_any_of"])
+        self.assertIn("architecture_decision", environment["memory"]["approval_required_memory_types"])
+        self.assertIn("failure_pattern", environment["memory"]["auto_write_memory_types"])
+        for script in [
+            "f/mil/memory_contract",
+            "f/mil/mem0_retrieve",
+            "f/mil/mem0_writeback",
+        ]:
+            self.assertIn(script, environment["windmill"]["required_scripts"])
         self.assertIsNone(
             re.search(
                 r"(gho_|ghp_|github_pat_|accessToken|sk-)",
