@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -106,6 +107,18 @@ class CodexWorkerContractTests(unittest.TestCase):
         self.assertIn("Run implementation through plan/checkpoint discipline", prompt)
         self.assertIn("schema_version", prompt)
         self.assertIn("gate", prompt)
+
+    def test_worker_blocks_when_ai_factory_rules_are_unavailable(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            plan = codex_worker_contract.build_worker_plan(
+                sample_task(),
+                repo_root=Path(tmpdir),
+            )
+
+        self.assertEqual(plan["decision"], "CODEX_WORKER_BLOCKED")
+        self.assertTrue(plan["blocking"])
+        self.assertEqual(plan["codex_command"], [])
+        self.assertIn("AI Factory rule sources", plan["reasons"][0])
 
     def test_restricted_changes_block_before_command_build(self) -> None:
         plan = codex_worker_contract.build_worker_plan(
