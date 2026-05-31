@@ -35,6 +35,8 @@ class WindmillRuntimeConfigTests(unittest.TestCase):
         self.assertIn("owners:", folder_metadata.read_text(encoding="utf-8"))
 
         for name in [
+            "codex_worker_contract",
+            "codex_worker",
             "issue_to_plan",
             "plan_to_pr",
             "pr_quality_gate",
@@ -55,6 +57,7 @@ class WindmillRuntimeConfigTests(unittest.TestCase):
 
     def test_windmill_wrappers_use_workspace_imports(self) -> None:
         for name in [
+            "codex_worker",
             "issue_to_plan",
             "plan_to_pr",
             "pr_quality_gate",
@@ -69,7 +72,8 @@ class WindmillRuntimeConfigTests(unittest.TestCase):
                     encoding="utf-8"
                 )
 
-                self.assertRegex(script, r"from f\.mil\.(flow_contract|memory_contract) import")
+                self.assertRegex(script, r"from f\.mil\.(codex_worker_contract|flow_contract|memory_contract) import")
+                self.assertNotIn("from codex_worker_contract import", script)
                 self.assertNotIn("from flow_contract import", script)
                 self.assertNotIn("from memory_contract import", script)
 
@@ -104,6 +108,33 @@ class WindmillRuntimeConfigTests(unittest.TestCase):
         self.assertEqual(calls[0], "mem0_memory.retrieve_plan_memory")
         self.assertIn("windmill.dispatch_coding_agent", calls)
         self.assertLess(calls.index("windmill.dispatch_coding_agent"), calls.index("codex.implement"))
+
+    def test_windmill_codex_worker_wrapper_returns_command_pack_not_execution(self) -> None:
+        codex_worker = load_module("codex_worker", "f/mil/codex_worker.py")
+
+        result = codex_worker.main(
+            {
+                "task": {
+                    "task_id": "MIL-LOCAL",
+                    "title": "Local dispatch",
+                    "goal": "Prepare a scoped local Codex worker run.",
+                    "acceptance_criteria": ["Worker produces evidence"],
+                    "allowed_files": ["docs/**"],
+                    "checks": ["git diff --check"],
+                    "restricted_changes": [],
+                },
+                "options": {
+                    "repo_root": str(REPO_ROOT),
+                },
+            }
+        )
+
+        self.assertEqual(result["decision"], "CODEX_WORKER_READY")
+        self.assertFalse(result["execution"]["execute_agent"])
+        self.assertFalse(result["execution"]["push"])
+        self.assertFalse(result["execution"]["open_pr"])
+        self.assertEqual(result["source_of_truth"], "github_issue_or_explicit_task")
+        self.assertIn("codex", result["codex_command"])
 
     def test_windmill_memory_scripts_enforce_scope_and_policy(self) -> None:
         mem0_retrieve = load_module("mem0_retrieve", "f/mil/mem0_retrieve.py")

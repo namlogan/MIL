@@ -100,9 +100,12 @@ class AIFactoryRuntimeConfigTests(unittest.TestCase):
         )
 
         self.assertIn("developer_handoff", evidence["required_evidence"])
+        self.assertIn("codex_worker_run", evidence["required_evidence"])
         self.assertIn("qa_gate", evidence["required_evidence"])
         self.assertIn("memory_record", evidence["required_evidence"])
+        self.assertEqual(evidence["artifact_paths"]["codex_worker"], ".ai-factory/qa/codex_worker")
         self.assertEqual(evidence["artifact_paths"]["memory"], ".ai-factory/memory")
+        self.assertIn("codex", environment["required_tools"])
         self.assertIn("wmill", environment["required_tools"])
         self.assertIn(
             "f/mil/github_status_token",
@@ -134,11 +137,21 @@ class AIFactoryRuntimeConfigTests(unittest.TestCase):
         self.assertIn("architecture_decision", environment["memory"]["approval_required_memory_types"])
         self.assertIn("failure_pattern", environment["memory"]["auto_write_memory_types"])
         for script in [
+            "f/mil/codex_worker_contract",
+            "f/mil/codex_worker",
             "f/mil/memory_contract",
             "f/mil/mem0_retrieve",
             "f/mil/mem0_writeback",
         ]:
             self.assertIn(script, environment["windmill"]["required_scripts"])
+        self.assertEqual(environment["codex_worker"]["runner_script"], "scripts/agent-flow/codex_worker.py")
+        self.assertEqual(environment["codex_worker"]["windmill_script"], "f/mil/codex_worker")
+        self.assertFalse(environment["codex_worker"]["execute_agent_default"])
+        self.assertFalse(environment["codex_worker"]["push_default"])
+        self.assertFalse(environment["codex_worker"]["open_pr_default"])
+        self.assertTrue(environment["codex_worker"]["requires_allowed_files"])
+        self.assertEqual(environment["codex_worker"]["default_approval"], "never")
+        self.assertEqual(environment["codex_worker"]["default_sandbox"], "workspace-write")
         self.assertIsNone(
             re.search(
                 r"(gho_|ghp_|github_pat_|accessToken|sk-)",
