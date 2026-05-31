@@ -1,14 +1,14 @@
 # Auggie Supervised Human Loop Runbook
 
-MIL uses Auggie in a supervised lane while Auggie CLI non-interactive mode is blocked for the account.
+MIL uses Auggie only in a supervised advisory lane. Auggie is not a coding worker in MIL.
 
 ## Operating Model
 
 ```text
 Windmill creates or records the advisory job
 Codex opens Auggie interactive TTY
-Auggie reviews, diagnoses, or implements only within explicit scope
-Codex verifies commands, diff, and evidence
+Auggie reviews, diagnoses, and produces risk notes without editing code
+Codex verifies notes and evidence
 GitHub PR/CI/gate remains the source of truth
 Human approves restricted changes and merge decisions
 ```
@@ -72,9 +72,9 @@ These are advisory verdicts only. They are not final merge approvals.
 - Do not store Augment session data in tracked files.
 - Keep `.env.local` local-only and mode `600`.
 - Use Windmill encrypted secrets for deployed workers.
-- Auggie is read-only by default.
-- Auggie may edit only when the GitHub issue explicitly routes implementation to Auggie.
-- Codex must verify Auggie changes before a PR is marked ready.
+- Auggie is read-only for MIL.
+- Auggie must not create branches, edit files, write commits, open PRs, or approve merges.
+- Codex must verify Auggie notes before they are used as PR evidence.
 - Human approval is required for restricted changes, credentials, production deploy behavior, and final merge decisions.
 
 ## What Windmill Does

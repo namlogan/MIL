@@ -21,8 +21,8 @@ RUNTIME_FILES = {
 REQUIRED_AGENT_IDS = {
     "codex_developer",
     "codex_qa",
+    "augment_context_provider",
     "auggie_advisory",
-    "auggie_supervised_developer",
     "windmill_orchestrator",
     "github_merge_gate",
 }
@@ -31,7 +31,7 @@ REQUIRED_DEFAULT_STAGES = [
     "issue_to_plan",
     "plan_to_pr",
     "control_plane_ci",
-    "auggie_advisory_review",
+    "augment_context_review",
     "codex_qa_gate",
     "protected_merge",
 ]

@@ -31,18 +31,18 @@
       "task_id": "MIL-001"
     },
     {
-      "action": "review",
-      "agent": "auggie",
-      "role": "advisory_review_and_diagnosis_worker",
+      "action": "provide_review_context",
+      "agent": "augment_context",
+      "role": "codebase_index_and_context_provider",
       "task_id": "MIL-001"
     }
   ],
   "artifacts": {
     "dispatch": {
       "branch": "agent/mil-001",
+      "context_provider": "augment_context",
       "developer_agent": "codex",
-      "requires_pull_request": true,
-      "supervised": false
+      "requires_pull_request": true
     },
     "required_checks": [
       "python3 -m unittest discover -s tests -v",

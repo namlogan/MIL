@@ -17,8 +17,8 @@ from typing import Any, NamedTuple
 
 FLOW_STEPS: dict[str, list[tuple[str, str]]] = {
     "issue_to_plan": [
+        ("augment_context", "provide_issue_context"),
         ("codex", "plan"),
-        ("auggie", "validate_plan"),
     ],
     "plan_to_pr": [
         ("windmill", "dispatch_coding_agent"),
@@ -26,13 +26,14 @@ FLOW_STEPS: dict[str, list[tuple[str, str]]] = {
         ("developer", "implement"),
         ("developer", "test"),
         ("developer", "open_pr"),
-        ("auggie", "review"),
+        ("augment_context", "provide_review_context"),
     ],
     "pr_quality_gate": [
+        ("augment_context", "provide_gate_context"),
         ("codex", "qa"),
     ],
     "fix_ci_or_review": [
-        ("auggie", "diagnose"),
+        ("augment_context", "provide_ci_context"),
         ("codex", "fix"),
     ],
 }
@@ -77,8 +78,8 @@ class DryRunAgentAdapter:
 
     roles = {
         "codex": "implementation_test_and_qa_worker",
-        "auggie_supervised": "supervised_interactive_developer_worker",
-        "auggie": "advisory_review_and_diagnosis_worker",
+        "augment_context": "codebase_index_and_context_provider",
+        "auggie": "supervised_advisory_context_reviewer",
         "windmill": "cockpit_and_orchestrator",
     }
 
@@ -116,14 +117,9 @@ def _has_restricted_changes(task: dict[str, Any]) -> bool:
 
 def _developer_agent_for_task(task: dict[str, Any]) -> str:
     configured = str(task.get("developer_agent") or "codex").strip()
-    allowed = {"codex", "auggie_supervised"}
-    if configured not in allowed:
+    if configured != "codex":
         raise ValueError(
-            f"unsupported developer_agent: {configured}; expected one of {sorted(allowed)}"
-        )
-    if configured == "auggie_supervised" and not task.get("allow_auggie_implementation"):
-        raise ValueError(
-            "developer_agent auggie_supervised requires allow_auggie_implementation=true"
+            f"Codex is the only supported coding agent; got developer_agent={configured}"
         )
     return configured
 
@@ -167,9 +163,9 @@ def _artifacts_for_flow(
         developer = _developer_agent_for_task(task)
         artifacts["dispatch"] = {
             "developer_agent": developer,
+            "context_provider": "augment_context",
             "branch": f"agent/{task_id.lower()}",
             "requires_pull_request": True,
-            "supervised": developer == "auggie_supervised",
         }
 
     if flow == "pr_quality_gate":
@@ -224,17 +220,17 @@ def run_self_test() -> None:
         "restricted_changes": [],
     }
     expected_calls = {
-        "issue_to_plan": [("codex", "plan"), ("auggie", "validate_plan")],
+        "issue_to_plan": [("augment_context", "provide_issue_context"), ("codex", "plan")],
         "plan_to_pr": [
             ("windmill", "dispatch_coding_agent"),
             ("codex", "create_branch"),
             ("codex", "implement"),
             ("codex", "test"),
             ("codex", "open_pr"),
-            ("auggie", "review"),
+            ("augment_context", "provide_review_context"),
         ],
-        "pr_quality_gate": [("codex", "qa")],
-        "fix_ci_or_review": [("auggie", "diagnose"), ("codex", "fix")],
+        "pr_quality_gate": [("augment_context", "provide_gate_context"), ("codex", "qa")],
+        "fix_ci_or_review": [("augment_context", "provide_ci_context"), ("codex", "fix")],
     }
 
     for flow, expected in expected_calls.items():

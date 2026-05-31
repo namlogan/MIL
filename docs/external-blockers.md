@@ -23,7 +23,7 @@ Required decision:
 
 - Keep the Windmill publisher healthy so every PR head and merged `main` commit receives `ai-gate/final-review`.
 
-## Auggie Automated Worker
+## Augment Context Provider / Auggie Advisory
 
 Tracking issue: https://github.com/namlogan/MIL/issues/3
 
@@ -31,14 +31,16 @@ Current state:
 
 - Auggie CLI is installed.
 - `auggie --version` works.
-- Non-interactive `auggie --print` execution is blocked by account policy.
+- Non-interactive `auggie --print` execution is blocked by account policy, but this is no longer a blocker for coding because MIL uses Codex as the only coding worker.
 - Local Augment credential config can be validated with `scripts/agent-flow/check_augment_config.py`.
-- Augment MCP can be started with credentials, but Codex may still require MCP tool-call approval depending on the client/session.
-- Supervised Auggie interactive review works through `scripts/agent-flow/auggie_interactive.sh`; Windmill should queue and record this lane rather than call `auggie --print`.
+- Augment MCP is the desired codebase index/context provider for Codex sessions.
+- Codex may still require MCP tool-call approval depending on the client/session.
+- Supervised Auggie interactive review remains optional advisory evidence only; Windmill should queue and record this lane rather than call `auggie --print`.
 
 Required decision:
 
-- Enable Auggie non-interactive mode, provide an approved SDK/API path, or keep Auggie as a manual advisory lane until access changes.
+- Verify the Augment MCP context provider path in Codex sessions and document the exact command/config to expose codebase index safely.
+- Keep Auggie non-interactive as optional future read-only advisory capability, not as a coding worker.
 
 ## Windmill Cockpit
 

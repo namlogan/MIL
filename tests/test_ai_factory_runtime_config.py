@@ -67,7 +67,7 @@ class AIFactoryRuntimeConfigTests(unittest.TestCase):
                 "issue_to_plan",
                 "plan_to_pr",
                 "control_plane_ci",
-                "auggie_advisory_review",
+                "augment_context_review",
                 "codex_qa_gate",
                 "protected_merge",
             ],
@@ -84,6 +84,9 @@ class AIFactoryRuntimeConfigTests(unittest.TestCase):
             "f/mil/github_status_token",
             environment["windmill"]["required_secret_references"],
         )
+        self.assertEqual(environment["augment"]["context_provider"], "augment_mcp")
+        self.assertFalse(environment["augment"]["coding_allowed"])
+        self.assertIn("AUGMENT_MCP_TOKEN", environment["augment"]["required_local_env"])
         self.assertIsNone(
             re.search(
                 r"(gho_|ghp_|github_pat_|accessToken)",

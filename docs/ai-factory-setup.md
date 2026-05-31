@@ -35,7 +35,7 @@ python3 scripts/ai-factory/bootstrap_runtime.py --check --check-tools
 AI Factory defines the process:
 
 ```text
-issue_to_plan -> plan_to_pr -> control_plane_ci -> auggie_advisory_review -> codex_qa_gate -> protected_merge
+issue_to_plan -> plan_to_pr -> control_plane_ci -> augment_context_review -> codex_qa_gate -> protected_merge
 ```
 
 GitHub enforces the process with required checks:

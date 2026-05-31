@@ -52,19 +52,25 @@ agents:
       - merge_main
       - read_production_secrets
       - deploy_production
-  auggie_supervised:
-    role: supervised_interactive_developer_worker
+  augment_context:
+    role: codebase_index_and_context_provider
     allowed_default_actions:
-      - implement_scoped_issue_when_explicitly_routed
-      - run_focused_tests
-      - write_pr_evidence
+      - expose_codebase_index
+      - retrieve_code_context
+      - summarize_symbols
+      - answer_codebase_context_questions
+      - provide_codebase_context
     forbidden_default_actions:
+      - implement_scoped_issue
+      - create_branch
+      - open_pr
+      - write_pr_evidence
       - final_merge_approval
       - merge_main
       - deploy_production
       - read_production_secrets
   auggie:
-    role: advisory_review_and_diagnosis_worker
+    role: supervised_advisory_context_reviewer
     allowed_default_actions:
       - validate_plan
       - review_diff
@@ -74,6 +80,7 @@ agents:
       - final_merge_approval
       - merge_main
       - deploy_production
+      - implement_scoped_issue
   windmill:
     role: cockpit_and_orchestrator
     allowed_default_actions:

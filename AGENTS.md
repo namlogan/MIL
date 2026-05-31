@@ -2,7 +2,7 @@
 
 Project: MIL
 Workflow version: 1
-Current mode: GitHub + Windmill cockpit + AI Factory protocol + Codex/Auggie workers
+Current mode: GitHub + Windmill cockpit + AI Factory protocol + Codex workers + Augment context
 
 ## Source Of Truth
 
@@ -24,7 +24,8 @@ Windmill is an orchestrator, not the source of truth. AI Factory is the SDLC pro
 | Product Owner | Business goal, release approval, restricted decisions | No direct code by role |
 | Merge Controller | Final gate decision, scope and evidence review | Only for emergency/unblock tasks |
 | Codex Developer | Plan, implement, tests, small fixes | Yes, within issue scope |
-| Auggie Reviewer / Supervised Developer | Codebase-aware advisory review, diagnosis, risk notes; implementation only when explicitly routed | No by default; yes only with explicit issue routing |
+| Augment Context Provider | Expose codebase index, retrieval, symbol summaries, and context to Codex sessions | No |
+| Auggie Advisory Reviewer | Supervised advisory review, diagnosis, and risk notes when explicitly requested | No |
 | Codex QA | Final AI QA review and gate evidence | Review/test only |
 | Windmill Bot | Run flows, write comments/checks/labels, request approval | No app-code authorship |
 | GitHub Bot | Create status checks and merge only when protections pass | No app-code authorship |
@@ -78,13 +79,13 @@ Default lane:
 Windmill coding_agent_dispatch -> Codex Developer -> agent/<issue-id>-<slug> -> PR
 ```
 
-Optional lane:
+Augment/Auggie is not a coding lane:
 
 ```text
-Windmill coding_agent_dispatch -> Auggie supervised developer -> agent/<issue-id>-<slug> -> PR
+Codex session -> Augment MCP/codebase index -> retrieved context -> Codex plan/implementation/QA
 ```
 
-The Auggie supervised developer lane is allowed only when the issue explicitly permits Auggie implementation. Codex must operate the Auggie interactive TTY, then independently verify the diff, tests, evidence, and scope before PR gate review.
+Codex remains the only implementation worker. Augment may provide indexed codebase context and Auggie may provide supervised advisory notes, but neither may create branches, edit files, write commits, open PRs, or approve merges.
 
 ## Gate Decisions
 

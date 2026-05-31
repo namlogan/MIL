@@ -9,9 +9,9 @@ Windmill cockpit
         |
         | routes work, records logs, requests approval
         v
-Codex and Auggie workers
+Codex worker + Augment context
         |
-        | plans, implementation, reviews, QA evidence
+        | context retrieval, plans, implementation, reviews, QA evidence
         v
 .ai-factory artifacts
         |
@@ -30,7 +30,7 @@ AI Factory owns workflow artifacts. It defines runtime agent contracts, workflow
 
 Codex owns scoped implementation. It writes code and tests only inside issue-approved scope.
 
-Auggie owns advisory context review and diagnosis. It does not replace final QA or branch protection.
+Augment owns codebase index and context retrieval for Codex sessions. Auggie may provide supervised advisory review and diagnosis, but it is not a coding worker and does not replace final QA or branch protection.
 
 ## Merge Boundary
 

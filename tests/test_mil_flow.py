@@ -27,7 +27,7 @@ class MilFlowTests(unittest.TestCase):
     def setUp(self) -> None:
         self.task = mil_flow.load_task(REPO_ROOT / "tests/fixtures/agent_task.json")
 
-    def test_issue_to_plan_routes_to_codex_and_auggie(self) -> None:
+    def test_issue_to_plan_routes_to_context_then_codex(self) -> None:
         result = mil_flow.run_flow("issue_to_plan", self.task)
 
         calls = [(call.agent, call.action) for call in result.agent_calls]
@@ -115,7 +115,8 @@ class MilFlowTests(unittest.TestCase):
             artifact = json.loads(out_path.read_text(encoding="utf-8"))
             self.assertEqual(artifact["flow"], "pr_quality_gate")
             self.assertEqual(artifact["decision"], "APPROVE_MERGE")
-            self.assertEqual(artifact["agent_calls"][0]["agent"], "codex")
+            self.assertEqual(artifact["agent_calls"][0]["agent"], "augment_context")
+            self.assertEqual(artifact["agent_calls"][-1]["agent"], "codex")
             self.assertIn("aif_gate_result", artifact["artifacts"])
 
 
