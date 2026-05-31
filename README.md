@@ -20,6 +20,7 @@ Start here:
 - [External blockers](docs/external-blockers.md)
 - [Augment setup](docs/augment-setup.md)
 - [Mem0 memory layer](docs/mem0-memory-layer.md)
+- [Codex worker runner](docs/codex-worker-runner.md)
 - [Auggie supervised loop](docs/auggie-human-loop-runbook.md)
 - [Windmill coding dispatch](.windmill/flows/coding_agent_dispatch.md)
 - [AI Factory rules](.ai-factory/RULES.md)

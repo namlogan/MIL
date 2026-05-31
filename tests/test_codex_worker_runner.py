@@ -27,6 +27,7 @@ class CodexWorkerRunnerTests(unittest.TestCase):
     def test_dry_run_cli_writes_non_executing_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             output_path = Path(tmpdir) / "codex-worker-result.json"
+            evidence_root = Path(tmpdir) / "codex-worker-evidence"
             completed = subprocess.run(
                 [
                     sys.executable,
@@ -35,6 +36,8 @@ class CodexWorkerRunnerTests(unittest.TestCase):
                     str(REPO_ROOT),
                     "--task",
                     str(REPO_ROOT / "tests" / "fixtures" / "agent_task.json"),
+                    "--evidence-root",
+                    str(evidence_root),
                     "--dry-run",
                     "--out",
                     str(output_path),
@@ -53,6 +56,7 @@ class CodexWorkerRunnerTests(unittest.TestCase):
             self.assertFalse(result["git"]["worktree_created"])
             self.assertFalse(result["git"]["committed"])
             self.assertIn("codex", result["codex_command"])
+            self.assertFalse(evidence_root.exists())
 
     def test_self_test_uses_contract_without_running_codex(self) -> None:
         runner = load_module("codex_worker_runner", "scripts/agent-flow/codex_worker.py")

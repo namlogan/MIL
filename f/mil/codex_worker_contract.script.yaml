@@ -11,5 +11,4 @@ schema:
       type: object
       description: Codex worker planning request.
       default: null
-  required:
-    - request
+  required: []

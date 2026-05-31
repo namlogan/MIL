@@ -288,7 +288,23 @@ pr_quality_gate -> augment_context.provide_gate_context -> mem0_memory.retrieve_
 fix_ci_or_review -> augment_context.provide_ci_context -> mem0_memory.retrieve_ci_patterns -> codex.fix -> mem0_memory.store_fix_memory
 ```
 
-In Windmill, the dry-run adapter should be replaced by worker scripts that call Codex for implementation/QA, Augment MCP for codebase context, and mem0 for sanitized memory with least-privilege credentials. Auggie remains a supervised read-only advisory lane when explicitly requested; it is not a coding worker.
+In Windmill, `f/mil/codex_worker` is the implementation worker command-pack
+entrypoint. It calls the shared `f/mil/codex_worker_contract` and is mirrored by
+the local runner `scripts/agent-flow/codex_worker.py`. Augment MCP provides
+codebase context, and mem0 provides sanitized memory with least-privilege
+credentials. Auggie remains a supervised read-only advisory lane when
+explicitly requested; it is not a coding worker.
+
+Local runner smoke test:
+
+```bash
+python3 scripts/agent-flow/codex_worker.py --self-test
+python3 scripts/agent-flow/codex_worker.py \
+  --repo /Users/mac/Documents/MIL \
+  --task tests/fixtures/agent_task.json \
+  --dry-run \
+  --out /tmp/mil-codex-worker.json
+```
 
 Memory retrieval and writeback are deployable Windmill scripts:
 
@@ -333,6 +349,9 @@ Preview a local script without deploying after a workspace profile is configured
 ```bash
 wmill script preview f/mil/plan_to_pr \
   -d '{"task":{"task_id":"MIL-LOCAL","checks":["git diff --check"],"restricted_changes":[]}}'
+
+wmill script preview f/mil/codex_worker \
+  -d '{"request":{"task":{"task_id":"MIL-LOCAL","goal":"Prepare a scoped worker run.","acceptance_criteria":["Evidence is produced"],"allowed_files":["docs/**"],"checks":["git diff --check"],"restricted_changes":[]},"options":{"repo_root":"/Users/mac/Documents/MIL"}}}'
 ```
 
 With `wmill` CLI 1.712.0, `script preview` still requires an active workspace profile even though it does not deploy.

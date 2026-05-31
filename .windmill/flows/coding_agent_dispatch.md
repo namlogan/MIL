@@ -25,13 +25,14 @@ Steps:
 3. Choose the Codex developer lane.
 4. Write dispatch evidence with selected agent, branch name, allowed files, tests, and rollback note.
 5. Start the selected local worker:
-   - Codex worker: local Codex implementation session.
+   - Codex worker: `f/mil/codex_worker` prepares the command pack; `scripts/agent-flow/codex_worker.py --execute-agent` runs the local implementation session when explicitly enabled.
    - Augment context provider: MCP/index lookup only when the Codex session needs codebase context.
    - mem0 memory provider: sanitized memory lookup/writeback only.
-6. Require Codex to create or update `agent/<issue-id>-<slug>`.
-7. Require a PR before review/gate.
-8. Store sanitized handoff/review memory after PR readiness.
-9. Stop after PR readiness; do not auto-merge.
+6. Require Codex to create or update `agent/<issue-id>-<slug>` in an isolated worktree.
+7. Validate changed files against `allowed_files` and `out_of_scope_files`.
+8. Require a PR before review/gate.
+9. Store sanitized handoff/review memory after PR readiness.
+10. Stop after PR readiness; do not auto-merge.
 
 Stop conditions:
 

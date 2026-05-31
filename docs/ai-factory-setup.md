@@ -11,7 +11,10 @@ The repo-local AI Factory layer is the SDLC protocol and artifact contract for M
 .ai-factory/runtime/evidence.json
 .ai-factory/runtime/environment.json
 scripts/ai-factory/bootstrap_runtime.py
+scripts/agent-flow/codex_worker.py
 scripts/agent-memory/memory_contract.py
+f/mil/codex_worker.py
+f/mil/codex_worker_contract.py
 f/mil/memory_contract.py
 f/mil/mem0_retrieve.py
 f/mil/mem0_writeback.py
@@ -51,6 +54,16 @@ ai-gate/final-review
 ```
 
 Windmill runs the orchestration scripts under `f/mil/**` and publishes the AI gate status. Production credentials must stay in Windmill or GitHub secret stores, never in `.ai-factory/**`.
+
+Implementation dispatch now uses the Codex worker contract:
+
+```text
+f/mil/codex_worker -> scripts/agent-flow/codex_worker.py -> codex exec
+```
+
+The worker is non-executing by default. It creates a command pack until
+`execute_agent`, `push`, and `open_pr` are explicitly enabled by the control
+plane.
 
 GitHub webhook ingress is handled by `f/mil/github_webhook_router` through the Windmill HTTP route `mil/github-webhook`. The route is public at the HTTP layer, but the router rejects unsigned or incorrectly signed GitHub deliveries using the Windmill secret `f/mil/github_webhook_secret`.
 

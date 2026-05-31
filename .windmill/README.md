@@ -8,6 +8,7 @@ Windmill responsibilities:
 - dispatch exactly one coding agent for approved implementation work
 - run planning, implementation, review, QA, and fix flows
 - route jobs to least-privilege worker groups
+- prepare scoped Codex worker command packs through `f/mil/codex_worker`
 - store logs and artifacts
 - retrieve and write sanitized project memory through the mem0 memory contract
 - request human approval for restricted or release actions
@@ -41,6 +42,18 @@ f/mil/mem0_writeback
 `mem0_retrieve` builds strict scoped filters and a compact context pack.
 `mem0_writeback` validates provenance, redacts secrets, enforces approval
 policy, and emits a Mem0 add payload.
+
+Implementation worker entrypoints:
+
+```text
+f/mil/codex_worker_contract
+f/mil/codex_worker
+```
+
+`codex_worker` is non-executing by default. It returns branch, prompt,
+worktree, evidence, and `codex exec` command details for the control plane. The
+local runner `scripts/agent-flow/codex_worker.py` performs real execution only
+when explicitly invoked with `--execute-agent`.
 
 The Markdown files in this directory remain the human-readable cockpit contracts. The `f/mil/**` scripts are the deployable Windmill entrypoints and are validated by `scripts/windmill/validate_windmill_project.py`.
 

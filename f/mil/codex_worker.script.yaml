@@ -11,5 +11,4 @@ schema:
       type: object
       description: Codex worker request with task and options.
       default: null
-  required:
-    - request
+  required: []

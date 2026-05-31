@@ -145,15 +145,15 @@ def run_worker(
         result["status"] = "BLOCKED"
         return result
 
+    if dry_run:
+        result["status"] = "DRY_RUN"
+        return result
+
     prompt_path = Path(str(plan["prompt_path"]))
     result_path = Path(str(plan["result_path"]))
     evidence_dir = Path(str(plan["evidence_dir"]))
     evidence_dir.mkdir(parents=True, exist_ok=True)
     prompt_path.write_text(str(plan["prompt"]), encoding="utf-8")
-
-    if dry_run:
-        result["status"] = "DRY_RUN"
-        return result
 
     worktree_path = Path(str(plan["worktree_path"]))
     if worktree_path.exists():
