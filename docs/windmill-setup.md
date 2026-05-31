@@ -283,17 +283,19 @@ The harness verifies expected routing:
 
 ```text
 issue_to_plan -> augment_context.provide_issue_context -> mem0_memory.retrieve_project_memory -> codex.plan -> mem0_memory.store_plan_memory
-plan_to_pr -> mem0_memory.retrieve_plan_memory -> windmill.dispatch_coding_agent -> codex.implement -> codex.test -> codex.open_pr -> augment_context.provide_review_context -> mem0_memory.store_handoff_memory
+plan_to_pr -> mem0_memory.retrieve_plan_memory -> augment_context.provide_codebase_context -> windmill.dispatch_coding_agent -> codex.prepare_command_pack
 pr_quality_gate -> augment_context.provide_gate_context -> mem0_memory.retrieve_gate_memory -> codex.qa -> mem0_memory.store_qa_memory
 fix_ci_or_review -> augment_context.provide_ci_context -> mem0_memory.retrieve_ci_patterns -> codex.fix -> mem0_memory.store_fix_memory
 ```
 
-In Windmill, `f/mil/codex_worker` is the implementation worker command-pack
-entrypoint. It calls the shared `f/mil/codex_worker_contract` and is mirrored by
+In Windmill, `f/mil/plan_to_pr` is the real dispatch orchestrator. It calls
+`f/mil/plan_to_pr_contract`, prepares scoped memory context, prepares a
+read-only Augment MCP `codebase-retrieval` request, and then calls
+`f/mil/codex_worker` for the command pack. `f/mil/codex_worker` is mirrored by
 the local runner `scripts/agent-flow/codex_worker.py`. Augment MCP provides
 codebase context, and mem0 provides sanitized memory with least-privilege
-credentials. Auggie remains a supervised read-only advisory lane when
-explicitly requested; it is not a coding worker.
+credentials. Auggie remains a supervised read-only advisory lane when explicitly
+requested; it is not a coding worker.
 
 Local runner smoke test:
 
@@ -348,14 +350,15 @@ Preview a local script without deploying after a workspace profile is configured
 
 ```bash
 wmill script preview f/mil/plan_to_pr.py \
-  -d '{"task":{"task_id":"MIL-LOCAL","checks":["git diff --check"],"restricted_changes":[]}}'
+  -d '{"request":{"task":{"task_id":"MIL-LOCAL","title":"Local dispatch","goal":"Prepare a scoped worker run.","acceptance_criteria":["Evidence is produced"],"allowed_files":["docs/**"],"checks":["git diff --check"],"restricted_changes":[]},"options":{"repo_root":"/Users/mac/Documents/MIL"}}}'
 
 wmill script preview f/mil/codex_worker.py \
   -d '{"request":{"task":{"task_id":"MIL-LOCAL","goal":"Prepare a scoped worker run.","acceptance_criteria":["Evidence is produced"],"allowed_files":["docs/**"],"checks":["git diff --check"],"restricted_changes":[]},"options":{"repo_root":"/Users/mac/Documents/MIL"}}}'
 ```
 
 For hosted Windmill, `repo_root` may not exist inside the worker runtime. In
-that case `f/mil/codex_worker` intentionally returns
+that case `f/mil/plan_to_pr` forwards the request to `f/mil/codex_worker`, which
+intentionally returns
 `CODEX_WORKER_BLOCKED` until the request includes pre-resolved
 `options.rule_sources` from the local relay/control plane. This prevents a
 Codex worker from running without the AI Factory 2.x rule hierarchy in its

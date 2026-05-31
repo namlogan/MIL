@@ -87,15 +87,18 @@ ai-gate/final-review
 
 Windmill runs the orchestration scripts under `f/mil/**` and publishes the AI gate status. Production credentials must stay in Windmill or GitHub secret stores, never in `.ai-factory/**`.
 
-Implementation dispatch now uses the Codex worker contract:
+Implementation dispatch now uses the real Plan-to-PR orchestrator and Codex
+worker contract:
 
 ```text
-f/mil/codex_worker -> scripts/agent-flow/codex_worker.py -> codex exec
+f/mil/plan_to_pr -> f/mil/plan_to_pr_contract -> f/mil/codex_worker -> scripts/agent-flow/codex_worker.py -> codex exec
 ```
 
-The worker is non-executing by default. It creates a command pack until
-`execute_agent`, `push`, and `open_pr` are explicitly enabled by the control
-plane.
+`plan_to_pr` retrieves scoped memory, prepares a read-only Augment MCP
+`codebase-retrieval` request, injects any preloaded Augment context into the
+Codex prompt, and then asks `codex_worker` for the command pack. The worker is
+non-executing by default. It creates a command pack until `execute_agent`,
+`push`, and `open_pr` are explicitly enabled by the control plane.
 
 GitHub webhook ingress is handled by `f/mil/github_webhook_router` through the Windmill HTTP route `mil/github-webhook`. The route is public at the HTTP layer, but the router rejects unsigned or incorrectly signed GitHub deliveries using the Windmill secret `f/mil/github_webhook_secret`.
 

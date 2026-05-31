@@ -28,10 +28,12 @@ Windmill owns orchestration. It receives GitHub events, starts workers, records 
 
 AI Factory owns workflow artifacts. It defines runtime agent contracts, workflow stages, evidence requirements, rules, plans, QA outputs, and the final machine-readable `aif-gate-result` block.
 
-Codex owns scoped implementation. `f/mil/codex_worker` builds the Windmill
-command pack, and `scripts/agent-flow/codex_worker.py` runs `codex exec` in an
-isolated worktree when execution is explicitly enabled. It writes code and
-tests only inside issue-approved scope.
+Codex owns scoped implementation. `f/mil/plan_to_pr` prepares the real dispatch
+artifact, including scoped memory and read-only Augment MCP context requests,
+then calls `f/mil/codex_worker` to build the Windmill command pack.
+`scripts/agent-flow/codex_worker.py` runs `codex exec` in an isolated worktree
+when execution is explicitly enabled. It writes code and tests only inside
+issue-approved scope.
 
 Rules follow the AI Factory 2.x hierarchy: `paths.rules_file` for universal
 axioms, `rules.base` for project conventions, and named `rules.<area>` files for
@@ -56,6 +58,8 @@ The executable install contract lives in:
 .ai-factory/runtime/environment.json
 scripts/ai-factory/bootstrap_runtime.py
 scripts/agent-flow/codex_worker.py
+f/mil/plan_to_pr.py
+f/mil/plan_to_pr_contract.py
 f/mil/codex_worker.py
 f/mil/codex_worker_contract.py
 ```

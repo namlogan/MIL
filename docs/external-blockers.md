@@ -34,13 +34,14 @@ Current state:
 - Non-interactive `auggie --print` execution is blocked by account policy, but this is no longer a blocker for coding because MIL uses Codex as the only coding worker.
 - Local Augment credential config can be validated with `scripts/agent-flow/check_augment_config.py`.
 - Augment MCP is the desired codebase index/context provider for Codex sessions.
+- `f/mil/plan_to_pr` now prepares a read-only `mil-auggie-local/codebase-retrieval` request and injects preloaded Augment context into the Codex worker prompt.
 - `scripts/agent-flow/check_mil_mcp_runtime.py --mcp-smoke` verifies that Codex has a `mil-auggie-local` server and that Auggie MCP indexes `/Users/mac/Documents/MIL`.
 - Nested Codex sessions may still cancel the actual `codebase-retrieval` call depending on Codex client/tool approval behavior.
 - Supervised Auggie interactive review remains optional advisory evidence only; Windmill should queue and record this lane rather than call `auggie --print`.
 
 Required decision:
 
-- Resolve Codex client/tool approval behavior for nested automatic `codebase-retrieval` calls, or keep direct MCP smoke plus Codex file inspection as the fallback.
+- Resolve Codex client/tool approval behavior for nested automatic `codebase-retrieval` calls, or preload Augment context through Windmill/local control-plane before `plan_to_pr`.
 - Keep Auggie non-interactive as optional future read-only advisory capability, not as a coding worker.
 
 ## Windmill Cockpit

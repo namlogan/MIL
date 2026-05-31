@@ -26,8 +26,9 @@ GitHub is the system of record.
 
 ## Codex Worker Runner
 
-The deployable implementation runner is `f/mil/codex_worker`, backed by the
-local CLI `scripts/agent-flow/codex_worker.py`.
+The deployable dispatch path is `f/mil/plan_to_pr`, which calls
+`f/mil/plan_to_pr_contract` and then `f/mil/codex_worker`. The local execution
+runner is `scripts/agent-flow/codex_worker.py`.
 
 The runner converts an approved task into:
 
@@ -44,6 +45,11 @@ creation require explicit flags. It still cannot merge or approve restricted
 changes. If the AI Factory 2.x rule hierarchy cannot be resolved from the repo
 or from preloaded `options.rule_sources`, it returns `CODEX_WORKER_BLOCKED`
 instead of dispatching a worker.
+
+`plan_to_pr` always prepares a read-only Augment MCP `codebase-retrieval`
+request for the task and passes preloaded Augment context into the Codex worker
+prompt when available. Augment remains context-only; Codex still owns the
+implementation.
 
 ## Auggie Supervised Lane
 
