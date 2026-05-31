@@ -29,6 +29,11 @@ class WindmillRuntimeConfigTests(unittest.TestCase):
         self.assertTrue((REPO_ROOT / "wmill-lock.yaml").exists())
 
     def test_runtime_scripts_exist_with_metadata(self) -> None:
+        folder_metadata = REPO_ROOT / "f" / "mil" / "folder.meta.yaml"
+
+        self.assertTrue(folder_metadata.exists())
+        self.assertIn("owners:", folder_metadata.read_text(encoding="utf-8"))
+
         for name in [
             "issue_to_plan",
             "plan_to_pr",
@@ -43,6 +48,22 @@ class WindmillRuntimeConfigTests(unittest.TestCase):
                 self.assertTrue(script.exists())
                 self.assertTrue(metadata.exists())
                 self.assertIn("kind: script", metadata.read_text(encoding="utf-8"))
+
+    def test_windmill_wrappers_use_workspace_imports(self) -> None:
+        for name in [
+            "issue_to_plan",
+            "plan_to_pr",
+            "pr_quality_gate",
+            "fix_ci_or_review",
+            "auggie_supervised_advisory",
+        ]:
+            with self.subTest(name=name):
+                script = (REPO_ROOT / "f" / "mil" / f"{name}.py").read_text(
+                    encoding="utf-8"
+                )
+
+                self.assertIn("from f.mil.flow_contract import", script)
+                self.assertNotIn("from flow_contract import", script)
 
     def test_windmill_worker_bridge_reuses_ai_factory_contract(self) -> None:
         bridge = load_module(
@@ -78,7 +99,8 @@ class WindmillRuntimeConfigTests(unittest.TestCase):
 
         self.assertIn("WINDMILL_TOKEN is required", script)
         self.assertIn("wmill workspace add", script)
-        self.assertIn("wmill sync push --dry-run", script)
+        self.assertIn('WMILL_SYNC_INCLUDE_PATTERN="${WMILL_SYNC_INCLUDE_PATTERN:-f/mil/**}"', script)
+        self.assertIn('wmill sync push --dry-run --includes "${WMILL_SYNC_INCLUDE_PATTERN}"', script)
         self.assertNotIn("WINDMILL_TOKEN=", script)
 
 
