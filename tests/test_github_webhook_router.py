@@ -98,6 +98,69 @@ class GitHubWebhookRouterTests(unittest.TestCase):
         self.assertEqual(result["result"]["agent_calls"][0]["agent"], "augment_context")
         self.assertEqual(result["result"]["agent_calls"][-1]["agent"], "mem0_memory")
 
+    def test_issue_agent_build_label_dispatches_real_plan_to_pr(self) -> None:
+        payload = {
+            "action": "labeled",
+            "repository": {"full_name": "namlogan/MIL"},
+            "issue": {
+                "number": 31,
+                "title": "MIL-031 Route webhook build to worker",
+                "body": "\n".join(
+                    [
+                        "### Task ID",
+                        "MIL-031",
+                        "",
+                        "### User or business goal",
+                        "Route build requests into the real Codex worker dispatcher.",
+                        "",
+                        "### Acceptance criteria",
+                        "- Router calls real plan_to_pr orchestration.",
+                        "- Codex worker prompt includes Augment codebase context.",
+                        "",
+                        "### Allowed files and out-of-scope files",
+                        "Allowed:",
+                        "- f/mil/github_webhook_router.py",
+                        "- tests/test_github_webhook_router.py",
+                        "",
+                        "Out of scope:",
+                        "- secrets/**",
+                        "",
+                        "### Required checks",
+                        "- python3 -m unittest tests.test_github_webhook_router -v",
+                        "- git diff --check",
+                        "",
+                        "### Restricted change check",
+                        "- [x] none of the above",
+                        "",
+                        "### Rollback note",
+                        "Revert the webhook router change.",
+                    ]
+                ),
+                "labels": [{"name": "agent:build"}],
+            },
+        }
+
+        request = self.preprocess("issues", payload)["request"]
+        result = self.router.main(request)
+
+        self.assertEqual(result["route"]["flow"], "plan_to_pr")
+        self.assertEqual(result["route"]["task"]["task_id"], "MIL-031")
+        self.assertEqual(
+            result["result"]["decision"],
+            "PLAN_TO_PR_COMMAND_PACK_READY",
+        )
+        self.assertEqual(
+            [call["agent"] for call in result["result"]["agent_calls"]],
+            ["mem0_memory", "augment_context", "windmill", "codex"],
+        )
+        codex_worker = result["result"]["artifacts"]["codex_worker"]
+        self.assertEqual(codex_worker["decision"], "CODEX_WORKER_READY")
+        self.assertIn("Augment Codebase Context", codex_worker["prompt"])
+        self.assertIn(
+            "f/mil/github_webhook_router.py",
+            result["route"]["task"]["allowed_files"],
+        )
+
     def test_pull_request_event_routes_to_codex_quality_gate(self) -> None:
         payload = {
             "action": "synchronize",
