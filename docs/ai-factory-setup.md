@@ -48,9 +48,11 @@ windmill       -> .ai-factory/rules/windmill.md
 
 `codex_worker` resolves these files from `.ai-factory/config.yaml` and embeds
 the active rule sources into the worker prompt before implementation. The
-worker fails closed when no rule source is available. Hosted Windmill runtimes
-must either mount the MIL repo at `options.repo_root` or receive pre-resolved
-`options.rule_sources` from the local relay/control-plane request.
+worker fails closed when no rule source is available. For GitHub webhook
+`agent:build` dispatch, `f/mil/github_webhook_router` passes a bundled rulepack
+snapshot so hosted Windmill can prepare Codex command packs even when the MIL
+repo is not mounted. Local callers may still use a mounted `options.repo_root`
+or pass pre-resolved `options.rule_sources`.
 
 ## Check Install
 

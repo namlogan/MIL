@@ -59,6 +59,7 @@ Current state:
 - A local Windmill workspace profile `mil-local` targets workspace `admins`.
 - `f/mil/github_commit_status` has been imported and has published real `ai-gate/final-review` commit statuses.
 - `f/mil/github_webhook_router` and `f/mil/github_webhook.http_trigger.yaml` define the repo-local GitHub webhook ingress.
+- `f/mil/github_webhook_router` routes `agent:build` issue events into real `plan_to_pr` dispatch and passes a bundled AI Factory rulepack for hosted Windmill runtimes without a mounted repo.
 - `scripts/windmill/github_webhook_public_relay.py` exposes only `POST /mil/github-webhook`, verifies GitHub HMAC signatures before forwarding, and forwards signed deliveries to local Windmill.
 - `scripts/windmill/setup_cloudflare_named_tunnel.py` can create or reuse a Cloudflare named tunnel, route DNS, and write the local cloudflared config for the signed relay.
 - `scripts/windmill/run_github_webhook_relay_from_windmill_secret.sh` starts the relay by reading `f/mil/github_webhook_secret` from Windmill without storing the secret in repo files.
