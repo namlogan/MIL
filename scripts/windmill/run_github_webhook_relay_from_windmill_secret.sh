@@ -25,8 +25,18 @@ if [[ -z "${secret}" ]]; then
 fi
 
 export MIL_GITHUB_WEBHOOK_SECRET="${secret}"
-exec python3 "${REPO_ROOT}/scripts/windmill/github_webhook_public_relay.py" \
+args=(
+  python3 "${REPO_ROOT}/scripts/windmill/github_webhook_public_relay.py"
   --host "${MIL_WEBHOOK_RELAY_HOST:-127.0.0.1}" \
   --port "${MIL_WEBHOOK_RELAY_PORT:-18090}" \
   --public-route "${MIL_WEBHOOK_PUBLIC_ROUTE:-/mil/github-webhook}" \
   --windmill-url "${MIL_WINDMILL_WEBHOOK_URL:-http://localhost:8090/api/r/admins/mil/github-webhook}"
+)
+
+if [[ "${MIL_AUTO_DISPATCH_ENABLED:-0}" =~ ^(1|true|TRUE|yes|YES|on|ON)$ ]]; then
+  args+=(--auto-dispatch)
+fi
+args+=(--auto-dispatch-repo "${MIL_AUTO_DISPATCH_REPO:-${REPO_ROOT}}")
+args+=(--auto-dispatch-queue "${MIL_AUTO_DISPATCH_QUEUE:-.ai-factory/queue/webhooks}")
+
+exec "${args[@]}"

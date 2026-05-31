@@ -301,6 +301,7 @@ Local runner smoke test:
 
 ```bash
 python3 scripts/agent-flow/codex_worker.py --self-test
+python3 scripts/agent-flow/auto_dispatcher.py --self-test
 python3 scripts/agent-flow/codex_worker.py \
   --repo /Users/mac/Documents/MIL \
   --task tests/fixtures/agent_task.json \
@@ -362,6 +363,39 @@ GitHub webhook router therefore ships a bundled AI Factory 2.x rule snapshot for
 `f/mil/plan_to_pr`. Local callers may still override that with pre-resolved
 `options.rule_sources` or a mounted `options.repo_root`. The test suite checks
 that the bundled snapshot matches the repo-local rule files.
+
+## Opt-In Auto Execution
+
+Windmill remains the webhook router and audit surface. Real unattended Codex
+execution runs on the local control station through the signed relay:
+
+```text
+GitHub -> public tunnel -> github_webhook_public_relay.py -> Windmill
+                                                 |
+                                                 v
+                                     auto_dispatcher.py
+                                                 |
+                                                 v
+                         codex_worker.py --execute-agent --push --open-pr
+```
+
+Enable it only on the local relay process:
+
+```bash
+export MIL_AUTO_DISPATCH_ENABLED=1
+export MIL_AUTO_DISPATCH_REPO=/Users/mac/Documents/MIL
+export MIL_AUTO_DISPATCH_QUEUE=.ai-factory/queue/webhooks
+scripts/windmill/run_github_webhook_relay_from_windmill_secret.sh
+```
+
+Auto execution is still opt-in per GitHub task. Use label `agent:auto-build` or
+comment `/agent autobuild`. Label `agent:build` continues to prepare a command
+pack without launching Codex.
+
+The dispatcher refuses to run when issue scope is incomplete, `allowed_files` is
+missing, restricted changes are selected, AI Factory rules are unavailable, or
+the router does not resolve to `plan_to_pr`. It may push an agent branch and open
+a PR, but it cannot merge or bypass branch protection.
 
 With `wmill` CLI 1.712.0, `script preview` still requires an active workspace profile even though it does not deploy.
 

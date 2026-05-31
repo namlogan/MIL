@@ -146,10 +146,16 @@ class AIFactoryRuntimeConfigTests(unittest.TestCase):
         ]:
             self.assertIn(script, environment["windmill"]["required_scripts"])
         self.assertEqual(environment["codex_worker"]["runner_script"], "scripts/agent-flow/codex_worker.py")
+        self.assertEqual(
+            environment["codex_worker"]["auto_dispatcher_script"],
+            "scripts/agent-flow/auto_dispatcher.py",
+        )
         self.assertEqual(environment["codex_worker"]["windmill_script"], "f/mil/codex_worker")
         self.assertFalse(environment["codex_worker"]["execute_agent_default"])
         self.assertFalse(environment["codex_worker"]["push_default"])
         self.assertFalse(environment["codex_worker"]["open_pr_default"])
+        self.assertFalse(environment["codex_worker"]["auto_dispatch_default"])
+        self.assertEqual(environment["codex_worker"]["auto_dispatch_required_label"], "agent:auto-build")
         self.assertTrue(environment["codex_worker"]["requires_allowed_files"])
         self.assertEqual(environment["codex_worker"]["default_approval"], "never")
         self.assertEqual(environment["codex_worker"]["default_sandbox"], "workspace-write")

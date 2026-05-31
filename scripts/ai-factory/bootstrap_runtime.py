@@ -279,6 +279,7 @@ def _validate_environment(
     else:
         expected = {
             "runner_script": "scripts/agent-flow/codex_worker.py",
+            "auto_dispatcher_script": "scripts/agent-flow/auto_dispatcher.py",
             "windmill_script": "f/mil/codex_worker",
             "contract_script": "f/mil/codex_worker_contract",
             "default_sandbox": "workspace-write",
@@ -291,9 +292,12 @@ def _validate_environment(
             "execute_agent_default",
             "push_default",
             "open_pr_default",
+            "auto_dispatch_default",
         ]:
             if codex_worker.get(field) is not False:
                 errors.append(f"environment.codex_worker.{field} must be false")
+        if codex_worker.get("auto_dispatch_required_label") != "agent:auto-build":
+            errors.append("environment.codex_worker.auto_dispatch_required_label must be agent:auto-build")
         if codex_worker.get("requires_allowed_files") is not True:
             errors.append("environment.codex_worker.requires_allowed_files must be true")
 

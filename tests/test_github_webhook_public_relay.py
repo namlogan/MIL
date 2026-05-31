@@ -3,6 +3,8 @@ from __future__ import annotations
 import hashlib
 import hmac
 import importlib.util
+import json
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -101,6 +103,62 @@ class GitHubWebhookPublicRelayTests(unittest.TestCase):
         self.assertEqual(observed["Content-Length"], "2")
         self.assertNotIn("Authorization", observed)
         self.assertNotIn("Cookie", observed)
+
+    def test_builds_auto_dispatch_request_from_verified_webhook(self) -> None:
+        body = json.dumps(
+            {
+                "action": "labeled",
+                "repository": {"full_name": "namlogan/MIL"},
+                "issue": {
+                    "number": 41,
+                    "title": "MIL-041 Auto",
+                    "labels": [{"name": "agent:auto-build"}],
+                },
+            }
+        ).encode("utf-8")
+        headers = {
+            "X-GitHub-Event": "issues",
+            "X-GitHub-Delivery": "delivery-1",
+            "X-Hub-Signature-256": self._signature(body),
+        }
+
+        request = self.relay.build_auto_dispatch_request(headers, body)
+
+        self.assertEqual(request["github_event"], "issues")
+        self.assertEqual(request["delivery"], "delivery-1")
+        self.assertEqual(request["payload"]["issue"]["number"], 41)
+
+    def test_auto_dispatch_launch_is_opt_in_and_backgrounded(self) -> None:
+        calls: list[dict] = []
+        body = b'{"action":"labeled","issue":{"number":41}}'
+        headers = {
+            "X-GitHub-Event": "issues",
+            "X-GitHub-Delivery": "delivery-1",
+        }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            disabled = self.relay.maybe_launch_auto_dispatch(
+                headers=headers,
+                body=body,
+                enabled=False,
+                repo_root=str(REPO_ROOT),
+                queue_root=Path(tmpdir),
+                launcher=lambda **kwargs: calls.append(kwargs),
+            )
+            enabled = self.relay.maybe_launch_auto_dispatch(
+                headers=headers,
+                body=body,
+                enabled=True,
+                repo_root=str(REPO_ROOT),
+                queue_root=Path(tmpdir),
+                launcher=lambda **kwargs: calls.append(kwargs),
+            )
+
+        self.assertFalse(disabled["launched"])
+        self.assertTrue(enabled["launched"])
+        self.assertEqual(len(calls), 1)
+        self.assertIn("auto_dispatcher.py", " ".join(calls[0]["command"]))
+        self.assertTrue(calls[0]["log_path"].endswith(".log"))
 
 
 if __name__ == "__main__":
