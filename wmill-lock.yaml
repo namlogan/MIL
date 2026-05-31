@@ -1,8 +1,8 @@
 version: v2
 locks:
-  f/mil/auggie_supervised_advisory: 324ad453e9421d1bce76822f9471241ae7da2eefca9ec0fbf4f95ced89192064
-  f/mil/fix_ci_or_review: 3d83de0188963bacd56ec1241567904af5f25920e1922265b18c74cc368b4483
-  f/mil/flow_contract: 210f5e38a37c1301a358b3341b71926ca806585fa2723cbd513570f424f371d9
-  f/mil/issue_to_plan: c1cc4186804e079edb02bf7f34ca87d89eb9f61de3dfc6544c61d3001ca6431e
-  f/mil/plan_to_pr: 5e9903db3ba1a8e33c6fee0bd2bd33946ad62b6859d5095a8b3a81c4a4602b16
-  f/mil/pr_quality_gate: 6a8ab26e1f121a3a5076eceefbdd1828c25e51f5262ccef4f8aa607eb67cdfe8
+  f/mil/auggie_supervised_advisory: 86e44b16c712b91aaf4cbb0ac73dc2045444b3532fb542aa9c52824d299b5e03
+  f/mil/fix_ci_or_review: df6eeda3f5ec4d7f9b6c122dcef50281365a90d81c37d3bfb0e136fc2709fa0c
+  f/mil/flow_contract: 57b4ff1f8c79c4e4b31957cfc9060050510ef8d0e7eec39afdd2bfb358e7c8a0
+  f/mil/issue_to_plan: ef9d3dab0aac6c6d125b7323e021ac1ca745c2bcd15031e4a96c4ab1da3107a5
+  f/mil/plan_to_pr: d2f9812dfea86ac7f36916c3151bc43e5494a299e3c0ea86e0675bbf1f5e6085
+  f/mil/pr_quality_gate: 6d0dc7489df2cf569d2c5545941e00949a815bdc1a93cb7041ba9751137bc0b7

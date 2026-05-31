@@ -1,6 +1,7 @@
 summary: MIL issue to plan
 description: Validate issue scope and produce AI Factory planning evidence.
-lock: ''
+lock: '!inline f/mil/issue_to_plan.script.lock'
+has_on_behalf_of: false
 kind: script
 schema:
   $schema: https://json-schema.org/draft/2020-12/schema
@@ -9,5 +10,7 @@ schema:
     task:
       type: object
       description: MIL task payload.
+      default: null
+      properties: {}
   required:
     - task

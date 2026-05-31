@@ -119,8 +119,10 @@ MIL now includes a Windmill CLI project:
 ```text
 wmill.yaml
 wmill-lock.yaml
+f/mil/folder.meta.yaml
 f/mil/*.py
 f/mil/*.script.yaml
+f/mil/*.script.lock
 ```
 
 Validate the deployable project files without workspace credentials:
@@ -147,6 +149,14 @@ export WINDMILL_WORKSPACE_ID="..."
 export WINDMILL_BASE_URL="https://app.windmill.dev"
 scripts/windmill/bootstrap_workspace.sh
 ```
+
+The bootstrap script defaults to a MIL-only dry run:
+
+```bash
+wmill sync push --dry-run --includes "f/mil/**"
+```
+
+Override `WMILL_SYNC_INCLUDE_PATTERN` only when intentionally deploying a wider Windmill workspace scope.
 
 Only run `wmill sync push` after the dry-run diff is reviewed and the workspace secrets below are present.
 

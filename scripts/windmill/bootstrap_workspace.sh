@@ -10,6 +10,7 @@ cd "${REPO_ROOT}"
 
 WINDMILL_WORKSPACE_NAME="${WINDMILL_WORKSPACE_NAME:-mil}"
 WINDMILL_BRANCH="${WINDMILL_BRANCH:-main}"
+WMILL_SYNC_INCLUDE_PATTERN="${WMILL_SYNC_INCLUDE_PATTERN:-f/mil/**}"
 
 python3 scripts/windmill/validate_windmill_project.py --self-test
 
@@ -21,4 +22,4 @@ wmill workspace add \
 
 wmill workspace switch "${WINDMILL_WORKSPACE_NAME}"
 wmill workspace bind --workspace "${WINDMILL_WORKSPACE_NAME}" --branch "${WINDMILL_BRANCH}"
-wmill sync push --dry-run
+wmill sync push --dry-run --includes "${WMILL_SYNC_INCLUDE_PATTERN}"
