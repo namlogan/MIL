@@ -44,7 +44,9 @@ By default it only returns the command pack. Real `codex exec`, push, and PR
 creation require explicit flags. It still cannot merge or approve restricted
 changes. If the AI Factory 2.x rule hierarchy cannot be resolved from the repo
 or from preloaded `options.rule_sources`, it returns `CODEX_WORKER_BLOCKED`
-instead of dispatching a worker.
+instead of dispatching a worker. The GitHub webhook route for `agent:build`
+preloads a bundled rulepack snapshot before calling `plan_to_pr`, which keeps
+hosted Windmill usable even when the repository is not mounted.
 
 `plan_to_pr` always prepares a read-only Augment MCP `codebase-retrieval`
 request for the task and passes preloaded Augment context into the Codex worker

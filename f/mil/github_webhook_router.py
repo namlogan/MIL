@@ -19,6 +19,130 @@ from f.mil.plan_to_pr_contract import run_plan_to_pr
 
 DEFAULT_WEBHOOK_SECRET_VARIABLE_PATH = "f/mil/github_webhook_secret"
 DEFAULT_CHECKS = ["control-plane", "ai-gate/final-review"]
+HOSTED_AI_FACTORY_RULE_SOURCES = [
+    {
+        "name": "paths.rules_file",
+        "path": ".ai-factory/RULES.md",
+        "content": """# MIL AI Factory Rules
+
+AI Factory 2.x-compatible top-level axioms. Area-specific rules live under
+`.ai-factory/rules/` and are registered in `.ai-factory/config.yaml`.
+
+Rule priority: `rules.<area> > rules/base.md > paths.rules_file`.
+
+## Rules
+
+- Start work from a GitHub issue or approved local task file.
+- Keep one task per branch and keep implementation inside `allowed_files`.
+- Codex is the only implementation worker; Augment, Mem0, and Auggie are context, memory, or advisory lanes only.
+- Run implementation through the configured `codex_worker` runner or an explicitly approved local equivalent.
+- Write tests or record why tests are not applicable.
+- Record developer handoff, checks, risks, rollback note, and worker evidence in the PR or `.ai-factory/qa/`.
+- Emit the final machine-readable `aif-gate-result` block after the human summary.
+- Allowed MIL merge decisions are `APPROVE_MERGE`, `REQUEST_CHANGES`, `REJECT`, and `BLOCKED_NEEDS_HUMAN`.
+- Never merge, deploy, bypass branch protection, or approve restricted work without human approval.
+- Never store secrets, raw tokens, customer data, raw proprietary source, or raw transcripts in memory.
+- Restricted changes include production deploy behavior, production secrets, billing, customer data retention/deletion, auth boundaries, destructive migrations, legal/compliance behavior, and safety-critical behavior.""",
+    },
+    {
+        "name": "rules.base",
+        "path": ".ai-factory/rules/base.md",
+        "content": """# Base Rules
+
+> Project-wide base conventions loaded after `.ai-factory/RULES.md`.
+
+## Rules
+
+- Prefer small, reviewable changes tied to one issue and one branch.
+- Preserve GitHub as the source of truth for issues, PRs, CI state, review evidence, and merge decisions.
+- Keep AI Factory artifacts command-scoped: rules are owned by rule setup, plans by planning, QA by gate/review, and memory by memory writeback.
+- When a task needs broad architecture decisions, produce a plan and request approval before implementation.
+- Handoffs must include what changed, why it changed, tests run, risks left, and rollback note.
+- Use conventional commits for local checkpoint commits and do not add AI co-author trailers.""",
+    },
+    {
+        "name": "rules.implementation",
+        "path": ".ai-factory/rules/implementation.md",
+        "content": """# Implementation Rules
+
+> Area rules for Codex implementation work and `codex_worker` sessions.
+
+## Rules
+
+- Run implementation through plan/checkpoint discipline: understand issue scope, apply scoped changes, run checks, then produce handoff evidence.
+- `codex_worker` must load issue scope, allowed files, checks, Mem0 context, Augment context, and the AI Factory rule hierarchy before coding.
+- Do not edit outside `allowed_files`; if required files are missing from scope, stop and request scope expansion.
+- Do not silently continue after restricted changes are detected; return a blocked state before creating commands or edits.
+- Use isolated worktrees for unattended implementation so worker state cannot pollute `main`.
+- Run required checks from the task payload before commit; if a check cannot run, record the blocker as evidence.
+- Keep PRs small enough for review; split unrelated work into separate tasks or branches.
+- Update docs only when the task or plan requires docs, or when behavior-facing contracts changed.""",
+    },
+    {
+        "name": "rules.memory",
+        "path": ".ai-factory/rules/memory.md",
+        "content": """# Memory Rules
+
+> Area rules for Mem0-backed project memory.
+
+## Rules
+
+- Treat memory as retrieval hints and operational learning only; never as source of truth for requirements, code, PR state, CI, or merge approval.
+- Retrieve memory only with strict tenant, repo, task, memory type, status, visibility, and entity-scope filters.
+- Store only distilled operational summaries with provenance, confidence, source URI, and approval state when required.
+- Never write secrets, raw tokens, raw transcripts, customer data, full proprietary source, or generated patches before review.
+- Architecture decisions, human preferences, repo conventions, review rules, and security policy memory require explicit human approval before writeback.
+- Every memory context inserted into a worker prompt must be compact and provenance-bearing.""",
+    },
+    {
+        "name": "rules.quality_gates",
+        "path": ".ai-factory/rules/quality-gates.md",
+        "content": """# Quality Gate Rules
+
+> Area rules for AI Factory gates, Codex QA, and merge-controller decisions.
+
+## Rules
+
+- Gate output must keep human-readable findings first and append exactly one final `aif-gate-result` JSON block.
+- `aif-gate-result` must include `schema_version`, `gate`, `status`, `blocking`, `blockers`, `affected_files`, and `suggested_next`.
+- AI Factory 2.x gate status values are lowercase `pass`, `warn`, and `fail`; MIL merge decisions remain `APPROVE_MERGE`, `REQUEST_CHANGES`, `REJECT`, and `BLOCKED_NEEDS_HUMAN`.
+- `blocking: true` is allowed only when explicit hard-rule violations, failed required checks, missing required evidence, or restricted-change approval gaps exist.
+- Gate checks must inspect issue acceptance criteria, diff scope, required checks, security/restricted triggers, unresolved review threads, memory write policy, and rollback note.
+- Final merge remains protected by GitHub branch protection and required status contexts, not by an LLM-only decision.""",
+    },
+    {
+        "name": "rules.security",
+        "path": ".ai-factory/rules/security.md",
+        "content": """# Security Rules
+
+> Area rules for credentials, restricted changes, and sensitive operations.
+
+## Rules
+
+- Agents must not print, copy, commit, request, or store production secrets.
+- All secrets must stay in GitHub or Windmill secret stores and be referenced by variable path or environment name only.
+- Hardcoded API keys, tokens, passwords, private keys, and session cookies are blocking security violations.
+- Use least-privilege worker credentials: read-only workers inspect, write workers push agent branches, merge workers merge only after protections pass, and release workers require human approval.
+- Authentication, authorization, billing, customer data handling, destructive migrations, production deployment behavior, and legal/compliance changes require human approval before merge.
+- Security gate findings with concrete secret exposure or auth boundary impact must block the PR.""",
+    },
+    {
+        "name": "rules.windmill",
+        "path": ".ai-factory/rules/windmill.md",
+        "content": """# Windmill Rules
+
+> Area rules for Windmill orchestration and webhook-driven workers.
+
+## Rules
+
+- Windmill is an orchestrator and audit surface, not the source of truth for requirements or merge approval.
+- Windmill may prepare `codex_worker` command packs, dispatch workers, publish statuses, comment on PRs, and request human approval.
+- Windmill must not reinterpret gate policy, bypass branch protection, auto-merge code, or continue a worker after PR readiness unless a separate task requires it.
+- Windmill write flows must use least-privilege secrets and must not expose token values in logs, memory, prompts, or artifacts.
+- GitHub webhook handlers must verify signatures before dispatch and ignore unmatched events without agent calls.
+- Public relay or tunnel endpoints must route only the GitHub webhook path into Windmill.""",
+    },
+]
 PR_GATE_ACTIONS = {"opened", "reopened", "synchronize", "ready_for_review"}
 ISSUE_ROUTE_ACTIONS = {"opened", "edited", "labeled", "reopened"}
 FAILED_WORKFLOW_CONCLUSIONS = {
@@ -255,6 +379,20 @@ def _parse_issue_form_task_fields(body: str) -> dict[str, Any]:
     return parsed
 
 
+def _hosted_rule_sources() -> list[dict[str, str]]:
+    return [dict(source) for source in HOSTED_AI_FACTORY_RULE_SOURCES]
+
+
+def _plan_to_pr_options(request: dict[str, Any]) -> dict[str, Any]:
+    options = request.get("options") or {}
+    if not isinstance(options, dict):
+        options = {}
+    normalized = dict(options)
+    if not normalized.get("rule_sources") and not normalized.get("ai_factory_rule_sources"):
+        normalized["rule_sources"] = _hosted_rule_sources()
+    return normalized
+
+
 def _github_context(
     event: str,
     payload: dict[str, Any],
@@ -432,13 +570,10 @@ def main(request: dict[str, Any]) -> dict[str, Any]:
         }
 
     if route["flow"] == "plan_to_pr":
-        options = request.get("options") or {}
-        if not isinstance(options, dict):
-            options = {}
         result = run_plan_to_pr(
             {
                 "task": route["task"],
-                "options": options,
+                "options": _plan_to_pr_options(request),
                 "memory_context": request.get("memory_context", []),
                 "augment_context": request.get("augment_context", []),
             }

@@ -217,6 +217,12 @@ class GitHubWebhookRouterTests(unittest.TestCase):
         self.assertIn(".ai-factory/RULES.md", rule_paths)
         self.assertIn(".ai-factory/rules/windmill.md", rule_paths)
 
+    def test_hosted_rule_sources_match_repo_ai_factory_rules(self) -> None:
+        for source in self.router.HOSTED_AI_FACTORY_RULE_SOURCES:
+            with self.subTest(path=source["path"]):
+                expected = (REPO_ROOT / source["path"]).read_text(encoding="utf-8")
+                self.assertEqual(source["content"], expected.strip())
+
     def test_pull_request_event_routes_to_codex_quality_gate(self) -> None:
         payload = {
             "action": "synchronize",

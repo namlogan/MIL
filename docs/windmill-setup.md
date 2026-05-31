@@ -356,13 +356,12 @@ wmill script preview f/mil/codex_worker.py \
   -d '{"request":{"task":{"task_id":"MIL-LOCAL","goal":"Prepare a scoped worker run.","acceptance_criteria":["Evidence is produced"],"allowed_files":["docs/**"],"checks":["git diff --check"],"restricted_changes":[]},"options":{"repo_root":"/Users/mac/Documents/MIL"}}}'
 ```
 
-For hosted Windmill, `repo_root` may not exist inside the worker runtime. In
-that case `f/mil/plan_to_pr` forwards the request to `f/mil/codex_worker`, which
-intentionally returns
-`CODEX_WORKER_BLOCKED` until the request includes pre-resolved
-`options.rule_sources` from the local relay/control plane. This prevents a
-Codex worker from running without the AI Factory 2.x rule hierarchy in its
-prompt.
+For hosted Windmill, `repo_root` may not exist inside the worker runtime. The
+GitHub webhook router therefore ships a bundled AI Factory 2.x rule snapshot for
+`agent:build` dispatch and passes it as `options.rule_sources` before calling
+`f/mil/plan_to_pr`. Local callers may still override that with pre-resolved
+`options.rule_sources` or a mounted `options.repo_root`. The test suite checks
+that the bundled snapshot matches the repo-local rule files.
 
 With `wmill` CLI 1.712.0, `script preview` still requires an active workspace profile even though it does not deploy.
 
