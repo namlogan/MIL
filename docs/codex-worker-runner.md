@@ -88,7 +88,7 @@ f/mil/codex_worker_contract
 Preview command after a Windmill workspace profile is active:
 
 ```bash
-wmill script preview f/mil/codex_worker \
+wmill script preview f/mil/codex_worker.py \
   -d '{"request":{"task":{"task_id":"MIL-LOCAL","goal":"Prepare a scoped worker run.","acceptance_criteria":["Evidence is produced"],"allowed_files":["docs/**"],"checks":["git diff --check"],"restricted_changes":[]},"options":{"repo_root":"/Users/mac/Documents/MIL"}}}'
 ```
 

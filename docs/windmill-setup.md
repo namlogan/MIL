@@ -347,10 +347,10 @@ wmill lint .
 Preview a local script without deploying after a workspace profile is configured:
 
 ```bash
-wmill script preview f/mil/plan_to_pr \
+wmill script preview f/mil/plan_to_pr.py \
   -d '{"task":{"task_id":"MIL-LOCAL","checks":["git diff --check"],"restricted_changes":[]}}'
 
-wmill script preview f/mil/codex_worker \
+wmill script preview f/mil/codex_worker.py \
   -d '{"request":{"task":{"task_id":"MIL-LOCAL","goal":"Prepare a scoped worker run.","acceptance_criteria":["Evidence is produced"],"allowed_files":["docs/**"],"checks":["git diff --check"],"restricted_changes":[]},"options":{"repo_root":"/Users/mac/Documents/MIL"}}}'
 ```
 
