@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "workflows": {
+    "default_issue_to_merge": {
+      "source_of_truth": "github_issue_and_pull_request",
+      "stages": [
+        {
+          "name": "issue_to_plan",
+          "owner": "codex_developer",
+          "windmill_script": "f/mil/issue_to_plan",
+          "required_inputs": [
+            "issue_id",
+            "task_id",
+            "goal",
+            "acceptance_criteria",
+            "allowed_files",
+            "required_checks",
+            "restricted_change_check",
+            "rollback_note"
+          ],
+          "outputs": [
+            "plan"
+          ]
+        },
+        {
+          "name": "plan_to_pr",
+          "owner": "windmill_orchestrator",
+          "windmill_script": "f/mil/plan_to_pr",
+          "must_dispatch_exactly_one_coding_agent": true,
+          "default_developer_agent": "codex_developer",
+          "outputs": [
+            "branch",
+            "pull_request",
+            "developer_handoff"
+          ]
+        },
+        {
+          "name": "control_plane_ci",
+          "owner": "github_merge_gate",
+          "required_context": "control-plane",
+          "blocking": true
+        },
+        {
+          "name": "auggie_advisory_review",
+          "owner": "auggie_advisory",
+          "windmill_script": "f/mil/auggie_supervised_advisory",
+          "blocking_verdicts": [
+            "AUGMENT_REVIEW_BLOCKED",
+            "AUGMENT_REVIEW_CHANGES_RECOMMENDED"
+          ]
+        },
+        {
+          "name": "codex_qa_gate",
+          "owner": "codex_qa",
+          "windmill_script": "f/mil/pr_quality_gate",
+          "publishes_status_with": "f/mil/github_commit_status",
+          "required_context": "ai-gate/final-review",
+          "allowed_decisions": [
+            "APPROVE_MERGE",
+            "REQUEST_CHANGES",
+            "REJECT",
+            "BLOCKED_NEEDS_HUMAN"
+          ]
+        },
+        {
+          "name": "protected_merge",
+          "owner": "github_merge_gate",
+          "requires_status_contexts": [
+            "control-plane",
+            "ai-gate/final-review"
+          ],
+          "requires_pull_request": true,
+          "requires_conversation_resolution": true,
+          "requires_human_for_restricted_changes": true
+        }
+      ]
+    },
+    "ci_or_review_fix": {
+      "source_of_truth": "github_pull_request",
+      "stages": [
+        {
+          "name": "fix_ci_or_review",
+          "owner": "windmill_orchestrator",
+          "windmill_script": "f/mil/fix_ci_or_review",
+          "max_iterations": 2,
+          "diagnosis_agent": "auggie_advisory",
+          "fix_agent": "codex_developer"
+        },
+        {
+          "name": "codex_qa_gate",
+          "owner": "codex_qa",
+          "windmill_script": "f/mil/pr_quality_gate"
+        }
+      ]
+    }
+  }
+}

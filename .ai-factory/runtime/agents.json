@@ -1,0 +1,120 @@
+{
+  "version": 1,
+  "agents": {
+    "codex_developer": {
+      "runtime": "codex",
+      "role": "implementation_and_test_worker",
+      "default_branch_prefix": "agent/",
+      "allowed_actions": [
+        "plan",
+        "implement_scoped_issue",
+        "generate_tests",
+        "fix_ci",
+        "write_pr_evidence"
+      ],
+      "forbidden_actions": [
+        "merge_main",
+        "read_production_secrets",
+        "deploy_production",
+        "bypass_branch_protection"
+      ],
+      "requires_issue_scope": true,
+      "requires_pull_request": true
+    },
+    "codex_qa": {
+      "runtime": "codex",
+      "role": "final_ai_qa_gate_worker",
+      "allowed_actions": [
+        "inspect_diff",
+        "run_required_checks",
+        "verify_evidence",
+        "emit_aif_gate_result"
+      ],
+      "forbidden_actions": [
+        "author_implementation_commits",
+        "merge_main",
+        "deploy_production",
+        "read_production_secrets"
+      ],
+      "requires_issue_scope": true,
+      "requires_pull_request": true
+    },
+    "auggie_advisory": {
+      "runtime": "auggie_supervised",
+      "role": "advisory_review_and_diagnosis_worker",
+      "allowed_actions": [
+        "validate_plan",
+        "review_diff",
+        "diagnose_ci_failure",
+        "identify_risks"
+      ],
+      "forbidden_actions": [
+        "final_merge_approval",
+        "merge_main",
+        "deploy_production",
+        "read_production_secrets"
+      ],
+      "requires_operator": true,
+      "allowed_verdicts": [
+        "AUGMENT_REVIEW_PASS",
+        "AUGMENT_REVIEW_NOTES",
+        "AUGMENT_REVIEW_CHANGES_RECOMMENDED",
+        "AUGMENT_REVIEW_BLOCKED"
+      ]
+    },
+    "auggie_supervised_developer": {
+      "runtime": "auggie_supervised",
+      "role": "explicitly_routed_supervised_developer_worker",
+      "default_branch_prefix": "agent/",
+      "allowed_actions": [
+        "implement_scoped_issue_when_explicitly_routed",
+        "run_focused_tests",
+        "write_pr_evidence"
+      ],
+      "forbidden_actions": [
+        "final_merge_approval",
+        "merge_main",
+        "deploy_production",
+        "read_production_secrets"
+      ],
+      "requires_explicit_issue_permission": true,
+      "requires_codex_verification": true
+    },
+    "windmill_orchestrator": {
+      "runtime": "windmill",
+      "role": "cockpit_and_orchestrator",
+      "allowed_actions": [
+        "receive_webhook",
+        "run_agent_worker",
+        "publish_ai_gate_status",
+        "request_human_approval",
+        "comment_on_issue_or_pr"
+      ],
+      "forbidden_actions": [
+        "bypass_branch_protection",
+        "reinterpret_gate_policy",
+        "author_app_code"
+      ],
+      "requires_scoped_sync": true
+    },
+    "github_merge_gate": {
+      "runtime": "github",
+      "role": "protected_merge_enforcement",
+      "allowed_actions": [
+        "enforce_required_checks",
+        "block_force_pushes",
+        "block_deletions",
+        "require_conversation_resolution"
+      ],
+      "forbidden_actions": [
+        "ignore_required_checks",
+        "merge_without_pull_request",
+        "bypass_restricted_human_approval"
+      ],
+      "required_status_contexts": [
+        "control-plane",
+        "ai-gate/final-review"
+      ]
+    }
+  }
+}

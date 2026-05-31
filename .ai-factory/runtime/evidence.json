@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "required_evidence": {
+    "issue_intake": [
+      "issue_id",
+      "task_id",
+      "goal",
+      "acceptance_criteria",
+      "allowed_files",
+      "out_of_scope_files",
+      "restricted_change_check",
+      "rollback_note"
+    ],
+    "developer_handoff": [
+      "issue_id",
+      "branch",
+      "files_changed",
+      "rules_applied",
+      "tests_run",
+      "gate_artifacts_generated",
+      "residual_risks",
+      "rollback_note"
+    ],
+    "auggie_advisory": [
+      "target_pr",
+      "verdict",
+      "risk_notes",
+      "recommended_changes",
+      "operator"
+    ],
+    "qa_gate": [
+      "decision",
+      "blocking",
+      "reasons",
+      "tests",
+      "residual_risks"
+    ],
+    "merge_gate": [
+      "control-plane",
+      "ai-gate/final-review",
+      "conversation_resolution",
+      "restricted_approval_if_needed"
+    ]
+  },
+  "artifact_paths": {
+    "plans": ".ai-factory/plans",
+    "qa": ".ai-factory/qa",
+    "gates": ".ai-factory/gates",
+    "windmill_runs": ".ai-factory/qa"
+  }
+}
