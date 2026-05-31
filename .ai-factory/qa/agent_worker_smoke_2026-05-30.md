@@ -64,3 +64,31 @@ Required follow-up:
 - Provide an approved Auggie SDK/API token path for Windmill, or
 - Treat Auggie as advisory/manual until the account policy changes.
 
+## Auggie Re-check
+
+Date: 2026-05-31
+Branch: `agent/4-github-webhook-routing`
+
+Command:
+
+```bash
+auggie --print --quiet --output-format json --max-turns 1 --workspace-root /Users/mac/Documents/MIL --rules AGENTS.md "Return exactly: AUGGIE_MIL_SMOKE_OK"
+```
+
+Observed result:
+
+```text
+CLI non-interactive mode access has been disabled for your account. If you believe this to be an error, please contact your administrator.
+```
+
+Verdict:
+
+```text
+Auggie non-interactive worker execution remains blocked by account policy on 2026-05-31.
+```
+
+Current allowed lane:
+
+```text
+Windmill queues Auggie supervised advisory -> Codex operates scripts/agent-flow/auggie_interactive.sh -> Codex verifies diff/evidence -> GitHub records the result.
+```
