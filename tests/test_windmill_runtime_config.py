@@ -41,6 +41,7 @@ class WindmillRuntimeConfigTests(unittest.TestCase):
             "fix_ci_or_review",
             "auggie_supervised_advisory",
             "github_commit_status",
+            "github_webhook_router",
         ]:
             with self.subTest(name=name):
                 script = REPO_ROOT / "f" / "mil" / f"{name}.py"
@@ -57,6 +58,7 @@ class WindmillRuntimeConfigTests(unittest.TestCase):
             "pr_quality_gate",
             "fix_ci_or_review",
             "auggie_supervised_advisory",
+            "github_webhook_router",
         ]:
             with self.subTest(name=name):
                 script = (REPO_ROOT / "f" / "mil" / f"{name}.py").read_text(
@@ -65,6 +67,17 @@ class WindmillRuntimeConfigTests(unittest.TestCase):
 
                 self.assertIn("from f.mil.flow_contract import", script)
                 self.assertNotIn("from flow_contract import", script)
+
+    def test_github_webhook_http_trigger_is_versioned(self) -> None:
+        trigger = REPO_ROOT / "f" / "mil" / "github_webhook.http_trigger.yaml"
+
+        self.assertTrue(trigger.exists())
+        contents = trigger.read_text(encoding="utf-8")
+        self.assertIn("script_path: f/mil/github_webhook_router", contents)
+        self.assertIn("route_path: mil/github-webhook", contents)
+        self.assertIn("http_method: post", contents)
+        self.assertIn("raw_string: true", contents)
+        self.assertIn("authentication_method: none", contents)
 
     def test_windmill_worker_bridge_reuses_ai_factory_contract(self) -> None:
         bridge = load_module(

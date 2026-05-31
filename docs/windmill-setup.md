@@ -20,21 +20,39 @@ Use separate GitHub tokens for readonly, write, and merge actions. Do not give i
 
 ## Webhooks
 
-Configure GitHub webhooks to call Windmill routes for:
+Configure GitHub webhooks to call this Windmill HTTP route:
 
 ```text
-issues
-pull_request
-workflow_run
-issue_comment
+POST <public-windmill-base-url>/.../mil/github-webhook
 ```
 
-Recommended routing:
+The exact URL depends on the deployed Windmill base URL and workspace route prefix. The repo-local trigger spec is:
+
+```text
+f/mil/github_webhook.http_trigger.yaml
+script_path: f/mil/github_webhook_router
+route_path: mil/github-webhook
+http_method: post
+raw_string: true
+authentication_method: none
+```
+
+GitHub webhook settings:
+
+- Content type: `application/json`
+- Secret: value stored in Windmill as `f/mil/github_webhook_secret`
+- Events: `issues`, `pull_request`, `workflow_run`, `issue_comment`
+
+The route itself uses `authentication_method: none` so GitHub can call it directly. The Python preprocessor verifies `X-Hub-Signature-256` against the raw body before any MIL flow is routed.
+
+Implemented routing:
 
 - `issues` with label `agent:plan` -> `issue_to_plan`
 - `issues` with label `agent:build` -> `plan_to_pr`
-- `pull_request.opened` or `pull_request.synchronize` -> `pr_quality_gate`
-- `workflow_run.failure` or label `agent:fix` -> `fix_ci_or_review`
+- `pull_request.opened`, `pull_request.reopened`, `pull_request.synchronize`, or `pull_request.ready_for_review` -> `pr_quality_gate`
+- failed `workflow_run.completed` with PR context -> `fix_ci_or_review`
+- successful `workflow_run.completed` with PR context -> `pr_quality_gate`
+- issue comment commands `/agent plan`, `/agent build`, `/agent qa`, `/agent gate`, `/agent fix` -> matching flow
 
 ## GitHub Check Payload
 
@@ -168,9 +186,10 @@ Required Windmill secret variable:
 
 ```text
 f/mil/github_status_token
+f/mil/github_webhook_secret
 ```
 
-The variable must be created as `is_secret=true`. For local development, the token must have permission to write commit statuses for `namlogan/MIL`; production should use a least-privilege GitHub App or fine-grained token instead of a broad developer token.
+Both variables must be created as `is_secret=true`. For local development, the status token must have permission to write commit statuses for `namlogan/MIL`; production should use a least-privilege GitHub App or fine-grained token instead of a broad developer token.
 
 Smoke run without touching GitHub:
 

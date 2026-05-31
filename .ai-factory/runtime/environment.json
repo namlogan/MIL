@@ -20,10 +20,12 @@
       "f/mil/pr_quality_gate",
       "f/mil/fix_ci_or_review",
       "f/mil/auggie_supervised_advisory",
-      "f/mil/github_commit_status"
+      "f/mil/github_commit_status",
+      "f/mil/github_webhook_router"
     ],
     "required_secret_references": [
-      "f/mil/github_status_token"
+      "f/mil/github_status_token",
+      "f/mil/github_webhook_secret"
     ]
   },
   "local_checks": [
