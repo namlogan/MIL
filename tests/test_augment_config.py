@@ -64,6 +64,15 @@ class AugmentConfigTests(unittest.TestCase):
         self.assertFalse(result["checks"]["augment_mcp_token"]["present"])
         self.assertFalse(result["checks"]["augment_session_auth"]["present"])
 
+    def test_mil_mcp_runtime_checker_is_documented(self) -> None:
+        checker = REPO_ROOT / "scripts" / "agent-flow" / "check_mil_mcp_runtime.py"
+        docs = (REPO_ROOT / "docs" / "augment-setup.md").read_text(encoding="utf-8")
+
+        self.assertTrue(checker.exists())
+        self.assertIn("check_mil_mcp_runtime.py --mcp-smoke", docs)
+        self.assertIn("mil_workspace_indexed=true", docs)
+        self.assertIn("not another repo", docs)
+
 
 if __name__ == "__main__":
     unittest.main()
