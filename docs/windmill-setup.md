@@ -78,6 +78,78 @@ For durable automation, use a stable hosted Windmill URL, a stable reverse
 proxy, a reserved tunnel domain, or a Cloudflare named tunnel. Ephemeral tunnel
 URLs are useful for smoke tests only because GitHub webhooks need a stable URL.
 
+### Stable Cloudflare Named Tunnel
+
+Use this option when Windmill remains local but GitHub needs a stable public
+webhook URL. The tunnel must point to the signed local relay, not to the
+Windmill UI/API port.
+
+One-time human step on the control station:
+
+```bash
+cloudflared tunnel login
+```
+
+Log in with a Cloudflare account that controls the DNS zone for the hostname you
+want to use, for example `mil-webhook.example.com`.
+
+After login, create or reuse the named tunnel, route DNS, and write the local
+runtime config:
+
+```bash
+python3 scripts/windmill/setup_cloudflare_named_tunnel.py \
+  --hostname mil-webhook.example.com \
+  --overwrite-dns
+```
+
+The script writes:
+
+```text
+.windmill/runtime/cloudflared/mil-github-webhook.yml
+.windmill/runtime/cloudflared/mil-github-webhook.json
+```
+
+Both files are local runtime artifacts and must not be committed. The generated
+Cloudflare config exposes only:
+
+```text
+https://mil-webhook.example.com/mil/github-webhook
+```
+
+Run the relay without writing the GitHub webhook secret to disk:
+
+```bash
+scripts/windmill/run_github_webhook_relay_from_windmill_secret.sh
+```
+
+Run the named tunnel:
+
+```bash
+cloudflared tunnel --config .windmill/runtime/cloudflared/mil-github-webhook.yml run mil-github-webhook
+```
+
+Then configure the GitHub webhook URL:
+
+```text
+https://mil-webhook.example.com/mil/github-webhook
+```
+
+Use the same GitHub settings listed above: `application/json`, secret
+`f/mil/github_webhook_secret`, and events `issues`, `pull_request`,
+`workflow_run`, and `issue_comment`.
+
+Smoke test after the GitHub hook exists:
+
+```bash
+gh api -X POST repos/namlogan/MIL/hooks/<hook-id>/pings --silent
+gh api repos/namlogan/MIL/hooks/<hook-id>/deliveries \
+  --jq '.[0] | {event,status,status_code,delivered_at,duration}'
+wmill --workspace mil-local job list --json --limit 5
+```
+
+Expected result: GitHub delivery status `OK`, HTTP status `201`, and a recent
+Windmill job created by `HTTP-f/mil/github_webhook`.
+
 Implemented routing:
 
 - `issues` with label `agent:plan` -> `issue_to_plan`
