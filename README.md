@@ -22,3 +22,4 @@ Start here:
 - [Windmill coding dispatch](.windmill/flows/coding_agent_dispatch.md)
 - [AI Factory rules](.ai-factory/RULES.md)
 - [Windmill cockpit notes](.windmill/README.md)
+- [Portable backup and migration runbook](docs/portable-agent-factory-runbook.md)
