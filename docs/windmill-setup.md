@@ -354,6 +354,13 @@ wmill script preview f/mil/codex_worker.py \
   -d '{"request":{"task":{"task_id":"MIL-LOCAL","goal":"Prepare a scoped worker run.","acceptance_criteria":["Evidence is produced"],"allowed_files":["docs/**"],"checks":["git diff --check"],"restricted_changes":[]},"options":{"repo_root":"/Users/mac/Documents/MIL"}}}'
 ```
 
+For hosted Windmill, `repo_root` may not exist inside the worker runtime. In
+that case `f/mil/codex_worker` intentionally returns
+`CODEX_WORKER_BLOCKED` until the request includes pre-resolved
+`options.rule_sources` from the local relay/control plane. This prevents a
+Codex worker from running without the AI Factory 2.x rule hierarchy in its
+prompt.
+
 With `wmill` CLI 1.712.0, `script preview` still requires an active workspace profile even though it does not deploy.
 
 After a real Windmill workspace exists, bind and dry-run the sync:

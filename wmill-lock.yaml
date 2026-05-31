@@ -1,8 +1,8 @@
 version: v2
 locks:
   f/mil/auggie_supervised_advisory: 86e44b16c712b91aaf4cbb0ac73dc2045444b3532fb542aa9c52824d299b5e03
-  f/mil/codex_worker: 858e4582810cc4d8a8679fe274e150c46fa6928de50e97e55941f0c139a7a514
-  f/mil/codex_worker_contract: 396bfd54be6a1cc4060deeafff756633c52e2c35d4eac4964fe7603a591992d7
+  f/mil/codex_worker: 7247cf8b0ddc5cf7d2bbc66b1a8038be893f09434d3607551e49bb2ef9e458f5
+  f/mil/codex_worker_contract: c419a1c9d75f895baeac399932d21515dba206d57db8f62c76e6de3070581a37
   f/mil/fix_ci_or_review: df6eeda3f5ec4d7f9b6c122dcef50281365a90d81c37d3bfb0e136fc2709fa0c
   f/mil/flow_contract: 18d71fd974867f42b04940f7ae457b1811b78c1ccded6c95b1b2ad67f83231bb
   f/mil/github_commit_status: 9562496afca132f4d228f64c618de395851b384e29b1940aada2866f6e3b8b4a

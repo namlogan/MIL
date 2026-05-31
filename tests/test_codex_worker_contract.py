@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -79,6 +80,95 @@ class CodexWorkerContractTests(unittest.TestCase):
         self.assertIn("mem_1", plan["prompt"])
         self.assertIn("Runner must stay scoped", plan["prompt"])
         self.assertIn("Do not edit files outside allowed_files.", plan["prompt"])
+
+    def test_worker_prompt_loads_ai_factory_v2_rule_sources(self) -> None:
+        plan = codex_worker_contract.build_worker_plan(
+            sample_task(),
+            repo_root=REPO_ROOT,
+        )
+
+        rule_paths = [source["path"] for source in plan["rule_sources"]]
+        self.assertEqual(rule_paths[0], ".ai-factory/RULES.md")
+        for required in [
+            ".ai-factory/rules/base.md",
+            ".ai-factory/rules/implementation.md",
+            ".ai-factory/rules/quality-gates.md",
+            ".ai-factory/rules/security.md",
+            ".ai-factory/rules/memory.md",
+            ".ai-factory/rules/windmill.md",
+        ]:
+            with self.subTest(required=required):
+                self.assertIn(required, rule_paths)
+
+        prompt = plan["prompt"]
+        self.assertIn("## AI Factory v2 Rule Hierarchy", prompt)
+        self.assertIn("rules.<area> > rules/base.md > paths.rules_file", prompt)
+        self.assertIn(".ai-factory/rules/implementation.md", prompt)
+        self.assertIn("Run implementation through plan/checkpoint discipline", prompt)
+        self.assertIn("schema_version", prompt)
+        self.assertIn("gate", prompt)
+
+    def test_worker_blocks_when_ai_factory_rules_are_unavailable(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            plan = codex_worker_contract.build_worker_plan(
+                sample_task(),
+                repo_root=Path(tmpdir),
+            )
+
+        self.assertEqual(plan["decision"], "CODEX_WORKER_BLOCKED")
+        self.assertTrue(plan["blocking"])
+        self.assertEqual(plan["codex_command"], [])
+        self.assertIn("AI Factory rule sources", plan["reasons"][0])
+
+    def test_worker_accepts_preloaded_ai_factory_rule_sources(self) -> None:
+        preloaded_rules = [
+            {
+                "name": "paths.rules_file",
+                "path": ".ai-factory/RULES.md",
+                "content": "## Rules\nAI Factory 2.x baseline.",
+            },
+            {
+                "name": "rules.base",
+                "path": ".ai-factory/rules/base.md",
+                "content": "Base AI Factory worker boundaries.",
+            },
+            {
+                "name": "rules.implementation",
+                "path": ".ai-factory/rules/implementation.md",
+                "content": "Run implementation through plan/checkpoint discipline.",
+            },
+            {
+                "name": "rules.quality_gates",
+                "path": ".ai-factory/rules/quality-gates.md",
+                "content": "Emit schema_version and gate evidence.",
+            },
+            {
+                "name": "rules.security",
+                "path": ".ai-factory/rules/security.md",
+                "content": "Do not expose secrets.",
+            },
+            {
+                "name": "rules.memory",
+                "path": ".ai-factory/rules/memory.md",
+                "content": "Memory writeback must be scoped.",
+            },
+            {
+                "name": "rules.windmill",
+                "path": ".ai-factory/rules/windmill.md",
+                "content": "Windmill must not bypass gates.",
+            },
+        ]
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            plan = codex_worker_contract.build_worker_plan(
+                sample_task(),
+                repo_root=Path(tmpdir),
+                rule_sources=preloaded_rules,
+            )
+
+        self.assertEqual(plan["decision"], "CODEX_WORKER_READY")
+        self.assertIn(".ai-factory/rules/implementation.md", plan["prompt"])
+        self.assertIn("plan/checkpoint discipline", plan["prompt"])
 
     def test_restricted_changes_block_before_command_build(self) -> None:
         plan = codex_worker_contract.build_worker_plan(

@@ -33,6 +33,10 @@ command pack, and `scripts/agent-flow/codex_worker.py` runs `codex exec` in an
 isolated worktree when execution is explicitly enabled. It writes code and
 tests only inside issue-approved scope.
 
+Rules follow the AI Factory 2.x hierarchy: `paths.rules_file` for universal
+axioms, `rules.base` for project conventions, and named `rules.<area>` files for
+implementation, quality gates, security, memory, and Windmill behavior.
+
 Augment owns codebase index and context retrieval for Codex sessions. Auggie may provide supervised advisory review and diagnosis, but it is not a coding worker and does not replace final QA or branch protection.
 
 Mem0 owns optional long-term project/task memory. It stores sanitized operational summaries only and must not store secrets, raw customer data, raw transcripts, or merge approvals.

@@ -136,6 +136,67 @@ class WindmillRuntimeConfigTests(unittest.TestCase):
         self.assertEqual(result["source_of_truth"], "github_issue_or_explicit_task")
         self.assertIn("codex", result["codex_command"])
 
+    def test_windmill_codex_worker_accepts_preloaded_rule_sources(self) -> None:
+        codex_worker = load_module("codex_worker_preloaded_rules", "f/mil/codex_worker.py")
+
+        result = codex_worker.main(
+            {
+                "task": {
+                    "task_id": "MIL-LOCAL",
+                    "title": "Local dispatch",
+                    "goal": "Prepare a scoped local Codex worker run.",
+                    "acceptance_criteria": ["Worker produces evidence"],
+                    "allowed_files": ["docs/**"],
+                    "checks": ["git diff --check"],
+                    "restricted_changes": [],
+                },
+                "options": {
+                    "repo_root": "/tmp/mil-repo-not-mounted",
+                    "rule_sources": [
+                        {
+                            "name": "paths.rules_file",
+                            "path": ".ai-factory/RULES.md",
+                            "content": "## Rules\nAI Factory 2.x baseline.",
+                        },
+                        {
+                            "name": "rules.base",
+                            "path": ".ai-factory/rules/base.md",
+                            "content": "Base AI Factory worker boundaries.",
+                        },
+                        {
+                            "name": "rules.implementation",
+                            "path": ".ai-factory/rules/implementation.md",
+                            "content": "Run implementation through plan/checkpoint discipline.",
+                        },
+                        {
+                            "name": "rules.quality_gates",
+                            "path": ".ai-factory/rules/quality-gates.md",
+                            "content": "Emit schema_version and gate evidence.",
+                        },
+                        {
+                            "name": "rules.security",
+                            "path": ".ai-factory/rules/security.md",
+                            "content": "Do not expose secrets.",
+                        },
+                        {
+                            "name": "rules.memory",
+                            "path": ".ai-factory/rules/memory.md",
+                            "content": "Memory writeback must be scoped.",
+                        },
+                        {
+                            "name": "rules.windmill",
+                            "path": ".ai-factory/rules/windmill.md",
+                            "content": "Windmill must not bypass gates.",
+                        },
+                    ],
+                },
+            }
+        )
+
+        self.assertEqual(result["decision"], "CODEX_WORKER_READY")
+        self.assertEqual(result["rule_sources"][0]["path"], ".ai-factory/RULES.md")
+        self.assertIn(".ai-factory/rules/implementation.md", result["prompt"])
+
     def test_windmill_memory_scripts_enforce_scope_and_policy(self) -> None:
         mem0_retrieve = load_module("mem0_retrieve", "f/mil/mem0_retrieve.py")
         mem0_writeback = load_module("mem0_writeback", "f/mil/mem0_writeback.py")

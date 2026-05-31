@@ -17,6 +17,7 @@ RUNTIME_FILES = {
     "evidence": ".ai-factory/runtime/evidence.json",
     "environment": ".ai-factory/runtime/environment.json",
 }
+CONFIG_PATH = ".ai-factory/config.yaml"
 
 REQUIRED_AGENT_IDS = {
     "codex_developer",
@@ -170,6 +171,60 @@ def _validate_evidence(evidence: dict[str, Any], errors: list[str]) -> None:
             errors.append(f"required_evidence.{section} must not be empty")
 
 
+def _validate_ai_factory_v2_config(repo_root: Path, errors: list[str]) -> None:
+    config_path = repo_root / CONFIG_PATH
+    if not config_path.exists():
+        errors.append(f"missing runtime file: {CONFIG_PATH}")
+        return
+    config = config_path.read_text(encoding="utf-8")
+    for required in [
+        "language:",
+        "ui: en",
+        "artifacts: en",
+        "technical_terms: keep",
+        "rules_file: .ai-factory/RULES.md",
+        "rules: .ai-factory/rules",
+        "plan: .ai-factory/PLAN.md",
+        "plans: .ai-factory/plans",
+        "fix_plan: .ai-factory/FIX_PLAN.md",
+        "patches: .ai-factory/patches",
+        "evolutions: .ai-factory/evolutions",
+        "evolution: .ai-factory/evolution",
+        "references: .ai-factory/references",
+        "specs: .ai-factory/specs",
+        "archive: .ai-factory/archive",
+        "auto_create_dirs: true",
+        "plan_id_format: slug",
+        "verify_mode: strict",
+        "git:",
+        "enabled: true",
+        "base_branch: main",
+        "create_branches: true",
+        "branch_prefix: agent/",
+        "skip_push_after_commit: true",
+        "base: .ai-factory/rules/base.md",
+        "implementation: .ai-factory/rules/implementation.md",
+        "quality_gates: .ai-factory/rules/quality-gates.md",
+        "memory: .ai-factory/rules/memory.md",
+        "windmill: .ai-factory/rules/windmill.md",
+        "security: .ai-factory/rules/security.md",
+    ]:
+        if required not in config:
+            errors.append(f"config.yaml missing AI Factory v2 key: {required}")
+
+    for relative_path in [
+        ".ai-factory/RULES.md",
+        ".ai-factory/rules/base.md",
+        ".ai-factory/rules/implementation.md",
+        ".ai-factory/rules/quality-gates.md",
+        ".ai-factory/rules/security.md",
+        ".ai-factory/rules/memory.md",
+        ".ai-factory/rules/windmill.md",
+    ]:
+        if not (repo_root / relative_path).exists():
+            errors.append(f"missing AI Factory rule source: {relative_path}")
+
+
 def _validate_environment(
     environment: dict[str, Any],
     errors: list[str],
@@ -303,6 +358,7 @@ def validate(
         _validate_evidence(loaded["evidence"], errors)
     if "environment" in loaded:
         _validate_environment(loaded["environment"], errors, check_tools, tool_resolver)
+    _validate_ai_factory_v2_config(repo_root, errors)
 
     return errors
 

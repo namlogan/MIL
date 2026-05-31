@@ -27,4 +27,5 @@ def main(request: dict[str, Any] | None = None) -> dict[str, Any]:
         model=options.get("model") or None,
         sandbox=str(options.get("sandbox") or "workspace-write"),
         approval=str(options.get("approval") or "never"),
+        rule_sources=options.get("rule_sources") or options.get("ai_factory_rule_sources"),
     )

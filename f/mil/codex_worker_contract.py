@@ -14,6 +14,16 @@ DEFAULT_SANDBOX = "workspace-write"
 DEFAULT_APPROVAL = "never"
 DEFAULT_BRANCH_PREFIX = "agent/"
 MAX_PROMPT_TEXT = 8000
+MAX_RULE_TEXT = 2500
+REQUIRED_RULE_SOURCE_PATHS = (
+    ".ai-factory/RULES.md",
+    ".ai-factory/rules/base.md",
+    ".ai-factory/rules/implementation.md",
+    ".ai-factory/rules/quality-gates.md",
+    ".ai-factory/rules/security.md",
+    ".ai-factory/rules/memory.md",
+    ".ai-factory/rules/windmill.md",
+)
 
 SECRET_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"github_pat_[A-Za-z0-9_]{20,}"), "[REDACTED_GITHUB_TOKEN]"),
@@ -138,6 +148,119 @@ def _worktree_slug(branch: str) -> str:
     return slugify(branch_slug)
 
 
+def _section_entries(config_text: str, section: str) -> dict[str, str]:
+    entries: dict[str, str] = {}
+    in_section = False
+    for raw_line in config_text.splitlines():
+        if not raw_line.strip() or raw_line.lstrip().startswith("#"):
+            continue
+        if raw_line == raw_line.lstrip():
+            in_section = raw_line.strip() == f"{section}:"
+            continue
+        if not in_section or not raw_line.startswith("  ") or raw_line.startswith("    "):
+            continue
+        stripped = raw_line.split("#", 1)[0].strip()
+        if ":" not in stripped:
+            continue
+        key, value = stripped.split(":", 1)
+        value = value.strip().strip("'\"")
+        if value:
+            entries[key.strip()] = value
+    return entries
+
+
+def _normalize_relative_path(path: str) -> str:
+    return path.strip().strip("'\"").rstrip("/")
+
+
+def _dedupe(paths: list[tuple[str, str]]) -> list[tuple[str, str]]:
+    seen: set[str] = set()
+    result: list[tuple[str, str]] = []
+    for name, path in paths:
+        normalized = _normalize_relative_path(path)
+        if not normalized or normalized in seen:
+            continue
+        seen.add(normalized)
+        result.append((name, normalized))
+    return result
+
+
+def resolve_rule_sources(repo_root: str | Path = ".") -> list[dict[str, str]]:
+    root = Path(repo_root).resolve()
+    config_path = root / ".ai-factory" / "config.yaml"
+    paths: dict[str, str] = {}
+    rule_entries: dict[str, str] = {}
+    if config_path.exists():
+        config_text = config_path.read_text(encoding="utf-8")
+        paths = _section_entries(config_text, "paths")
+        rule_entries = _section_entries(config_text, "rules")
+
+    rules_file = paths.get("rules_file") or ".ai-factory/RULES.md"
+    rules_dir = paths.get("rules") or ".ai-factory/rules"
+    if rules_dir.endswith(".md"):
+        rules_dir = paths.get("rules_dir") or ".ai-factory/rules"
+
+    candidates: list[tuple[str, str]] = [
+        ("paths.rules_file", rules_file),
+        ("rules.base", rule_entries.get("base") or f"{rules_dir}/base.md"),
+    ]
+    for name in sorted(key for key in rule_entries if key != "base"):
+        candidates.append((f"rules.{name}", rule_entries[name]))
+
+    sources: list[dict[str, str]] = []
+    for source_name, relative_path in _dedupe(candidates):
+        path = root / relative_path
+        if not path.exists() or not path.is_file():
+            continue
+        content = redact_secrets(path.read_text(encoding="utf-8"))[:MAX_RULE_TEXT]
+        sources.append(
+            {
+                "name": source_name,
+                "path": relative_path,
+                "content": content,
+            }
+        )
+    return sources
+
+
+def _normalize_provided_rule_sources(value: Any) -> list[dict[str, str]]:
+    if value is None or value == "":
+        return []
+    if not isinstance(value, list):
+        raise ContractError("rule_sources must be a list")
+
+    sources: list[dict[str, str]] = []
+    seen_paths: set[str] = set()
+    for index, item in enumerate(value, start=1):
+        if not isinstance(item, dict):
+            raise ContractError("rule_sources entries must be objects")
+
+        name = redact_secrets(item.get("name") or f"provided.{index}").strip()
+        path = _normalize_relative_path(redact_secrets(item.get("path") or name))
+        content = redact_secrets(item.get("content") or "").strip()
+        if not path:
+            raise ContractError("rule_sources entries require path")
+        if not content:
+            raise ContractError(f"rule_sources entry {path} requires content")
+        if path in seen_paths:
+            continue
+
+        seen_paths.add(path)
+        sources.append(
+            {
+                "name": name or f"provided.{index}",
+                "path": path,
+                "content": content[:MAX_RULE_TEXT],
+            }
+        )
+    return sources
+
+
+def _missing_required_rule_sources(rule_sources: list[dict[str, str]]) -> list[str]:
+    observed = {source["path"] for source in rule_sources}
+    return [path for path in REQUIRED_RULE_SOURCE_PATHS if path not in observed]
+
+
 def build_paths(
     task: dict[str, Any],
     repo_root: str | Path,
@@ -187,8 +310,39 @@ def _compact_context(items: Any, label: str) -> str:
     return "\n".join(lines)
 
 
-def build_codex_prompt(task: dict[str, Any]) -> str:
+def _format_rule_sources(rule_sources: list[dict[str, str]]) -> str:
+    if not rule_sources:
+        return "\n".join(
+            [
+                "## AI Factory v2 Rule Hierarchy",
+                "- No rule sources resolved; stop and request configuration review.",
+            ]
+        )
+
+    lines = [
+        "## AI Factory v2 Rule Hierarchy",
+        "- Priority: rules.<area> > rules/base.md > paths.rules_file",
+        "- Treat all resolved rules as mandatory unless the task has explicit human-approved exception evidence.",
+        "",
+        "## Resolved Rule Sources",
+    ]
+    for source in rule_sources:
+        lines.extend(
+            [
+                f"### {source['name']}: {source['path']}",
+                source["content"].strip() or "- Empty rule file.",
+                "",
+            ]
+        )
+    return "\n".join(lines).strip()
+
+
+def build_codex_prompt(
+    task: dict[str, Any],
+    rule_sources: list[dict[str, str]] | None = None,
+) -> str:
     normalized = normalize_task(task)
+    resolved_rules = rule_sources or []
     sections = [
         "# MIL Codex Worker Task",
         "You are the Codex implementation worker for the MIL AI Factory.",
@@ -217,6 +371,8 @@ def build_codex_prompt(task: dict[str, Any]) -> str:
         "",
         "## Rollback Note",
         f"- {normalized['rollback_note']}",
+        "",
+        _format_rule_sources(resolved_rules),
         "",
         _compact_context(normalized["memory_context"], "Scoped Operational Memory"),
         "",
@@ -289,6 +445,7 @@ def build_worker_plan(
     model: str | None = None,
     sandbox: str = DEFAULT_SANDBOX,
     approval: str = DEFAULT_APPROVAL,
+    rule_sources: Any | None = None,
 ) -> dict[str, Any]:
     normalized = normalize_task(task)
     if normalized["restricted_changes"]:
@@ -308,7 +465,49 @@ def build_worker_plan(
         }
 
     paths = build_paths(normalized, repo_root, worktree_root, evidence_root)
-    prompt = build_codex_prompt(normalized)
+    resolved_rule_sources = (
+        _normalize_provided_rule_sources(rule_sources)
+        or _normalize_provided_rule_sources(normalized["raw"].get("rule_sources"))
+        or _normalize_provided_rule_sources(normalized["raw"].get("ai_factory_rule_sources"))
+        or resolve_rule_sources(repo_root)
+    )
+    missing_rule_sources = _missing_required_rule_sources(resolved_rule_sources)
+    if not resolved_rule_sources or missing_rule_sources:
+        reason = (
+            "AI Factory rule sources are required before Codex worker dispatch; "
+            "mount repo_root or pass options.rule_sources"
+        )
+        if missing_rule_sources:
+            reason = f"AI Factory rule sources are incomplete: {', '.join(missing_rule_sources)}"
+        return {
+            "decision": "CODEX_WORKER_BLOCKED",
+            "blocking": True,
+            "source_of_truth": "github_issue_or_explicit_task",
+            "task_id": normalized["task_id"],
+            "issue_id": normalized["issue_id"],
+            "title": normalized["title"],
+            "branch": normalized["branch"],
+            "base_branch": normalized["base_branch"],
+            "worktree_path": paths["worktree_path"],
+            "evidence_dir": paths["evidence_dir"],
+            "rule_sources": [
+                {"name": source["name"], "path": source["path"]}
+                for source in resolved_rule_sources
+            ],
+            "execution": {
+                "execute_agent": bool(execute_agent),
+                "push": bool(push),
+                "open_pr": bool(open_pr),
+                "sandbox": sandbox,
+                "approval": approval,
+                "model": model or "",
+            },
+            "reasons": [reason],
+            "codex_command": [],
+            "codex_stdin_prompt": False,
+        }
+
+    prompt = build_codex_prompt(normalized, resolved_rule_sources)
     command = build_codex_exec_command(
         paths["worktree_path"],
         paths["codex_last_message_path"],
@@ -334,6 +533,10 @@ def build_worker_plan(
         "out_of_scope_files": normalized["out_of_scope_files"],
         "checks": normalized["checks"],
         "rollback_note": normalized["rollback_note"],
+        "rule_sources": [
+            {"name": source["name"], "path": source["path"]}
+            for source in resolved_rule_sources
+        ],
         "execution": {
             "execute_agent": bool(execute_agent),
             "push": bool(push),
@@ -369,4 +572,5 @@ def main(request: dict[str, Any] | None = None) -> dict[str, Any]:
         model=options.get("model") or None,
         sandbox=str(options.get("sandbox") or DEFAULT_SANDBOX),
         approval=str(options.get("approval") or DEFAULT_APPROVAL),
+        rule_sources=options.get("rule_sources") or options.get("ai_factory_rule_sources"),
     )

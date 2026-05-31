@@ -20,6 +20,38 @@ f/mil/mem0_retrieve.py
 f/mil/mem0_writeback.py
 ```
 
+## AI Factory 2.x Rulepack
+
+MIL follows the AI Factory 2.x rule hierarchy:
+
+```text
+paths.rules_file -> .ai-factory/RULES.md
+rules.base       -> .ai-factory/rules/base.md
+rules.<area>     -> .ai-factory/rules/<area>.md
+```
+
+Priority is:
+
+```text
+rules.<area> > rules/base.md > paths.rules_file
+```
+
+Configured area rules:
+
+```text
+implementation -> .ai-factory/rules/implementation.md
+quality_gates  -> .ai-factory/rules/quality-gates.md
+security       -> .ai-factory/rules/security.md
+memory         -> .ai-factory/rules/memory.md
+windmill       -> .ai-factory/rules/windmill.md
+```
+
+`codex_worker` resolves these files from `.ai-factory/config.yaml` and embeds
+the active rule sources into the worker prompt before implementation. The
+worker fails closed when no rule source is available. Hosted Windmill runtimes
+must either mount the MIL repo at `options.repo_root` or receive pre-resolved
+`options.rule_sources` from the local relay/control-plane request.
+
 ## Check Install
 
 Run the runtime checker after cloning or changing factory config:
