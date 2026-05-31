@@ -290,6 +290,17 @@ fix_ci_or_review -> augment_context.provide_ci_context -> mem0_memory.retrieve_c
 
 In Windmill, the dry-run adapter should be replaced by worker scripts that call Codex for implementation/QA, Augment MCP for codebase context, and mem0 for sanitized memory with least-privilege credentials. Auggie remains a supervised read-only advisory lane when explicitly requested; it is not a coding worker.
 
+Memory retrieval and writeback are deployable Windmill scripts:
+
+```text
+f/mil/mem0_retrieve
+f/mil/mem0_writeback
+```
+
+`mem0_retrieve` refuses unscoped/global search. `mem0_writeback` refuses
+missing provenance, missing entity scope, and approval-required memory without
+human approval.
+
 ## CLI Project Setup
 
 Windmill CLI is installed with:

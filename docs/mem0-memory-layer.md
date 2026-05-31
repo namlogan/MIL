@@ -56,6 +56,51 @@ Do not store:
 - production credentials or deployment secrets
 - anything that should live only in GitHub issue/PR evidence
 
+## Required Schema
+
+Every memory write must include provenance and scope metadata:
+
+```json
+{
+  "tenant_id": "org_mil",
+  "workspace_id": "engineering",
+  "repo": "MIL",
+  "repo_id": "github:namlogan/MIL",
+  "user_id": "repo:github:namlogan/MIL",
+  "agent_id": "codex",
+  "run_id": "windmill-job-123",
+  "source_uri": "https://github.com/namlogan/MIL/pull/26",
+  "confidence": 0.82,
+  "status": "active",
+  "visibility": "repo",
+  "created_by": "agent"
+}
+```
+
+At least one Mem0 entity scope is required: `user_id`, `agent_id`,
+`app_id`, or `run_id`. Retrieval must always include `tenant_id`, `repo_id`,
+`memory_type`, `status`, `visibility`, and one entity scope. Global search is
+not allowed.
+
+Auto-write memory types:
+
+```text
+agent_performance, ci_pattern, developer_handoff, failure_pattern,
+incident_learning, merge_gate, operator_note, plan, qa_gate, review_note,
+run_summary, tool_failure
+```
+
+Approval-required memory types:
+
+```text
+architecture_decision, human_preference, repo_convention, review_rule,
+security_policy
+```
+
+Approval-required memories must include `approved_by` and must be submitted
+with the approval flag. The source of truth still remains the linked PR, issue,
+ADR, docs page, CI run, or Windmill job.
+
 ## Local Test Adapter
 
 The repo includes a deterministic JSONL adapter so CI can test the memory
@@ -65,10 +110,24 @@ contract without requiring a Mem0 account:
 python3 scripts/agent-memory/memory_contract.py --self-test
 python3 scripts/agent-memory/memory_contract.py add \
   --task-id MEM-001 \
-  --memory-type operator_note \
-  --text "Use mem0 as scoped project memory only."
+  --memory-type failure_pattern \
+  --text "Prior CI failures in this area were caused by non-idempotent retries." \
+  --metadata tenant_id=org_mil \
+  --metadata workspace_id=engineering \
+  --metadata repo=MIL \
+  --metadata repo_id=github:namlogan/MIL \
+  --metadata user_id=repo:github:namlogan/MIL \
+  --metadata source_uri=https://github.com/namlogan/MIL/pull/26 \
+  --metadata confidence=0.82 \
+  --metadata status=active \
+  --metadata visibility=repo \
+  --metadata created_by=agent
 python3 scripts/agent-memory/memory_contract.py search \
-  --query "scoped project memory"
+  --query "non-idempotent retries" \
+  --tenant-id org_mil \
+  --repo-id github:namlogan/MIL \
+  --memory-type failure_pattern \
+  --user-id repo:github:namlogan/MIL
 ```
 
 Local runtime memory is written to:
@@ -91,8 +150,15 @@ When moving beyond the local adapter, use one of these modes:
 Store those values in Windmill or the workstation secret store. Do not commit
 them and do not paste them into task memory.
 
-The integration boundary should stay behind `scripts/agent-memory/`. Windmill
-or Codex should call the same logical operations:
+The local CLI lives in `scripts/agent-memory/`; the deployable Windmill memory
+contract lives in `f/mil/memory_contract.py`. Windmill entrypoints:
+
+```text
+f/mil/mem0_retrieve
+f/mil/mem0_writeback
+```
+
+Windmill or Codex should call the same logical operations:
 
 ```text
 retrieve_project_memory
@@ -119,6 +185,8 @@ python3 scripts/agent-gate/validate_ai_factory.py --self-test
 Expected behavior:
 
 - token-shaped values are redacted before write
-- memory records require project and task scope
+- memory records require project, task, provenance, and entity scope
+- memory search requires strict metadata filters
+- approval-required memory types cannot be written by agents without approval
 - unsupported raw memory types are rejected
 - mem0 does not appear as a coding, QA, or merge agent
