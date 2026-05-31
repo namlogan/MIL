@@ -186,6 +186,37 @@ class WindmillRuntimeConfigTests(unittest.TestCase):
         self.assertIn("MIL_CLOUDFLARE_TUNNEL_NAME=mil-github-webhook", env_example)
         self.assertIn("setup_cloudflare_named_tunnel.py", docs)
 
+    def test_ngrok_static_endpoint_setup_is_scoped_to_relay(self) -> None:
+        setup = load_module(
+            "setup_ngrok_static_endpoint",
+            "scripts/windmill/setup_ngrok_static_endpoint.py",
+        )
+
+        self.assertEqual(
+            setup.normalize_domain("https://mil-demo.ngrok-free.app"),
+            "mil-demo.ngrok-free.app",
+        )
+        self.assertEqual(setup.validate_domain("mil-demo.ngrok-free.app"), [])
+        self.assertIn(
+            "expected an ngrok-managed static/dev domain such as <name>.ngrok-free.app",
+            setup.validate_domain("mil-demo.example.com"),
+        )
+        self.assertEqual(setup.validate_relay_url("http://127.0.0.1:18090"), [])
+        self.assertIn(
+            "relay URL must not expose the full local Windmill port",
+            setup.validate_relay_url("http://127.0.0.1:8090"),
+        )
+
+        env_example = (REPO_ROOT / ".windmill" / "env.example").read_text(
+            encoding="utf-8"
+        )
+        docs = (REPO_ROOT / "docs" / "windmill-setup.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("MIL_NGROK_DOMAIN=", env_example)
+        self.assertIn("setup_ngrok_static_endpoint.py", docs)
+        self.assertIn("ngrok-free.app", docs)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -150,6 +150,54 @@ wmill --workspace mil-local job list --json --limit 5
 Expected result: GitHub delivery status `OK`, HTTP status `201`, and a recent
 Windmill job created by `HTTP-f/mil/github_webhook`.
 
+### Stable Endpoint Without Owning A Domain
+
+If you do not have a custom domain, use an ngrok account dev/static domain such
+as:
+
+```text
+<assigned-name>.ngrok-free.app
+```
+
+This still gives GitHub a stable URL, but it does not require buying or moving a
+domain to Cloudflare.
+
+One-time human step:
+
+```bash
+ngrok config add-authtoken <NGROK_AUTHTOKEN>
+```
+
+Then copy the account's static/dev domain from the ngrok dashboard and validate
+the MIL endpoint command:
+
+```bash
+python3 scripts/windmill/setup_ngrok_static_endpoint.py \
+  --domain <assigned-name>.ngrok-free.app
+```
+
+Run the relay:
+
+```bash
+scripts/windmill/run_github_webhook_relay_from_windmill_secret.sh
+```
+
+Run the ngrok endpoint in another terminal:
+
+```bash
+ngrok http --url https://<assigned-name>.ngrok-free.app 18090
+```
+
+Then configure the GitHub webhook URL:
+
+```text
+https://<assigned-name>.ngrok-free.app/mil/github-webhook
+```
+
+Use the same GitHub settings listed above. The local MIL relay still accepts
+only `POST /mil/github-webhook` and still verifies the GitHub HMAC signature
+before forwarding to Windmill.
+
 Implemented routing:
 
 - `issues` with label `agent:plan` -> `issue_to_plan`
