@@ -59,9 +59,12 @@ Current state:
 - `f/mil/github_commit_status` has been imported and has published real `ai-gate/final-review` commit statuses.
 - `f/mil/github_webhook_router` and `f/mil/github_webhook.http_trigger.yaml` define the repo-local GitHub webhook ingress.
 - `scripts/windmill/github_webhook_public_relay.py` exposes only `POST /mil/github-webhook`, verifies GitHub HMAC signatures before forwarding, and forwards signed deliveries to local Windmill.
+- `scripts/windmill/setup_cloudflare_named_tunnel.py` can create or reuse a Cloudflare named tunnel, route DNS, and write the local cloudflared config for the signed relay.
+- `scripts/windmill/run_github_webhook_relay_from_windmill_secret.sh` starts the relay by reading `f/mil/github_webhook_secret` from Windmill without storing the secret in repo files.
+- A temporary Cloudflare quick tunnel smoke on 2026-05-31 proved GitHub -> public tunnel -> signed relay -> Windmill routing with HTTP 201 and Windmill success jobs.
 
 Required decision:
 
-- Choose a stable public endpoint: hosted Windmill, a reverse proxy, a reserved tunnel domain, or a Cloudflare named tunnel pointed at the relay route.
-- Add the GitHub webhook for `issues`, `pull_request`, `workflow_run`, and `issue_comment` once a stable public URL exists.
+- Complete Cloudflare login on the control station and choose the stable hostname in a Cloudflare-managed zone.
+- Run the Cloudflare named tunnel setup and add the GitHub webhook for `issues`, `pull_request`, `workflow_run`, and `issue_comment` once the stable public URL exists.
 - Do not expose the whole local Windmill UI/API through an unauthenticated tunnel.

@@ -119,6 +119,12 @@ class WindmillRuntimeConfigTests(unittest.TestCase):
 
     def test_public_webhook_relay_is_documented_and_scoped(self) -> None:
         relay = REPO_ROOT / "scripts" / "windmill" / "github_webhook_public_relay.py"
+        relay_runner = (
+            REPO_ROOT
+            / "scripts"
+            / "windmill"
+            / "run_github_webhook_relay_from_windmill_secret.sh"
+        )
         env_example = (REPO_ROOT / ".windmill" / "env.example").read_text(
             encoding="utf-8"
         )
@@ -132,6 +138,53 @@ class WindmillRuntimeConfigTests(unittest.TestCase):
         self.assertIn("github_webhook_public_relay.py", docs)
         self.assertIn("accepts only `POST /mil/github-webhook`", docs)
         self.assertIn("Do not expose the full Windmill UI/API", docs)
+        self.assertTrue(relay_runner.exists())
+
+        runner = relay_runner.read_text(encoding="utf-8")
+        self.assertIn("variable get", runner)
+        self.assertIn("f/mil/github_webhook_secret", runner)
+        self.assertIn('export MIL_GITHUB_WEBHOOK_SECRET="${secret}"', runner)
+        self.assertIn("exec python3", runner)
+        self.assertNotIn("ghp_", runner)
+        self.assertNotIn("sk-", runner)
+
+    def test_cloudflare_named_tunnel_setup_is_scoped_to_relay(self) -> None:
+        setup = load_module(
+            "setup_cloudflare_named_tunnel",
+            "scripts/windmill/setup_cloudflare_named_tunnel.py",
+        )
+
+        config = setup.build_config(
+            tunnel_id="11111111-1111-1111-1111-111111111111",
+            credentials_file=REPO_ROOT
+            / ".windmill"
+            / "runtime"
+            / "cloudflared"
+            / "mil-github-webhook.json",
+            hostname="mil-webhook.example.com",
+            relay_url="http://127.0.0.1:18090",
+            metrics="127.0.0.1:20241",
+        )
+
+        self.assertIn("hostname: mil-webhook.example.com", config)
+        self.assertIn("service: http://127.0.0.1:18090", config)
+        self.assertIn("service: http_status:404", config)
+        self.assertNotIn("localhost:8090", config)
+        self.assertNotIn("/api/r/admins", config)
+        self.assertEqual(setup.validate_relay_url("http://127.0.0.1:18090"), [])
+        self.assertIn(
+            "relay URL must not expose the full local Windmill port",
+            setup.validate_relay_url("http://127.0.0.1:8090"),
+        )
+
+        env_example = (REPO_ROOT / ".windmill" / "env.example").read_text(
+            encoding="utf-8"
+        )
+        docs = (REPO_ROOT / "docs" / "windmill-setup.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("MIL_CLOUDFLARE_TUNNEL_NAME=mil-github-webhook", env_example)
+        self.assertIn("setup_cloudflare_named_tunnel.py", docs)
 
 
 if __name__ == "__main__":
