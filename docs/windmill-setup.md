@@ -431,7 +431,7 @@ Only run `wmill sync push` after the dry-run diff is reviewed and the workspace 
 
 ## GitHub Commit Status Publisher
 
-MIL includes `f/mil/github_commit_status.py` for publishing `ai-gate/final-review` to the GitHub commit status API from a Windmill worker.
+MIL includes `f/mil/github_commit_status.py` for publishing `ai-gate/final-review` to the GitHub commit status API from a Windmill worker. `f/mil/github_webhook_router.py` now calls this publisher automatically after `pr_quality_gate` routes a PR or successful workflow run, so the required branch-protection context is produced by the normal webhook flow.
 
 Required Windmill secret variable:
 
@@ -449,7 +449,7 @@ wmill script run f/mil/github_commit_status \
   -d '{"status":{"owner":"namlogan","repo":"MIL","sha":"<sha>","state":"pending","description":"dry run","target_url":"https://github.com/namlogan/MIL/pull/<n>","dry_run":true}}'
 ```
 
-Real publish after the secret exists:
+Manual fallback publish after the secret exists:
 
 ```bash
 wmill script run f/mil/github_commit_status \

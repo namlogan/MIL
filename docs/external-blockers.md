@@ -1,6 +1,6 @@
 # MIL External Blockers
 
-Status as of 2026-05-31.
+Status as of 2026-06-01.
 
 The repo-local agent framework is in place on PR #2, and local tests cover all four specified flow contracts. The remaining items below require account, platform, or credential changes outside the repository.
 
@@ -17,11 +17,11 @@ Current state:
 - Pull requests are required with zero required approvals for the solo-owner pilot.
 - Force pushes and branch deletion are disabled.
 - Conversation resolution is required.
-- `ai-gate/final-review` can be published through the commit status API and is required by branch protection.
+- `ai-gate/final-review` is required by branch protection and is now published automatically by the Windmill webhook router after `pr_quality_gate` runs.
 
 Required decision:
 
-- Keep the Windmill publisher healthy so every PR head and merged `main` commit receives `ai-gate/final-review`.
+- Keep the Windmill publisher secret healthy so every PR head receives `ai-gate/final-review` from the normal webhook flow.
 
 ## Augment Context Provider / Auggie Advisory
 
@@ -59,6 +59,7 @@ Current state:
 - Required secret names are documented in `.ai-factory/runtime/environment.json` and `docs/windmill-setup.md`.
 - A local Windmill workspace profile `mil-local` targets workspace `admins`.
 - `f/mil/github_commit_status` has been imported and has published real `ai-gate/final-review` commit statuses.
+- `f/mil/github_webhook_router` now publishes `ai-gate/final-review` automatically for `pr_quality_gate` PR/workflow events; the standalone status script remains the manual fallback and diagnostic tool.
 - `f/mil/github_webhook_router` and `f/mil/github_webhook.http_trigger.yaml` define the repo-local GitHub webhook ingress.
 - `f/mil/github_webhook_router` routes `agent:build` issue events into real `plan_to_pr` dispatch and passes a bundled AI Factory rulepack for hosted Windmill runtimes without a mounted repo.
 - `scripts/windmill/github_webhook_public_relay.py` exposes only `POST /mil/github-webhook`, verifies GitHub HMAC signatures before forwarding, and forwards signed deliveries to local Windmill.

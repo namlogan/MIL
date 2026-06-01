@@ -14,6 +14,11 @@ except ImportError:  # pragma: no cover - local unit tests inject the secret.
     wmill = None  # type: ignore
 
 from f.mil.flow_contract import run_flow
+from f.mil.github_commit_status import (
+    DEFAULT_CONTEXT as DEFAULT_GATE_STATUS_CONTEXT,
+    build_status_payload,
+    publish_commit_status,
+)
 from f.mil.plan_to_pr_contract import run_plan_to_pr
 
 
@@ -246,6 +251,33 @@ def _repository(payload: dict[str, Any]) -> str:
     return str(repository.get("full_name") or "")
 
 
+def _repository_parts(full_name: str) -> tuple[str, str]:
+    owner, separator, repo = str(full_name or "").partition("/")
+    if not separator or not owner or not repo:
+        return "", ""
+    return owner, repo
+
+
+def _redact_sensitive(value: Any) -> str:
+    text = str(value)
+    patterns = (
+        (re.compile(r"github_pat_[A-Za-z0-9_]{20,}"), "github_pat_[REDACTED]"),
+        (re.compile(r"gh[pousr]_[A-Za-z0-9_]{20,}"), "gh_[REDACTED]"),
+        (re.compile(r"sk-[A-Za-z0-9_-]{20,}"), "sk-[REDACTED]"),
+        (
+            re.compile(r"(?i)(authorization\\s*[:=]\\s*bearer\\s+)[A-Za-z0-9._-]{8,}"),
+            r"\1[REDACTED]",
+        ),
+        (
+            re.compile(r"(?i)(token\\s*[:=]\\s*)[A-Za-z0-9._-]{8,}"),
+            r"\1[REDACTED]",
+        ),
+    )
+    for pattern, replacement in patterns:
+        text = pattern.sub(replacement, text)
+    return text[:500]
+
+
 def _base_task(task_id: str, goal: str, body: str = "") -> dict[str, Any]:
     return {
         "task_id": task_id,
@@ -420,6 +452,99 @@ def _github_context(
     }
 
 
+def _gate_payload(result: dict[str, Any]) -> dict[str, Any]:
+    artifacts = result.get("artifacts") or {}
+    gate = artifacts.get("aif_gate_result") or {}
+    return gate if isinstance(gate, dict) else {}
+
+
+def _gate_decision(result: dict[str, Any]) -> str:
+    gate = _gate_payload(result)
+    return str(gate.get("decision") or result.get("decision") or "BLOCKED_NEEDS_HUMAN").strip().upper()
+
+
+def _gate_blocking(result: dict[str, Any]) -> bool:
+    gate = _gate_payload(result)
+    return bool(gate.get("blocking") or result.get("blocking"))
+
+
+def _gate_status_state(result: dict[str, Any]) -> str:
+    if _gate_blocking(result):
+        return "failure"
+    return "success" if _gate_decision(result) == "APPROVE_MERGE" else "failure"
+
+
+def _gate_status_target_url(github: dict[str, Any]) -> str:
+    if github.get("url"):
+        return str(github["url"])
+    repository = str(github.get("repository") or "")
+    pr_number = github.get("pr_number")
+    if repository and pr_number:
+        return f"https://github.com/{repository}/pull/{pr_number}"
+    return ""
+
+
+def _gate_status_description(result: dict[str, Any]) -> str:
+    decision = _gate_decision(result)
+    if _gate_status_state(result) == "success":
+        return f"{decision}: Windmill AI gate passed."
+    return f"{decision}: Windmill AI gate requires attention."
+
+
+def _publish_pr_gate_status(
+    *,
+    route: dict[str, Any],
+    result: dict[str, Any],
+) -> dict[str, Any]:
+    github = route.get("github") or {}
+    owner, repo = _repository_parts(str(github.get("repository") or ""))
+    sha = str(github.get("head_sha") or "").strip()
+    target_url = _gate_status_target_url(github)
+    state = _gate_status_state(result)
+    description = _gate_status_description(result)
+    payload = build_status_payload(
+        state=state,
+        context=DEFAULT_GATE_STATUS_CONTEXT,
+        description=description,
+        target_url=target_url,
+    )
+
+    base = {
+        "ok": False,
+        "state": state,
+        "context": DEFAULT_GATE_STATUS_CONTEXT,
+        "sha": sha,
+        "target_url": target_url,
+        "description": payload["description"],
+    }
+    if not owner or not repo:
+        return {**base, "skipped": True, "reason": "repository full_name is missing"}
+    if not sha:
+        return {**base, "skipped": True, "reason": "head_sha is missing"}
+
+    try:
+        published = publish_commit_status(
+            owner=owner,
+            repo=repo,
+            sha=sha,
+            payload=payload,
+        )
+    except Exception as exc:  # pragma: no cover - exercised by live Windmill smoke.
+        return {
+            **base,
+            "skipped": False,
+            "reason": _redact_sensitive(exc),
+        }
+
+    return {
+        **base,
+        "ok": bool(published.get("ok")),
+        "skipped": False,
+        "status_code": published.get("status_code"),
+        "url": published.get("url", ""),
+    }
+
+
 def _matched(
     flow: str,
     task: dict[str, Any],
@@ -587,8 +712,11 @@ def main(request: dict[str, Any]) -> dict[str, Any]:
     else:
         result = run_flow(route["flow"], route["task"])
 
-    return {
+    response = {
         "decision": "ROUTED_TO_FLOW",
         "route": route,
         "result": result,
     }
+    if route["flow"] == "pr_quality_gate":
+        response["status_publish"] = _publish_pr_gate_status(route=route, result=result)
+    return response
