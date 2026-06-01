@@ -119,23 +119,23 @@ python3 scripts/agent-memory/check_mem0_provider.py
 python3 scripts/agent-memory/mem0_framework_integration.py --self-test
 ```
 
-When the product app or worker needs real Mem0 during development, use the OSS
-library directly:
+When the product app or a future worker explicitly needs Mem0's own package,
+check the OSS library without requiring any external LLM provider:
 
 ```bash
 pip install mem0ai
-export OPENAI_API_KEY="..."
 python3 scripts/agent-memory/check_mem0_library.py --runtime python
-python3 scripts/agent-memory/mem0_framework_integration.py --self-test
 ```
 
 or for a Node app:
 
 ```bash
 npm install mem0ai
-export OPENAI_API_KEY="..."
 python3 scripts/agent-memory/check_mem0_library.py --runtime node
 ```
+
+Only use `--require-llm` when you intentionally want real Mem0 `Memory()` calls
+that perform extraction/semantic search through a configured provider.
 
 Mem0 may store scoped, sanitized operational facts. It must not store secrets,
 raw source, raw transcripts, customer data, or unreviewed generated patches.

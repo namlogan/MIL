@@ -30,7 +30,7 @@ class Mem0LibraryPreflightTests(unittest.TestCase):
     def test_python_library_mode_requires_package_and_llm_config(self) -> None:
         result = self.preflight.check_library(
             runtime="python",
-            env={"OPENAI_API_KEY": "secret-openai-key"},
+            env={},
             python_module_available=lambda module: module == "mem0",
         )
 
@@ -38,7 +38,21 @@ class Mem0LibraryPreflightTests(unittest.TestCase):
         self.assertEqual(result["runtime"], "python")
         self.assertEqual(result["store"]["history"], "~/.mem0/history.db")
         self.assertEqual(result["store"]["vector"], "/tmp/qdrant")
-        self.assertNotIn("secret-openai-key", json.dumps(result))
+        self.assertIn("No external LLM provider is configured", result["warnings"][0])
+
+    def test_library_mode_requires_llm_only_when_explicitly_requested(self) -> None:
+        result = self.preflight.check_library(
+            runtime="python",
+            env={},
+            python_module_available=lambda module: module == "mem0",
+            require_llm=True,
+        )
+
+        self.assertFalse(result["ok"])
+        self.assertIn(
+            "OPENAI_API_KEY, OLLAMA_HOST, or another explicit Mem0 LLM provider is required.",
+            result["errors"],
+        )
 
     def test_python_library_mode_can_use_ollama_instead_of_openai(self) -> None:
         result = self.preflight.check_library(

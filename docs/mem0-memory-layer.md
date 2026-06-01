@@ -139,42 +139,56 @@ Local runtime memory is written to:
 That file is ignored by git. Keep `.ai-factory/memory/.gitkeep` committed so
 the portable directory exists.
 
-## Development Library Mode
+## Internal Framework Memory
 
-For the development phase, use Mem0 as an OSS library inside the app or worker
-process. Do not start a Mem0 server unless the project explicitly needs a
-shared team service.
+For MIL's own agent memory, do not call OpenAI, Ollama, or any external LLM by
+default. The internal memory path is deterministic:
 
-Python app:
+```text
+mem0_writeback -> sanitized JSON record -> local JSONL / context pack
+mem0_retrieve  -> strict scoped filters -> context injected into Codex prompt
+```
+
+Run the framework smoke:
 
 ```bash
-pip install mem0ai
-export OPENAI_API_KEY="..."
-python3 -c 'from mem0 import Memory; print("MEM0_LIBRARY_OK")'
-python3 scripts/agent-memory/check_mem0_library.py --runtime python
 python3 scripts/agent-memory/mem0_framework_integration.py --self-test
 ```
 
-The official Python quickstart initializes `Memory()` from the `mem0` module.
-By default it uses OpenAI for fact extraction/embeddings, Qdrant with on-disk
-data at `/tmp/qdrant`, and SQLite history at `~/.mem0/history.db`.
+This proves the memory path agents use to understand project context without
+network calls or LLM-backed extraction.
 
-Node app:
+## Optional Mem0 Library Adapter
+
+Use the OSS `mem0ai` package only when a product app or a future worker wants
+Mem0's own extraction/embedding behavior. This is not required for MIL internal
+agent memory.
+
+Python package check:
+
+```bash
+pip install mem0ai
+python3 -c 'from mem0 import Memory; print("MEM0_LIBRARY_OK")'
+python3 scripts/agent-memory/check_mem0_library.py --runtime python
+```
+
+Node package check:
 
 ```bash
 npm install mem0ai
-export OPENAI_API_KEY="..."
 node -e 'import("mem0ai/oss").then(() => console.log("MEM0_LIBRARY_OK"))'
 python3 scripts/agent-memory/check_mem0_library.py --runtime node
 ```
 
-The official Node quickstart imports `Memory` from `mem0ai/oss`; its default
-development profile uses a local-friendly memory vector store and SQLite
-history. Node apps should keep `mem0ai` in `package.json` so the preflight can
-detect it without network calls.
+The checker does not require an external LLM provider by default. If you
+explicitly want to validate real Mem0 `Memory()` calls that perform extraction
+and semantic search, run:
 
-Use Ollama instead of OpenAI by exporting `OLLAMA_HOST` or setting
-`MEM0_LLM_PROVIDER=ollama` and passing the matching Mem0 config in app code.
+```bash
+python3 scripts/agent-memory/check_mem0_library.py --runtime python --require-llm
+```
+
+Only that explicit mode needs OpenAI, Ollama, or another configured provider.
 
 ## External Provider Mode
 
@@ -214,12 +228,12 @@ Framework integration smoke:
 python3 scripts/agent-memory/mem0_framework_integration.py --self-test
 ```
 
-This smoke proves the development integration without external LLM/network
-calls: `mem0_writeback` creates a sanitized record, the Mem0 library adapter
-builds Python `Memory.add/search` calls, the resulting context pack is injected
-into `plan_to_pr`, and the Codex worker prompt contains the retrieved memory.
-It uses a fake Mem0 client in CI; real app memory should still use `mem0ai`
-directly once `OPENAI_API_KEY` or Ollama is configured.
+This smoke proves the internal project-memory integration without external
+LLM/network calls: `mem0_writeback` creates a sanitized record, the adapter
+builds Python `Memory.add/search` shaped calls for compatibility, the resulting
+context pack is injected into `plan_to_pr`, and the Codex worker prompt contains
+the retrieved memory. It uses a fake Mem0 client in CI because MIL's internal
+memory must stay deterministic.
 
 Windmill or Codex should call the same logical operations:
 
