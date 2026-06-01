@@ -60,6 +60,7 @@ def check_library(
     repo_root: str | Path | None = None,
     env: Mapping[str, str] | None = None,
     python_module_available: ModuleAvailable = _python_module_available,
+    require_llm: bool = False,
 ) -> dict[str, object]:
     values = dict(os.environ if env is None else env)
     root = Path(repo_root or Path.cwd()).resolve()
@@ -71,7 +72,16 @@ def check_library(
     warnings: list[str] = []
     provider = _llm_provider(values)
     if not provider:
-        errors.append("OPENAI_API_KEY or Ollama configuration is required for Mem0 library mode.")
+        message = (
+            "No external LLM provider is configured; this is OK for MIL internal "
+            "deterministic memory smoke, but real Mem0 Memory() extraction/search "
+            "needs an explicit provider."
+        )
+        warnings.append(message)
+        if require_llm:
+            errors.append(
+                "OPENAI_API_KEY, OLLAMA_HOST, or another explicit Mem0 LLM provider is required."
+            )
 
     if selected_runtime == "python":
         package_available = python_module_available("mem0")
@@ -136,6 +146,11 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--runtime", choices=["auto", "python", "node"], default="auto")
     parser.add_argument("--repo", default=str(Path(__file__).resolve().parents[2]))
+    parser.add_argument(
+        "--require-llm",
+        action="store_true",
+        help="Fail if no explicit LLM/embedder provider is configured for real Mem0 Memory() calls.",
+    )
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args(argv)
 
@@ -144,7 +159,7 @@ def main(argv: list[str] | None = None) -> int:
         print("check_mem0_library self-test passed")
         return 0
 
-    result = check_library(runtime=args.runtime, repo_root=args.repo)
+    result = check_library(runtime=args.runtime, repo_root=args.repo, require_llm=args.require_llm)
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0 if result["ok"] else 1
 

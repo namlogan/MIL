@@ -111,8 +111,6 @@
     "required_local_env": [],
     "optional_local_env": [
       "MEM0_RUNTIME",
-      "OPENAI_API_KEY",
-      "OLLAMA_HOST",
       "MEM0_API_KEY",
       "MEM0_BASE_URL",
       "MEM0_ORG_ID",
@@ -127,7 +125,7 @@
       "agent",
       "run"
     ],
-    "notes": "Mem0 is the optional long-term memory provider. Local JSONL is the deterministic framework adapter. For development app memory, prefer the Mem0 OSS library via pip/npm before enabling an external provider."
+    "notes": "Mem0 is the optional long-term memory provider. Local JSONL is the deterministic framework adapter for internal agent memory and does not require OpenAI, Ollama, or external LLM calls. The Mem0 OSS library via pip/npm is optional for product/app code."
   },
   "project_intake": {
     "validator": "scripts/project-intake/validate_project_intake.py",
