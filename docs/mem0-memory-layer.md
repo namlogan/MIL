@@ -206,6 +206,20 @@ Audit log:
 
 Both are runtime artifacts and ignored by git.
 
+Operational backup rule:
+
+- Framework/source backups intentionally exclude `.ai-factory/memory/*.jsonl`.
+- For the same ongoing project, back up local JSONL memory separately as private
+  runtime data before cleanup, migration, machine handoff, or long project runs.
+- Do not copy local memory into another project. Restore it only when
+  `tenant_id`, `repo_id`, `project_id`, and repo scope still match.
+- After restore, run:
+
+```bash
+python3 scripts/agent-memory/check_mem0_provider.py
+python3 scripts/agent-memory/memory_contract.py --self-test
+```
+
 ## Optional Mem0 Package Adapter
 
 The OSS `mem0ai` package is optional. Use it only when product/app code or a

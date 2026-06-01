@@ -63,6 +63,8 @@ class AgentFactoryBackupTests(unittest.TestCase):
             self.assertNotIn(".windmill/runtime/local/.env", manifest["files"])
             serialized = json.dumps(manifest)
             self.assertIn("Windmill f/mil/github_status_token", serialized)
+            self.assertIn("Local JSONL runtime memory is excluded", serialized)
+            self.assertIn("different tenant_id, repo_id, project_id", serialized)
             for secret_shape in ("ghp_", "github_pat_", "sk-", "accessToken"):
                 self.assertNotIn(secret_shape, serialized)
 
