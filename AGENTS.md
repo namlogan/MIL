@@ -145,6 +145,39 @@ Rules for new projects:
 - Do not write Memory0 without `source_ref`.
 - Do not let project-specific memory leak into another project.
 
+## User Binding Startup Protocol
+
+For future projects with Logan, this startup protocol is mandatory and must be
+treated as long-term operating memory:
+
+1. Do not let agents code immediately.
+2. Establish project identity first: `project_id`, `repo_id`, product name,
+   stack, deployment target, and owner.
+3. Fill or generate the project intake package before implementation:
+   `PRD.md`, `MVP_SCOPE.md`, `USER_FLOWS.md`, `DATA_MODEL.md`,
+   `TEST_STRATEGY.md`, `DEPLOYMENT.md`, `RISK_REGISTER.md`,
+   `OPEN_QUESTIONS.md`, `SOURCE_OF_TRUTH.md`, and
+   `QUALITY_GATE_MATRIX.md`.
+4. Run intake and framework validation before dispatch:
+   `python3 scripts/project-intake/validate_project_intake.py`,
+   `python3 scripts/delivery/validate_delivery_os.py --self-test`, and
+   `python3 scripts/operator/daily_status.py`.
+5. Set architecture, contracts, backlog, testing strategy, deployment strategy,
+   and rollback strategy before the first implementation task.
+6. Enable product CI in `.ai-factory/product-ci.json` according to the real app
+   stack once app code exists.
+7. Start implementation from small GitHub issues with acceptance criteria,
+   allowed files, required checks, risk/escalation, rollback, and memory
+   preflight.
+8. Use the standard flow only: GitHub issue -> `agent:plan` -> reviewed plan ->
+   `agent:build` -> Codex worker branch/PR -> CI -> Augment context support ->
+   Codex QA/AI gate -> protected merge -> memory candidate writeback.
+9. Use `python3 scripts/operator/daily_status.py` as the daily operator entry
+   point before dispatching or merging work.
+
+If a future session tries to skip this sequence, stop and return to Project
+Intake instead of improvising.
+
 ## Required PR Evidence
 
 Before review, the developer agent must attach or reference:

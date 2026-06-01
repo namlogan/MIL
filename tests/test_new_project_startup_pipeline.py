@@ -119,6 +119,22 @@ class NewProjectStartupPipelineTests(unittest.TestCase):
         self.assertIn("New Project Startup Pipeline", agents)
         self.assertIn("No implementation task may start before the startup pipeline gates pass", rules)
 
+    def test_user_binding_startup_protocol_is_explicit(self) -> None:
+        agents = (REPO_ROOT / "AGENTS.md").read_text(encoding="utf-8")
+
+        for marker in [
+            "User Binding Startup Protocol",
+            "Do not let agents code immediately",
+            "project_id",
+            "PRD.md",
+            "python3 scripts/project-intake/validate_project_intake.py",
+            "python3 scripts/operator/daily_status.py",
+            "GitHub issue -> `agent:plan` -> reviewed plan ->",
+            "If a future session tries to skip this sequence",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, agents)
+
 
 if __name__ == "__main__":
     unittest.main()
