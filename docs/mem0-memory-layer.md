@@ -152,6 +152,7 @@ pip install mem0ai
 export OPENAI_API_KEY="..."
 python3 -c 'from mem0 import Memory; print("MEM0_LIBRARY_OK")'
 python3 scripts/agent-memory/check_mem0_library.py --runtime python
+python3 scripts/agent-memory/mem0_framework_integration.py --self-test
 ```
 
 The official Python quickstart initializes `Memory()` from the `mem0` module.
@@ -207,6 +208,19 @@ f/mil/mem0_retrieve
 f/mil/mem0_writeback
 ```
 
+Framework integration smoke:
+
+```bash
+python3 scripts/agent-memory/mem0_framework_integration.py --self-test
+```
+
+This smoke proves the development integration without external LLM/network
+calls: `mem0_writeback` creates a sanitized record, the Mem0 library adapter
+builds Python `Memory.add/search` calls, the resulting context pack is injected
+into `plan_to_pr`, and the Codex worker prompt contains the retrieved memory.
+It uses a fake Mem0 client in CI; real app memory should still use `mem0ai`
+directly once `OPENAI_API_KEY` or Ollama is configured.
+
 Windmill or Codex should call the same logical operations:
 
 ```text
@@ -227,6 +241,8 @@ Run these checks after changing memory policy:
 ```bash
 python3 scripts/agent-memory/memory_contract.py --self-test
 python3 scripts/agent-memory/check_mem0_provider.py --self-test
+python3 scripts/agent-memory/check_mem0_library.py --self-test
+python3 scripts/agent-memory/mem0_framework_integration.py --self-test
 python3 -m unittest tests.test_memory_contract -v
 python3 scripts/ai-factory/bootstrap_runtime.py --check
 python3 scripts/agent-gate/validate_ai_factory.py --self-test
