@@ -32,6 +32,7 @@ Rule priority: `rules.<area> > rules/base.md > paths.rules_file`.
 - Every memory candidate must include `source_ref`.
 - Never store secrets, raw data, credentials, private logs, raw artifacts, database dumps, model weights, or chain-of-thought.
 - Route all Memory0 add/search/update/supersede/retire operations through the Memory Gateway contract.
+- Back up local JSONL runtime memory separately as private project data before cleanup, migration, or handoff; never commit it, publish it in starter bundles, or reuse it across projects.
 
 ## Delivery OS Policy
 

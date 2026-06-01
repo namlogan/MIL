@@ -482,6 +482,11 @@ __pycache__/**
 node_modules/**
 ```
 
+If the same project will continue on another machine, back up
+`.ai-factory/memory/*.jsonl` separately as private runtime memory. Do not use
+that runtime memory when creating a starter for a different project, and do not
+restore it unless `tenant_id`, `repo_id`, and `project_id` still match.
+
 Restore:
 
 ```bash

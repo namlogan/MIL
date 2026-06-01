@@ -88,6 +88,12 @@ Do not commit runtime folders, local env files, tunnel credentials, tokens, or
 logs. Runtime memory files such as `.ai-factory/memory/*.jsonl` are ignored by
 git and must not be used as source-controlled evidence.
 
+Runtime memory backup is separate from the starter backup. For the same ongoing
+project, copy `.ai-factory/memory/*.jsonl` to a private backup location before
+cleanup, machine handoff, or migration. Do not include runtime memory in a
+public starter bundle and do not restore it into another tenant/repo/project
+scope.
+
 ### Non-Secret Snapshot
 
 Use the backup packager for a clean source archive, git bundle, and non-secret

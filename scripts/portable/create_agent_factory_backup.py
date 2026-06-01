@@ -158,6 +158,8 @@ def _manifest(
         ],
         "notes": [
             "This backup intentionally excludes runtime artifacts and secret values.",
+            "Local JSONL runtime memory is excluded; back it up separately as private project data when continuing the same project.",
+            "Do not restore local memory into a different tenant_id, repo_id, project_id, or customer/team workspace.",
             "Restore secrets from a password manager or vault, not from this manifest.",
             "Rename project IDs, Windmill paths, webhook route, and MCP server names for each new project.",
         ],

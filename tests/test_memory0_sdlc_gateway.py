@@ -242,9 +242,19 @@ class Memory0SdlcGatewayTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stderr + completed.stdout)
 
         rules = (REPO_ROOT / ".ai-factory" / "RULES.md").read_text(encoding="utf-8")
+        memory_rules = (REPO_ROOT / ".ai-factory" / "rules" / "memory.md").read_text(
+            encoding="utf-8"
+        )
+        memory_policy = (
+            REPO_ROOT / ".ai-factory" / "memory" / "MEMORY_POLICY.md"
+        ).read_text(encoding="utf-8")
         agents = (REPO_ROOT / "AGENTS.md").read_text(encoding="utf-8")
         self.assertIn("## Memory Policy", rules)
         self.assertIn("Read approved memory before task planning", rules)
+        self.assertIn("Back up local JSONL runtime memory separately", rules)
+        self.assertIn("back up `.ai-factory/memory/*.jsonl`", memory_rules)
+        self.assertIn("## Runtime Backup", memory_policy)
+        self.assertIn("Restore local memory only into the same", memory_policy)
         self.assertIn("## Memory Preflight", agents)
         self.assertIn("## Memory Candidate After Task", agents)
 

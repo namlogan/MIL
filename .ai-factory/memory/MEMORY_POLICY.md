@@ -31,6 +31,24 @@ memory, create a memory conflict event, and route it through Windmill review.
 - Every add, search, status update, supersede, and retire operation must be
   auditable.
 
+## Runtime Backup
+
+When the local JSONL adapter is active, `.ai-factory/memory/*.jsonl` is private
+runtime memory. It is useful for continuing the same project, but it is not
+source truth and must not be committed.
+
+- Back up local memory before cleanup, migration, machine handoff, or starting a
+  long project run.
+- Store the backup in a private backup location, preferably encrypted or under
+  the same access controls as project operational notes.
+- Restore local memory only into the same `tenant_id`, `repo_id`, `project_id`,
+  and repository scope.
+- Do not copy MIL runtime memory into a new project starter, public archive, or
+  different customer/team workspace.
+- After restore, run memory verification before dispatching agents:
+  `python3 scripts/agent-memory/check_mem0_provider.py` and
+  `python3 scripts/agent-memory/memory_contract.py --self-test`.
+
 ## Lifecycle
 
 ```text

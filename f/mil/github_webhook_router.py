@@ -62,6 +62,7 @@ Rule priority: `rules.<area> > rules/base.md > paths.rules_file`.
 - Every memory candidate must include `source_ref`.
 - Never store secrets, raw data, credentials, private logs, raw artifacts, database dumps, model weights, or chain-of-thought.
 - Route all Memory0 add/search/update/supersede/retire operations through the Memory Gateway contract.
+- Back up local JSONL runtime memory separately as private project data before cleanup, migration, or handoff; never commit it, publish it in starter bundles, or reuse it across projects.
 
 ## Delivery OS Policy
 
@@ -137,7 +138,8 @@ Rule priority: `rules.<area> > rules/base.md > paths.rules_file`.
 - Reject secrets, raw tokens, raw transcripts, customer data, full proprietary source, generated patches, raw artifacts, database dumps, model weights, and chain-of-thought.
 - Agent-created memory starts as `candidate`; approved memory requires review evidence and an approver.
 - Every memory context inserted into a worker prompt must be compact, provenance-bearing, and limited to 5-10 relevant memories.
-- If memory conflicts with docs/spec/tests/CI/GitHub evidence, the source-of-truth wins and a memory conflict review must be opened.""",
+- If memory conflicts with docs/spec/tests/CI/GitHub evidence, the source-of-truth wins and a memory conflict review must be opened.
+- When the local JSONL adapter is active, back up `.ai-factory/memory/*.jsonl` as private runtime memory before cleanup, migration, or project handoff; do not commit it, include it in public starter bundles, or restore it into a different tenant/repo/project scope.""",
     },
     {
         "name": "rules.quality_gates",
