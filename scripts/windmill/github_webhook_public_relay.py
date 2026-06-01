@@ -162,6 +162,8 @@ def maybe_launch_auto_dispatch(
     enabled: bool,
     repo_root: str | Path,
     queue_root: str | Path,
+    preload_augment_context: bool = True,
+    require_augment_context: bool = False,
     launcher: Any = _launch_background_command,
 ) -> dict[str, Any]:
     if not enabled:
@@ -193,9 +195,12 @@ def maybe_launch_auto_dispatch(
         "--execute-agent",
         "--push",
         "--open-pr",
-        "--out",
-        str(result_path),
     ]
+    if preload_augment_context:
+        command.append("--preload-augment-context")
+    if require_augment_context:
+        command.append("--require-augment-context")
+    command.extend(["--out", str(result_path)])
     launch_result = launcher(command=command, cwd=root, log_path=str(log_path))
     return {
         "launched": True,
@@ -255,6 +260,8 @@ class RelayHandler(BaseHTTPRequestHandler):
                     enabled=self.server.auto_dispatch_enabled,
                     repo_root=self.server.auto_dispatch_repo,
                     queue_root=self.server.auto_dispatch_queue,
+                    preload_augment_context=self.server.auto_dispatch_preload_augment_context,
+                    require_augment_context=self.server.auto_dispatch_require_augment_context,
                 )
             except (OSError, ValueError, json.JSONDecodeError) as exc:
                 sys.stderr.write(f"github-webhook-relay: auto dispatch skipped: {exc}\n")
@@ -300,6 +307,8 @@ class RelayServer(ThreadingHTTPServer):
         auto_dispatch_enabled: bool,
         auto_dispatch_repo: str,
         auto_dispatch_queue: str,
+        auto_dispatch_preload_augment_context: bool,
+        auto_dispatch_require_augment_context: bool,
     ) -> None:
         super().__init__(server_address, handler_class)
         self.webhook_secret = webhook_secret
@@ -310,6 +319,8 @@ class RelayServer(ThreadingHTTPServer):
         self.auto_dispatch_enabled = auto_dispatch_enabled
         self.auto_dispatch_repo = auto_dispatch_repo
         self.auto_dispatch_queue = auto_dispatch_queue
+        self.auto_dispatch_preload_augment_context = auto_dispatch_preload_augment_context
+        self.auto_dispatch_require_augment_context = auto_dispatch_require_augment_context
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -346,6 +357,18 @@ def main(argv: list[str] | None = None) -> int:
         "--auto-dispatch-queue",
         default=os.environ.get("MIL_AUTO_DISPATCH_QUEUE", DEFAULT_AUTO_DISPATCH_QUEUE),
     )
+    parser.add_argument(
+        "--auto-dispatch-preload-augment-context",
+        action="store_true",
+        default=_truthy(os.environ.get("MIL_AUTO_DISPATCH_PRELOAD_AUGMENT_CONTEXT")),
+        help="Preload Augment codebase context before launching the Codex worker.",
+    )
+    parser.add_argument(
+        "--auto-dispatch-require-augment-context",
+        action="store_true",
+        default=_truthy(os.environ.get("MIL_AUTO_DISPATCH_REQUIRE_AUGMENT_CONTEXT")),
+        help="Block auto dispatch when Augment context preload fails.",
+    )
     parser.add_argument("--describe", action="store_true", help="Print effective non-secret config.")
     args = parser.parse_args(argv)
 
@@ -363,6 +386,12 @@ def main(argv: list[str] | None = None) -> int:
                     "auto_dispatch_enabled": bool(args.auto_dispatch),
                     "auto_dispatch_repo": args.auto_dispatch_repo,
                     "auto_dispatch_queue": args.auto_dispatch_queue,
+                    "auto_dispatch_preload_augment_context": bool(
+                        args.auto_dispatch_preload_augment_context
+                    ),
+                    "auto_dispatch_require_augment_context": bool(
+                        args.auto_dispatch_require_augment_context
+                    ),
                 },
                 indent=2,
                 sort_keys=True,
@@ -385,6 +414,8 @@ def main(argv: list[str] | None = None) -> int:
         auto_dispatch_enabled=bool(args.auto_dispatch),
         auto_dispatch_repo=args.auto_dispatch_repo,
         auto_dispatch_queue=args.auto_dispatch_queue,
+        auto_dispatch_preload_augment_context=bool(args.auto_dispatch_preload_augment_context),
+        auto_dispatch_require_augment_context=bool(args.auto_dispatch_require_augment_context),
     )
     print(
         f"Listening on http://{args.host}:{args.port}{args.public_route} "

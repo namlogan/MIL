@@ -279,7 +279,8 @@ hands-off production system because:
 
 - ngrok and relay currently depend on local `tmux` sessions;
 - secrets must be rotated after being pasted into chat;
-- the nested Codex MCP tool approval behavior remains a known limitation;
+- nested Codex MCP tool approval remains a known limitation, but local
+  auto-dispatch preloads Augment context before Codex worker execution;
 - branch protection and Windmill secrets must be recreated per new repo;
 - real implementation dispatch should still be supervised until several tasks
   complete cleanly end to end.

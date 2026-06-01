@@ -36,6 +36,12 @@ args=(
 if [[ "${MIL_AUTO_DISPATCH_ENABLED:-0}" =~ ^(1|true|TRUE|yes|YES|on|ON)$ ]]; then
   args+=(--auto-dispatch)
 fi
+if [[ "${MIL_AUTO_DISPATCH_PRELOAD_AUGMENT_CONTEXT:-1}" =~ ^(1|true|TRUE|yes|YES|on|ON)$ ]]; then
+  args+=(--auto-dispatch-preload-augment-context)
+fi
+if [[ "${MIL_AUTO_DISPATCH_REQUIRE_AUGMENT_CONTEXT:-0}" =~ ^(1|true|TRUE|yes|YES|on|ON)$ ]]; then
+  args+=(--auto-dispatch-require-augment-context)
+fi
 args+=(--auto-dispatch-repo "${MIL_AUTO_DISPATCH_REPO:-${REPO_ROOT}}")
 args+=(--auto-dispatch-queue "${MIL_AUTO_DISPATCH_QUEUE:-.ai-factory/queue/webhooks}")
 

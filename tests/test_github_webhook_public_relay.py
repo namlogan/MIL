@@ -158,6 +158,7 @@ class GitHubWebhookPublicRelayTests(unittest.TestCase):
         self.assertTrue(enabled["launched"])
         self.assertEqual(len(calls), 1)
         self.assertIn("auto_dispatcher.py", " ".join(calls[0]["command"]))
+        self.assertIn("--preload-augment-context", calls[0]["command"])
         self.assertTrue(calls[0]["log_path"].endswith(".log"))
 
 

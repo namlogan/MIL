@@ -118,6 +118,77 @@ class AutoDispatcherTests(unittest.TestCase):
         self.assertIn("augment://mcp/mil-auggie-local/codebase-retrieval", augment_context[0]["source_uri"])
         self.assertIn("git diff --check", augment_context[0]["summary"])
 
+    def test_dispatch_preserves_preloaded_augment_context_for_runner(self) -> None:
+        captured: dict = {}
+
+        def fake_runner(**kwargs):
+            captured.update(kwargs)
+            return {"status": "DRY_RUN", "git": {"pushed": False, "pr_url": ""}}
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            request = {
+                **auto_build_issue_payload(),
+                "augment_context": [
+                    {
+                        "source_uri": "augment://mcp/mil-auggie-local/codebase-retrieval/result",
+                        "summary": "Preloaded dispatcher context for auto_dispatcher.py.",
+                    }
+                ],
+            }
+            result = self.dispatcher.dispatch_request(
+                request,
+                repo_root=REPO_ROOT,
+                dry_run=True,
+                runner=fake_runner,
+                lock_root=Path(tmpdir),
+            )
+
+        self.assertEqual(result["decision"], "AUTO_DISPATCH_COMPLETED")
+        summaries = [item["summary"] for item in captured["task"]["augment_context"]]
+        self.assertTrue(any("Preloaded dispatcher context" in summary for summary in summaries))
+        self.assertTrue(any("Before implementation, use Augment MCP" in summary for summary in summaries))
+
+    def test_dispatch_can_preload_augment_context_before_runner(self) -> None:
+        captured: dict = {}
+        provider_calls: list[dict] = []
+
+        def fake_provider(**kwargs):
+            provider_calls.append(kwargs)
+            return {
+                "ok": True,
+                "context_pack": [
+                    {
+                        "source_uri": "augment://mcp/mil-auggie-local/codebase-retrieval/result",
+                        "summary": "Control-plane Augment result for docs and runner contracts.",
+                    }
+                ],
+            }
+
+        def fake_runner(**kwargs):
+            captured.update(kwargs)
+            return {"status": "DRY_RUN", "git": {"pushed": False, "pr_url": ""}}
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = self.dispatcher.dispatch_request(
+                auto_build_issue_payload(),
+                repo_root=REPO_ROOT,
+                dry_run=True,
+                runner=fake_runner,
+                lock_root=Path(tmpdir),
+                preload_augment_context=True,
+                augment_context_provider=fake_provider,
+            )
+
+        self.assertEqual(result["decision"], "AUTO_DISPATCH_COMPLETED")
+        self.assertEqual(len(provider_calls), 1)
+        self.assertIn("MIL-041 Auto dispatcher smoke", provider_calls[0]["query"])
+        summaries = [item["summary"] for item in captured["task"]["augment_context"]]
+        self.assertTrue(any("Control-plane Augment result" in summary for summary in summaries))
+        self.assertEqual(
+            result["augment_context_preload"]["context_pack"][0]["summary"],
+            "Control-plane Augment result for docs and runner contracts.",
+        )
+
     def test_dispatch_claims_task_once(self) -> None:
         calls: list[dict] = []
 
