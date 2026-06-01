@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 
-REQUIRED_CONTEXTS = {"control-plane", "ai-gate/final-review"}
+REQUIRED_CONTEXTS = {"control-plane", "ai-gate/final-review", "merge-controller-policy"}
 
 
 def evaluate_branch_protection(
@@ -24,21 +24,25 @@ def evaluate_branch_protection(
     checks = protection.get("required_status_checks") or {}
     contexts = set(checks.get("contexts") or [])
     if not REQUIRED_CONTEXTS.issubset(contexts):
-        errors.append("branch protection must require control-plane and ai-gate/final-review")
+        errors.append("branch protection must require control-plane, ai-gate/final-review, and merge-controller-policy")
     if checks.get("strict") is not True:
         errors.append("branch protection must require branches to be up to date")
 
     reviews = protection.get("required_pull_request_reviews") or {}
     review_count = int(reviews.get("required_approving_review_count") or 0)
     if review_count < 1:
-        if allow_zero_reviews:
+        if "merge-controller-policy" in contexts:
+            warnings.append("zero required reviews accepted because merge-controller-policy is required")
+        elif allow_zero_reviews:
             warnings.append("zero required reviews allowed only with explicit --allow-zero-reviews")
         else:
-            errors.append("real project mode requires at least one approving review")
+            errors.append("zero required reviews require merge-controller-policy status check")
     if review_count >= 1 and reviews.get("require_code_owner_reviews") is not True:
         warnings.append("CODEOWNERS review is recommended for real project mode")
     if review_count >= 1 and reviews.get("dismiss_stale_reviews") is not True:
         warnings.append("stale review dismissal is recommended for real project mode")
+    if review_count >= 1 and reviews.get("require_last_push_approval") is not True:
+        warnings.append("last-push approval by a different actor is recommended for bot-controlled merge")
 
     return {
         "ok": not errors,
@@ -66,7 +70,7 @@ def run_self_test() -> None:
         {
             "required_status_checks": {
                 "strict": True,
-                "contexts": ["control-plane", "ai-gate/final-review"],
+                "contexts": ["control-plane", "ai-gate/final-review", "merge-controller-policy"],
             },
             "required_pull_request_reviews": {"required_approving_review_count": 1},
         },

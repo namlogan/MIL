@@ -1,0 +1,83 @@
+{
+  "schema_version": "1.0",
+  "enabled": true,
+  "repo": "namlogan/MIL",
+  "base_branch": "main",
+  "merge_method": "squash",
+  "auto_merge": true,
+  "approval_model": "required_status_check",
+  "status_context": "merge-controller-policy",
+  "identities": {
+    "owner": "namlogan",
+    "coding_bot": "mil-agent-bot",
+    "merge_bot": "mil-merge-bot"
+  },
+  "required_contexts": [
+    "control-plane",
+    "ai-gate/final-review",
+    "merge-controller-policy"
+  ],
+  "allowed_head_prefixes": [
+    "agent/",
+    "fix/",
+    "codex/"
+  ],
+  "allow_labels": [
+    "agent:auto-build",
+    "automerge:candidate",
+    "automerge:allowed",
+    "owner:auto-approve"
+  ],
+  "owner_approval_labels": [
+    "owner:auto-approve"
+  ],
+  "block_labels": [
+    "hold",
+    "owner-review",
+    "do-not-merge",
+    "blocked",
+    "security-review"
+  ],
+  "restricted_labels": [
+    "restricted-change",
+    "production-deploy",
+    "secrets",
+    "customer-data",
+    "auth-boundary",
+    "destructive-migration",
+    "legal-compliance",
+    "safety-critical"
+  ],
+  "restricted_paths": [
+    ".github/**",
+    ".windmill/**",
+    ".ai-factory/merge-controller.json",
+    ".ai-factory/runtime/environment.json",
+    ".ai-factory/rules/**",
+    "docs/project/DEPLOYMENT.md",
+    "docs/templates/release/**",
+    "scripts/github/**",
+    "scripts/windmill/**"
+  ],
+  "low_risk_path_prefixes": [
+    "docs/",
+    "tests/",
+    "contracts/",
+    ".ai-factory/DEFINITION_",
+    ".ai-factory/QUALITY_GATES.md",
+    ".ai-factory/SOURCE_OF_TRUTH_MATRIX.md"
+  ],
+  "required_pr_body_markers": [
+    "## Summary",
+    "## Evidence",
+    "## Restricted Change Check",
+    "Rollback"
+  ],
+  "limits": {
+    "max_changed_files": 20,
+    "max_additions": 500,
+    "max_deletions": 500,
+    "max_total_lines": 800
+  },
+  "notes": "Solo-owner continuous mode: coding workers may open PRs, merge-controller-policy acts as machine approval, GitHub auto-merge merges only after required checks pass, and restricted changes require owner:auto-approve evidence."
+}

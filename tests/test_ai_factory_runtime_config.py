@@ -147,8 +147,16 @@ class AIFactoryRuntimeConfigTests(unittest.TestCase):
             "f/mil/memory_contract",
             "f/mil/mem0_retrieve",
             "f/mil/mem0_writeback",
+            "f/mil/merge_controller",
         ]:
             self.assertIn(script, environment["windmill"]["required_scripts"])
+        self.assertEqual(environment["merge_controller"]["runner"], "scripts/github/merge_controller.py")
+        self.assertEqual(environment["merge_controller"]["config"], ".ai-factory/merge-controller.json")
+        self.assertEqual(environment["merge_controller"]["status_context"], "merge-controller-policy")
+        self.assertEqual(environment["merge_controller"]["approval_model"], "required_status_check")
+        self.assertTrue(environment["merge_controller"]["github_auto_merge"])
+        self.assertFalse(environment["merge_controller"]["execute_requires_separate_identity"])
+        self.assertFalse(environment["merge_controller"]["requires_codeowner_bot_membership"])
         self.assertEqual(environment["codex_worker"]["runner_script"], "scripts/agent-flow/codex_worker.py")
         self.assertEqual(
             environment["codex_worker"]["auto_dispatcher_script"],

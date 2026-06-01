@@ -24,6 +24,7 @@ from f.mil.plan_to_pr_contract import run_plan_to_pr
 
 DEFAULT_WEBHOOK_SECRET_VARIABLE_PATH = "f/mil/github_webhook_secret"
 DEFAULT_CHECKS = ["control-plane", "ai-gate/final-review"]
+PR_LABELS_TO_PROPAGATE = {"agent:auto-build", "automerge:allowed", "owner:auto-approve"}
 HOSTED_AI_FACTORY_RULE_SOURCES = [
     {
         "name": "paths.rules_file",
@@ -49,6 +50,8 @@ Rule priority: `rules.<area> > rules/base.md > paths.rules_file`.
 - Emit the final machine-readable `aif-gate-result` block after the human summary.
 - Allowed MIL merge decisions are `APPROVE_MERGE`, `REQUEST_CHANGES`, `REJECT`, and `BLOCKED_NEEDS_HUMAN`.
 - Never merge, deploy, bypass branch protection, or approve restricted work without human approval.
+- `merge-controller-policy` is the required machine approval status check for low-risk PRs. Do not require fake human review for routine solo-owner agent PRs.
+- Restricted paths, restricted labels, production release, and owner-review labels must stop automation until owner approval is recorded.
 - Never store secrets, raw tokens, customer data, raw proprietary source, or raw transcripts in memory.
 - Restricted changes include production deploy behavior, production secrets, billing, customer data retention/deletion, auth boundaries, destructive migrations, legal/compliance behavior, and safety-critical behavior.
 
@@ -629,6 +632,7 @@ def _route_issue_event(
     )
     task = _base_task(task_id, title, body)
     task.update(parsed_fields)
+    task["pr_labels"] = sorted(label_names.intersection(PR_LABELS_TO_PROPAGATE))
 
     if "agent:plan" in label_names:
         return _matched("issue_to_plan", task, github, "issue has agent:plan label")

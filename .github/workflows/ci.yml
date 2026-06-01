@@ -2,6 +2,7 @@ name: ci
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled, edited]
   push:
     branches:
       - main
@@ -60,3 +61,49 @@ jobs:
         run: python scripts/agent-flow/check_augment_config.py --self-test
       - name: Check shell wrappers
         run: bash -n scripts/agent-flow/auggie_mcp_server.sh scripts/agent-flow/run_codex_with_mil_env.sh scripts/agent-flow/auggie_interactive.sh scripts/windmill/bootstrap_workspace.sh
+
+  merge-controller-policy:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Evaluate PR auto-merge policy
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: python scripts/github/merge_controller.py --repo "$REPO" --pr "$PR_NUMBER" --policy-only
+
+  enable-automerge:
+    if: >
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.draft == false &&
+      (
+        contains(github.event.pull_request.labels.*.name, 'agent:auto-build') ||
+        contains(github.event.pull_request.labels.*.name, 'automerge:candidate') ||
+        contains(github.event.pull_request.labels.*.name, 'owner:auto-approve')
+      ) &&
+      !contains(github.event.pull_request.labels.*.name, 'hold') &&
+      !contains(github.event.pull_request.labels.*.name, 'owner-review') &&
+      !contains(github.event.pull_request.labels.*.name, 'do-not-merge') &&
+      !contains(github.event.pull_request.labels.*.name, 'blocked') &&
+      !contains(github.event.pull_request.labels.*.name, 'security-review')
+    needs:
+      - merge-controller-policy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Enable GitHub auto-merge
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: gh pr merge "$PR_NUMBER" --repo "$REPO" --squash --auto --delete-branch

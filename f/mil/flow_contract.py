@@ -42,6 +42,7 @@ ROLES = {
     "auggie": "supervised_advisory_context_reviewer",
     "mem0_memory": "sanitized_long_term_agent_memory_layer",
     "windmill": "cockpit_and_orchestrator",
+    "github": "source_of_truth_and_branch_protection",
 }
 
 
@@ -185,6 +186,56 @@ def run_auggie_supervised_advisory(target: dict[str, Any]) -> dict[str, Any]:
                 "AUGMENT_REVIEW_CHANGES_RECOMMENDED",
                 "AUGMENT_REVIEW_BLOCKED",
             ],
+        },
+    }
+
+
+def run_merge_controller_policy(request: dict[str, Any]) -> dict[str, Any]:
+    """Return the merge-controller command contract for Windmill/local schedules."""
+
+    repo = str(request.get("repo") or "namlogan/MIL")
+    mode = str(request.get("mode") or "scan-open")
+    execute = bool(request.get("execute") is True)
+    command = ["python3", "scripts/github/merge_controller.py", "--repo", repo]
+    if mode == "scan-open":
+        command.append("--scan-open")
+    elif request.get("pr"):
+        command.extend(["--pr", str(request["pr"])])
+    else:
+        raise ValueError("merge_controller requires mode=scan-open or pr")
+    if execute:
+        command.append("--execute")
+
+    return {
+        "flow": "merge_controller",
+        "decision": "MERGE_CONTROLLER_POLICY_COMMAND_READY",
+        "blocking": False,
+        "agent_calls": [
+            {
+                "agent": "windmill",
+                "action": "schedule_merge_controller",
+                "task_id": str(request.get("task_id") or "merge-controller"),
+                "role": ROLES["windmill"],
+            },
+            {
+                "agent": "github",
+                "action": "enforce_branch_protection",
+                "task_id": str(request.get("task_id") or "merge-controller"),
+                "role": ROLES["github"],
+            },
+        ],
+        "artifacts": {
+            "repo": repo,
+            "mode": mode,
+            "execute": execute,
+            "command": command,
+            "config": ".ai-factory/merge-controller.json",
+            "status_context": "merge-controller-policy",
+            "approval_model": "required_status_check",
+            "github_auto_merge": True,
+            "requires_separate_merge_identity": False,
+            "requires_codeowners_bot_membership": False,
+            "notes": "GitHub Actions runs policy-only mode as the required merge-controller-policy check.",
         },
     }
 

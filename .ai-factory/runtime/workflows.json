@@ -99,10 +99,13 @@
           "memory_provider": "mem0_memory",
           "requires_status_contexts": [
             "control-plane",
-            "ai-gate/final-review"
+            "ai-gate/final-review",
+            "merge-controller-policy"
           ],
           "requires_pull_request": true,
           "requires_conversation_resolution": true,
+          "requires_required_review_count": 0,
+          "approval_model": "required_status_check",
           "requires_human_for_restricted_changes": true
         }
       ]

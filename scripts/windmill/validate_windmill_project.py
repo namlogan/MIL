@@ -25,6 +25,7 @@ FLOW_NAMES = (
     "mem0_writeback",
     "auggie_supervised_advisory",
     "github_commit_status",
+    "merge_controller",
     "github_webhook_router",
 )
 
@@ -92,6 +93,7 @@ def validate(repo_root: Path) -> list[str]:
                 "mem0_writeback",
                 "auggie_supervised_advisory",
                 "github_commit_status",
+                "merge_controller",
                 "github_webhook_router",
             }:
                 continue

@@ -13,6 +13,7 @@ Windmill responsibilities:
 - retrieve and write sanitized project memory through the mem0 memory contract
 - request human approval for restricted or release actions
 - publish PR comments and status checks
+- schedule the merge-controller dry-run or execute command on the local control station
 
 Windmill must not become the source of truth for issue scope, PR state, or merge approval. GitHub remains the source of truth and branch protection remains the hard merge boundary.
 
@@ -42,6 +43,17 @@ f/mil/mem0_writeback
 `mem0_retrieve` builds strict scoped filters and a compact context pack.
 `mem0_writeback` validates provenance, redacts secrets, enforces approval
 policy, and emits a Mem0 add payload.
+
+Merge controller entrypoint:
+
+```text
+f/mil/merge_controller
+```
+
+This entrypoint returns the audited command contract for
+`scripts/github/merge_controller.py`. Actual GitHub approval/merge execution
+requires a separate bot identity and `MIL_MERGE_BOT_TOKEN` in the local control
+station or Windmill secret store.
 
 Implementation worker entrypoints:
 

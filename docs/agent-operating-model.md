@@ -5,7 +5,7 @@ MIL uses a controlled AI software factory model.
 ## Default Flow
 
 ```text
-issue intake -> Augment context lookup -> mem0 memory lookup -> plan -> Codex coding-agent dispatch -> implementation branch -> pull request -> CI -> Augment context/advisory review -> Codex QA gate -> sanitized memory writeback -> human or bot merge
+issue intake -> Augment context lookup -> mem0 memory lookup -> plan -> Codex coding-agent dispatch -> implementation branch -> pull request -> CI -> Augment context/advisory review -> Codex QA gate -> sanitized memory writeback -> merge-controller policy -> human or bot protected merge
 ```
 
 Agents may do planning, implementation, review, and CI fixes. They may not bypass branch protection or merge restricted changes without human approval.
@@ -27,6 +27,13 @@ Auggie may provide supervised advisory review, diagnosis, and risk notes when a 
 Windmill is the cockpit that routes work, captures logs, manages retries, and requests human approval.
 
 GitHub is the system of record.
+
+The merge-controller gate is the required machine approval status check. It
+may enable GitHub auto-merge for low-risk PRs after branch protection, required
+checks, evidence, and `.ai-factory/merge-controller.json` policy pass. It is
+not a coding worker. It must stop on restricted labels, restricted paths,
+owner-review labels, failed checks, missing rollback evidence, or missing owner
+approval evidence.
 
 ## Codex Worker Runner
 
@@ -104,6 +111,7 @@ The gate is intentionally layered:
 1. deterministic checks: CI, lint, tests, security scans
 2. AI review checks: issue scope, risks, evidence, edge cases
 3. GitHub branch protection: required checks and approval enforcement
-4. human approval for restricted changes
+4. merge-controller bot approval for low-risk continuous flow
+5. human approval for restricted changes
 
 No single LLM decision is enough to merge critical code.
