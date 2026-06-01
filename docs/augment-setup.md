@@ -88,6 +88,20 @@ MIL workspace index. If nested Codex reports `user cancelled MCP tool call`,
 the remaining issue is Codex client/tool approval behavior, not Augment's MIL
 workspace scope.
 
+The auto-dispatch path avoids depending on that nested approval layer by
+preloading Augment context in the local control-plane process:
+
+```bash
+python3 scripts/agent-flow/augment_context_provider.py \
+  --query "Find the files involved in the scoped task."
+```
+
+The provider calls `mil-auggie-local/codebase-retrieval` directly, converts the
+tool result into a compact `augment_context` pack, and passes that pack into
+`plan_to_pr` before the Codex worker prompt is built. The nested worker still
+receives the read-only MCP request as a fallback/instruction, but it no longer
+needs to call MCP successfully to start with useful codebase context.
+
 ## Plan-To-PR Context Use
 
 `f/mil/plan_to_pr` now creates an Augment context request before Codex worker

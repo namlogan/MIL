@@ -297,9 +297,18 @@ codebase context, and mem0 provides sanitized memory with least-privilege
 credentials. Auggie remains a supervised read-only advisory lane when explicitly
 requested; it is not a coding worker.
 
+For unattended local auto-dispatch, the public relay starts
+`scripts/agent-flow/auto_dispatcher.py` with `--preload-augment-context` by
+default through `scripts/windmill/run_github_webhook_relay_from_windmill_secret.sh`.
+This makes the control plane call `mil-auggie-local/codebase-retrieval` directly
+and inject the compact context pack before the nested Codex worker starts. Set
+`MIL_AUTO_DISPATCH_REQUIRE_AUGMENT_CONTEXT=1` when complex code tasks should
+block instead of falling back to the nested worker's own MCP request.
+
 Local runner smoke test:
 
 ```bash
+python3 scripts/agent-flow/augment_context_provider.py --self-test
 python3 scripts/agent-flow/codex_worker.py --self-test
 python3 scripts/agent-flow/auto_dispatcher.py --self-test
 python3 scripts/agent-flow/codex_worker.py \
