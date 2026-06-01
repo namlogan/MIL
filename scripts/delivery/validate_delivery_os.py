@@ -18,6 +18,7 @@ REQUIRED_DOCS = [
     ".ai-factory/RELEASE_POLICY.md",
     ".ai-factory/ESCALATION_POLICY.md",
     ".ai-factory/SOURCE_OF_TRUTH_MATRIX.md",
+    "docs/runbooks/new_project_startup_pipeline.md",
 ]
 
 REQUIRED_CHECKLISTS = [
@@ -54,6 +55,19 @@ REQUIRED_WINDMILL_FLOWS = [
     ".windmill/flows/rollback_drill.md",
     ".windmill/flows/release_memory_writeback.md",
     ".windmill/flows/sdlc_metrics_report.md",
+    ".windmill/flows/architecture_review.md",
+    ".windmill/flows/contract_bootstrap.md",
+    ".windmill/flows/task_generation.md",
+    ".windmill/flows/repo_bootstrap.md",
+    ".windmill/flows/ci_baseline_check.md",
+    ".windmill/flows/agent_assignment.md",
+    ".windmill/flows/pr_review_gate.md",
+    ".windmill/flows/test_gate.md",
+    ".windmill/flows/contract_gate.md",
+    ".windmill/flows/release_gate.md",
+    ".windmill/flows/deployment_gate.md",
+    ".windmill/flows/rollback_pack.md",
+    ".windmill/flows/postmortem_to_memory.md",
 ]
 
 REQUIRED_TEMPLATES = [
@@ -70,6 +84,30 @@ REQUIRED_TEMPLATES = [
     "templates/prd/README.md",
     "templates/runbook/README.md",
     "templates/release_manifest/README.md",
+    "docs/templates/project/RISK_REGISTER.md",
+    "docs/templates/project/OPEN_QUESTIONS.md",
+    "docs/templates/project/SOURCE_OF_TRUTH.md",
+    "docs/templates/project/QUALITY_GATE_MATRIX.md",
+]
+
+REQUIRED_PROJECT_DOCS = [
+    "docs/project/RISK_REGISTER.md",
+    "docs/project/OPEN_QUESTIONS.md",
+    "docs/project/SOURCE_OF_TRUTH.md",
+    "docs/project/QUALITY_GATE_MATRIX.md",
+]
+
+STARTUP_STAGE_ORDER = [
+    "project_intake",
+    "memory_preflight",
+    "bootstrap_docs",
+    "architecture_adr_gate",
+    "contract_backlog_gate",
+    "repo_ci_bootstrap",
+    "agent_delivery_loop",
+    "qa_review_merge_gate",
+    "release_rollback_gate",
+    "operate_learn_memory_maintenance",
 ]
 
 REQUIRED_CONFIG_MARKERS = [
@@ -141,6 +179,43 @@ def _validate_runtime_workflows(root: Path, errors: list[str]) -> None:
         if stage not in delivery:
             errors.append(f"delivery_operating_system missing {stage}")
 
+    startup = workflows.get("new_project_startup_pipeline")
+    if not isinstance(startup, dict):
+        errors.append("workflows.json missing new_project_startup_pipeline")
+        return
+    if startup.get("stage_order") != STARTUP_STAGE_ORDER:
+        errors.append("new_project_startup_pipeline stage_order is not the approved order")
+    if startup.get("source_of_truth") != "git_docs_tests_issues":
+        errors.append("new_project_startup_pipeline source_of_truth must be git_docs_tests_issues")
+    if startup.get("memory_policy") != "approved_memory_context_only":
+        errors.append("new_project_startup_pipeline memory_policy must be approved_memory_context_only")
+    if startup.get("allow_agent_implementation_before_ready") is not False:
+        errors.append("new_project_startup_pipeline must block implementation before ready")
+    flows = startup.get("flows")
+    if not isinstance(flows, dict):
+        errors.append("new_project_startup_pipeline.flows must be an object")
+        return
+    for flow_name in [
+        "project_intake",
+        "memory_preflight",
+        "bootstrap_docs",
+        "architecture_adr_gate",
+        "contract_bootstrap",
+        "task_generation",
+        "repo_bootstrap",
+        "ci_baseline_check",
+        "agent_assignment",
+        "pr_review_gate",
+        "test_gate",
+        "contract_gate",
+        "release_gate",
+        "deployment_gate",
+        "rollback_pack",
+        "postmortem_to_memory",
+    ]:
+        if flow_name not in flows:
+            errors.append(f"new_project_startup_pipeline.flows missing {flow_name}")
+
 
 def _validate_no_secrets(root: Path, paths: list[str], errors: list[str]) -> None:
     for relative_path in paths:
@@ -158,6 +233,7 @@ def validate_delivery_os(repo_root: str | Path) -> dict[str, Any]:
         + REQUIRED_CONTRACTS
         + REQUIRED_WINDMILL_FLOWS
         + REQUIRED_TEMPLATES
+        + REQUIRED_PROJECT_DOCS
     )
 
     _missing_or_thin(root, required, errors)

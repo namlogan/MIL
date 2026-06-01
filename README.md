@@ -21,6 +21,7 @@ Start here:
 - [Quality Gates](.ai-factory/QUALITY_GATES.md)
 - [Release Policy](.ai-factory/RELEASE_POLICY.md)
 - [Source of Truth Matrix](.ai-factory/SOURCE_OF_TRUTH_MATRIX.md)
+- [New project startup pipeline](docs/runbooks/new_project_startup_pipeline.md)
 - [Operating model](docs/agent-operating-model.md)
 - [Workflow and starter kit](docs/agent-factory-workflow-and-starter.md)
 - [Solo agent SDLC runbook](docs/solo-agent-sdlc-runbook.md)

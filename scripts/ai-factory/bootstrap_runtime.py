@@ -48,6 +48,7 @@ REQUIRED_DELIVERY_PATHS = [
     ".ai-factory/RELEASE_POLICY.md",
     ".ai-factory/ESCALATION_POLICY.md",
     ".ai-factory/SOURCE_OF_TRUTH_MATRIX.md",
+    "docs/runbooks/new_project_startup_pipeline.md",
     "contracts/README.md",
     "templates/project_bootstrap/README.md",
     "scripts/delivery/validate_delivery_os.py",
@@ -63,11 +64,14 @@ REQUIRED_DELIVERY_CONFIG_MARKERS = [
     "release_policy: .ai-factory/RELEASE_POLICY.md",
     "escalation_policy: .ai-factory/ESCALATION_POLICY.md",
     "source_of_truth_matrix: .ai-factory/SOURCE_OF_TRUTH_MATRIX.md",
+    "new_project_startup_runbook: docs/runbooks/new_project_startup_pipeline.md",
     "contracts: contracts",
     "templates: templates",
     "require_definition_of_ready: true",
     "require_definition_of_done: true",
     "require_contract_tests_for_contract_changes: true",
+    "require_new_project_startup_pipeline: true",
+    "forbid_implementation_before_startup_gates: true",
     "max_preferred_pr_loc: 300",
     "max_unapproved_pr_loc: 800",
     "require_rollback_drill_for_production: true",
@@ -392,6 +396,7 @@ def _validate_environment(
     else:
         expected_paths = {
             "validator": "scripts/delivery/validate_delivery_os.py",
+            "new_project_startup_runbook": "docs/runbooks/new_project_startup_pipeline.md",
             "contract_validator": "scripts/contracts/validate_contracts.py",
             "definition_of_ready": ".ai-factory/DEFINITION_OF_READY.md",
             "definition_of_done": ".ai-factory/DEFINITION_OF_DONE.md",
@@ -408,6 +413,8 @@ def _validate_environment(
             "require_definition_of_done",
             "require_contract_tests_for_contract_changes",
             "require_rollback_drill_for_production",
+            "require_new_project_startup_pipeline",
+            "forbid_implementation_before_startup_gates",
         ]:
             if delivery.get(field) is not True:
                 errors.append(f"environment.delivery_operating_system.{field} must be true")
