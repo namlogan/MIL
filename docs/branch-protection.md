@@ -2,7 +2,7 @@
 
 Configure this after the GitHub remote exists.
 
-Status as of 2026-05-31:
+Status as of 2026-06-01:
 
 - Remote exists at `https://github.com/namlogan/MIL`.
 - Repository visibility is public by Product Owner approval.
@@ -31,7 +31,7 @@ control-plane
 ai-gate/final-review
 ```
 
-`ai-gate/final-review` is published through Windmill's `f/mil/github_commit_status` script using the GitHub commit status API. A PR must have both required contexts on the head commit before protected merge is allowed.
+`ai-gate/final-review` is published automatically by Windmill's GitHub webhook router after `pr_quality_gate` runs. The router uses `f/mil/github_commit_status` and the GitHub commit status API. A PR must have both required contexts on the head commit before protected merge is allowed.
 
 Add application-specific checks after the product stack exists:
 

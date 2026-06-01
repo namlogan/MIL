@@ -244,6 +244,108 @@ class GitHubWebhookRouterTests(unittest.TestCase):
         self.assertEqual(result["result"]["agent_calls"][0]["action"], "provide_gate_context")
         self.assertEqual(result["result"]["agent_calls"][-1]["action"], "store_qa_memory")
 
+    def test_pull_request_gate_publishes_required_status_context(self) -> None:
+        seen: dict = {}
+
+        def fake_publish_commit_status(
+            owner: str,
+            repo: str,
+            sha: str,
+            payload: dict,
+            **kwargs,
+        ) -> dict:
+            seen["owner"] = owner
+            seen["repo"] = repo
+            seen["sha"] = sha
+            seen["payload"] = payload
+            seen["kwargs"] = kwargs
+            return {
+                "ok": True,
+                "status_code": 201,
+                "state": payload["state"],
+                "context": payload["context"],
+                "sha": sha,
+                "url": "https://api.github.com/repos/namlogan/MIL/statuses/abc123",
+            }
+
+        self.router.publish_commit_status = fake_publish_commit_status
+        payload = {
+            "action": "opened",
+            "repository": {"full_name": "namlogan/MIL"},
+            "pull_request": {
+                "number": 43,
+                "title": "MIL-997: Smoke the full flow",
+                "head": {"sha": "abc123", "ref": "agent/mil-997"},
+                "html_url": "https://github.com/namlogan/MIL/pull/43",
+            },
+        }
+
+        request = self.preprocess("pull_request", payload)["request"]
+        result = self.router.main(request)
+
+        self.assertEqual(result["route"]["flow"], "pr_quality_gate")
+        self.assertEqual(result["result"]["decision"], "APPROVE_MERGE")
+        self.assertEqual(result["status_publish"]["context"], "ai-gate/final-review")
+        self.assertEqual(result["status_publish"]["state"], "success")
+        self.assertEqual(seen["owner"], "namlogan")
+        self.assertEqual(seen["repo"], "MIL")
+        self.assertEqual(seen["sha"], "abc123")
+        self.assertEqual(seen["payload"]["context"], "ai-gate/final-review")
+        self.assertEqual(seen["payload"]["target_url"], "https://github.com/namlogan/MIL/pull/43")
+
+    def test_blocking_pr_gate_publishes_failure_status(self) -> None:
+        seen: dict = {}
+
+        def fake_publish_commit_status(
+            owner: str,
+            repo: str,
+            sha: str,
+            payload: dict,
+            **kwargs,
+        ) -> dict:
+            seen["payload"] = payload
+            return {
+                "ok": True,
+                "status_code": 201,
+                "state": payload["state"],
+                "context": payload["context"],
+                "sha": sha,
+                "url": "https://api.github.com/repos/namlogan/MIL/statuses/blocked123",
+            }
+
+        self.router.publish_commit_status = fake_publish_commit_status
+        self.router.run_flow = lambda flow, task: {
+            "flow": flow,
+            "task_id": task["task_id"],
+            "decision": "BLOCKED_NEEDS_HUMAN",
+            "blocking": True,
+            "agent_calls": [],
+            "artifacts": {
+                "aif_gate_result": {
+                    "decision": "BLOCKED_NEEDS_HUMAN",
+                    "blocking": True,
+                    "reasons": ["restricted change requires human approval"],
+                }
+            },
+        }
+        payload = {
+            "action": "opened",
+            "repository": {"full_name": "namlogan/MIL"},
+            "pull_request": {
+                "number": 44,
+                "title": "MIL-998: Restricted full flow",
+                "head": {"sha": "blocked123", "ref": "agent/mil-998"},
+                "html_url": "https://github.com/namlogan/MIL/pull/44",
+            },
+        }
+
+        request = self.preprocess("pull_request", payload)["request"]
+        result = self.router.main(request)
+
+        self.assertEqual(result["status_publish"]["state"], "failure")
+        self.assertEqual(seen["payload"]["state"], "failure")
+        self.assertIn("BLOCKED_NEEDS_HUMAN", seen["payload"]["description"])
+
     def test_failed_workflow_run_routes_to_fix_flow(self) -> None:
         payload = {
             "action": "completed",

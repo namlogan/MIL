@@ -18,7 +18,7 @@ Steps:
 6. Store a sanitized QA gate summary in project memory.
 7. Parse the last `aif-gate-result` block.
 8. Run `scripts/agent-gate/final_gate_check.py`.
-9. Publish a GitHub status check named `ai-gate/final-review`.
+9. Publish a GitHub status check named `ai-gate/final-review` automatically through `f/mil/github_webhook_router` -> `f/mil/github_commit_status`.
 10. Comment the decision and reasons on the PR.
 11. Add `agent:fix`, `blocked`, or `ready-for-human-review` labels as appropriate.
 
