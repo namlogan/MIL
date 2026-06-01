@@ -1,0 +1,22 @@
+{
+  "memory_type": "architecture_decision",
+  "scope": "project",
+  "framework_id": "ai-factory-sdlc",
+  "project_id": "mil",
+  "repo": "MIL",
+  "repo_id": "github:namlogan/MIL",
+  "task_id": "MIL-MEMORY-BOOTSTRAP",
+  "agent_id": "codex_qa",
+  "run_id": "windmill-run-local",
+  "status": "approved",
+  "source_ref": "docs/project/ARCHITECTURE.md",
+  "source_type": "docs",
+  "content": "Memory0 is a controlled SDLC learning layer. GitHub issues, PRs, docs, tests, CI, and audit logs remain source of truth.",
+  "tags": ["memory", "source-of-truth", "sdlc"],
+  "confidence": "high",
+  "sensitivity": "internal",
+  "valid_until": "until_superseded",
+  "created_by": "memory_gateway",
+  "approved_by": "logan",
+  "user_id": "repo:github:namlogan/MIL"
+}

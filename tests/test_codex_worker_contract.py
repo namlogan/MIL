@@ -48,9 +48,10 @@ class CodexWorkerContractTests(unittest.TestCase):
                 "memory_context": [
                     {
                         "memory_id": "mem_1",
-                        "memory_type": "repo_convention",
+                        "memory_type": "framework_rule",
                         "memory": "Use python3 -m unittest discover -s tests -v.",
-                        "source_uri": "https://github.com/namlogan/MIL/pull/1",
+                        "source_ref": "https://github.com/namlogan/MIL/pull/1",
+                        "status": "approved",
                     }
                 ],
                 "augment_context": [

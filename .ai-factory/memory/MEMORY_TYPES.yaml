@@ -1,0 +1,52 @@
+version: 1
+taxonomy:
+  - framework_rule
+  - security_rule
+  - product_rule
+  - architecture_decision
+  - adr_summary
+  - domain_glossary
+  - requirement_interpretation
+  - implementation_lesson
+  - test_lesson
+  - review_lesson
+  - deployment_runbook
+  - incident_postmortem
+  - agent_handoff
+  - open_question
+  - deprecated_decision
+approval_required:
+  - framework_rule
+  - security_rule
+  - product_rule
+  - architecture_decision
+  - adr_summary
+  - requirement_interpretation
+  - deployment_runbook
+  - incident_postmortem
+  - deprecated_decision
+statuses:
+  - candidate
+  - reviewed
+  - approved
+  - superseded
+  - retired
+  - needs_review
+retrievable_statuses:
+  - approved
+scopes:
+  - framework
+  - project
+  - task
+sensitivity:
+  - public
+  - internal
+  - confidential
+source_of_truth_priority:
+  - compliance_legal_security
+  - current_prd_spec_sop_contract
+  - git_code_and_tests
+  - approved_adr
+  - approved_memory
+  - candidate_memory
+  - conversation_context

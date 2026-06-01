@@ -34,14 +34,17 @@ class MilFlowTests(unittest.TestCase):
         self.assertEqual(
             calls,
             [
+                ("mem0_memory", "wm_memory_preflight"),
                 ("augment_context", "provide_issue_context"),
-                ("mem0_memory", "retrieve_project_memory"),
                 ("codex", "plan"),
-                ("mem0_memory", "store_plan_memory"),
+                ("mem0_memory", "record_memory_candidates"),
             ],
         )
         self.assertEqual(result.decision, "PLAN_READY_FOR_APPROVAL")
-        self.assertEqual(result.artifacts["memory"]["records"], ["plan"])
+        self.assertEqual(
+            result.artifacts["memory"]["records"],
+            ["requirement_interpretation", "open_question"],
+        )
 
     def test_plan_to_pr_routes_to_implementation_review_and_tests(self) -> None:
         result = mil_flow.run_flow("plan_to_pr", self.task)
@@ -50,20 +53,20 @@ class MilFlowTests(unittest.TestCase):
         self.assertEqual(
             calls,
             [
-                ("mem0_memory", "retrieve_plan_memory"),
+                ("mem0_memory", "wm_task_context_pack"),
                 ("windmill", "dispatch_coding_agent"),
                 ("codex", "create_branch"),
                 ("codex", "implement"),
                 ("codex", "test"),
                 ("codex", "open_pr"),
                 ("augment_context", "provide_review_context"),
-                ("mem0_memory", "store_handoff_memory"),
+                ("mem0_memory", "wm_agent_handoff_collect"),
             ],
         )
         self.assertEqual(result.decision, "PR_READY_FOR_GATE")
         self.assertEqual(result.artifacts["dispatch"]["developer_agent"], "codex")
         self.assertEqual(result.artifacts["dispatch"]["context_provider"], "augment_context")
-        self.assertIn("developer_handoff", result.artifacts["memory"]["records"])
+        self.assertIn("agent_handoff", result.artifacts["memory"]["records"])
 
     def test_plan_to_pr_rejects_auggie_as_developer(self) -> None:
         task = {
@@ -103,14 +106,14 @@ class MilFlowTests(unittest.TestCase):
             calls,
             [
                 ("augment_context", "provide_gate_context"),
-                ("mem0_memory", "retrieve_gate_memory"),
+                ("mem0_memory", "wm_memory_preflight"),
                 ("codex", "qa"),
-                ("mem0_memory", "store_qa_memory"),
+                ("mem0_memory", "wm_pr_merge_memory_writeback"),
             ],
         )
         self.assertEqual(result.decision, "APPROVE_MERGE")
         self.assertFalse(result.blocking)
-        self.assertEqual(result.artifacts["memory"]["records"], ["qa_gate"])
+        self.assertEqual(result.artifacts["memory"]["records"], ["test_lesson", "review_lesson"])
 
     def test_fix_ci_or_review_routes_to_context_before_codex_fix(self) -> None:
         result = mil_flow.run_flow("fix_ci_or_review", self.task)
@@ -120,9 +123,9 @@ class MilFlowTests(unittest.TestCase):
             calls,
             [
                 ("augment_context", "provide_ci_context"),
-                ("mem0_memory", "retrieve_ci_patterns"),
+                ("mem0_memory", "wm_memory_preflight"),
                 ("codex", "fix"),
-                ("mem0_memory", "store_fix_memory"),
+                ("mem0_memory", "wm_agent_handoff_collect"),
             ],
         )
         self.assertEqual(result.decision, "FIX_PUSH_READY")

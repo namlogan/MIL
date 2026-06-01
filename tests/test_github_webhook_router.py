@@ -95,7 +95,8 @@ class GitHubWebhookRouterTests(unittest.TestCase):
         self.assertEqual(result["route"]["flow"], "issue_to_plan")
         self.assertEqual(result["route"]["task"]["task_id"], "MIL-004")
         self.assertEqual(result["result"]["flow"], "issue_to_plan")
-        self.assertEqual(result["result"]["agent_calls"][0]["agent"], "augment_context")
+        self.assertEqual(result["result"]["agent_calls"][0]["agent"], "mem0_memory")
+        self.assertEqual(result["result"]["agent_calls"][0]["action"], "wm_memory_preflight")
         self.assertEqual(result["result"]["agent_calls"][-1]["agent"], "mem0_memory")
 
     def test_issue_agent_build_label_dispatches_real_plan_to_pr(self) -> None:
@@ -242,7 +243,7 @@ class GitHubWebhookRouterTests(unittest.TestCase):
         self.assertEqual(result["route"]["task"]["task_id"], "MIL-004")
         self.assertEqual(result["route"]["github"]["pr_number"], 18)
         self.assertEqual(result["result"]["agent_calls"][0]["action"], "provide_gate_context")
-        self.assertEqual(result["result"]["agent_calls"][-1]["action"], "store_qa_memory")
+        self.assertEqual(result["result"]["agent_calls"][-1]["action"], "wm_pr_merge_memory_writeback")
 
     def test_pull_request_gate_publishes_required_status_context(self) -> None:
         seen: dict = {}

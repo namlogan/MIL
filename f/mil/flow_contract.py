@@ -7,32 +7,32 @@ from typing import Any
 
 FLOW_STEPS: dict[str, list[tuple[str, str]]] = {
     "issue_to_plan": [
+        ("mem0_memory", "wm_memory_preflight"),
         ("augment_context", "provide_issue_context"),
-        ("mem0_memory", "retrieve_project_memory"),
         ("codex", "plan"),
-        ("mem0_memory", "store_plan_memory"),
+        ("mem0_memory", "record_memory_candidates"),
     ],
     "plan_to_pr": [
-        ("mem0_memory", "retrieve_plan_memory"),
+        ("mem0_memory", "wm_task_context_pack"),
         ("windmill", "dispatch_coding_agent"),
         ("developer", "create_branch"),
         ("developer", "implement"),
         ("developer", "test"),
         ("developer", "open_pr"),
         ("augment_context", "provide_review_context"),
-        ("mem0_memory", "store_handoff_memory"),
+        ("mem0_memory", "wm_agent_handoff_collect"),
     ],
     "pr_quality_gate": [
         ("augment_context", "provide_gate_context"),
-        ("mem0_memory", "retrieve_gate_memory"),
+        ("mem0_memory", "wm_memory_preflight"),
         ("codex", "qa"),
-        ("mem0_memory", "store_qa_memory"),
+        ("mem0_memory", "wm_pr_merge_memory_writeback"),
     ],
     "fix_ci_or_review": [
         ("augment_context", "provide_ci_context"),
-        ("mem0_memory", "retrieve_ci_patterns"),
+        ("mem0_memory", "wm_memory_preflight"),
         ("codex", "fix"),
-        ("mem0_memory", "store_fix_memory"),
+        ("mem0_memory", "wm_agent_handoff_collect"),
     ],
 }
 
@@ -133,13 +133,13 @@ def _artifacts(flow: str, task: dict[str, Any], decision: str, blocking: bool) -
 
 def _memory_records_for_flow(flow: str) -> list[str]:
     if flow == "issue_to_plan":
-        return ["plan"]
+        return ["requirement_interpretation", "open_question"]
     if flow == "plan_to_pr":
-        return ["developer_handoff", "review_note"]
+        return ["agent_handoff", "implementation_lesson", "review_lesson"]
     if flow == "pr_quality_gate":
-        return ["qa_gate"]
+        return ["test_lesson", "review_lesson"]
     if flow == "fix_ci_or_review":
-        return ["ci_pattern", "review_note"]
+        return ["implementation_lesson", "test_lesson"]
     raise ValueError(f"unknown flow: {flow}")
 
 

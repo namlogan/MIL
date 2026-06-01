@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MIL Memory Event",
+  "type": "object",
+  "required": [
+    "memory_type",
+    "scope",
+    "status",
+    "source_ref",
+    "content",
+    "sensitivity"
+  ],
+  "properties": {
+    "memory_id": {"type": "string"},
+    "memory_type": {
+      "type": "string",
+      "enum": [
+        "framework_rule",
+        "security_rule",
+        "product_rule",
+        "architecture_decision",
+        "adr_summary",
+        "domain_glossary",
+        "requirement_interpretation",
+        "implementation_lesson",
+        "test_lesson",
+        "review_lesson",
+        "deployment_runbook",
+        "incident_postmortem",
+        "agent_handoff",
+        "open_question",
+        "deprecated_decision"
+      ]
+    },
+    "scope": {"type": "string", "enum": ["framework", "project", "task"]},
+    "framework_id": {"type": "string"},
+    "project_id": {"type": "string"},
+    "repo": {"type": "string"},
+    "repo_id": {"type": "string"},
+    "task_id": {"type": "string"},
+    "agent_id": {"type": "string"},
+    "run_id": {"type": "string"},
+    "status": {
+      "type": "string",
+      "enum": ["candidate", "reviewed", "approved", "superseded", "retired", "needs_review"]
+    },
+    "source_ref": {"type": "string", "minLength": 1},
+    "source_type": {
+      "type": "string",
+      "enum": ["pull_request", "issue", "commit", "docs", "adr", "test", "ci_run", "windmill_run", "release", "incident"]
+    },
+    "content": {"type": "string", "minLength": 1},
+    "tags": {"type": "array", "items": {"type": "string"}},
+    "confidence": {"type": "string", "enum": ["low", "medium", "high"]},
+    "sensitivity": {"type": "string", "enum": ["public", "internal", "confidential"]},
+    "valid_until": {"type": "string"},
+    "created_by": {"type": "string"}
+  },
+  "additionalProperties": true
+}

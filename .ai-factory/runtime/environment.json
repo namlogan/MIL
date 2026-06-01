@@ -75,10 +75,10 @@
       "workspace_id",
       "repo",
       "repo_id",
-      "source_uri",
+      "source_ref",
       "confidence",
       "status",
-      "visibility",
+      "sensitivity",
       "created_by"
     ],
     "required_entity_scope_fields_any_of": [
@@ -87,26 +87,37 @@
       "app_id",
       "run_id"
     ],
-    "auto_write_memory_types": [
-      "agent_performance",
-      "ci_pattern",
-      "developer_handoff",
-      "failure_pattern",
-      "incident_learning",
-      "merge_gate",
-      "operator_note",
-      "plan",
-      "qa_gate",
-      "review_note",
-      "run_summary",
-      "tool_failure"
+    "taxonomy_memory_types": [
+      "framework_rule",
+      "security_rule",
+      "product_rule",
+      "architecture_decision",
+      "adr_summary",
+      "domain_glossary",
+      "requirement_interpretation",
+      "implementation_lesson",
+      "test_lesson",
+      "review_lesson",
+      "deployment_runbook",
+      "incident_postmortem",
+      "agent_handoff",
+      "open_question",
+      "deprecated_decision"
+    ],
+    "agent_write_status": "candidate",
+    "retrievable_statuses": [
+      "approved"
     ],
     "approval_required_memory_types": [
+      "framework_rule",
+      "security_rule",
+      "product_rule",
       "architecture_decision",
-      "human_preference",
-      "repo_convention",
-      "review_rule",
-      "security_policy"
+      "adr_summary",
+      "requirement_interpretation",
+      "deployment_runbook",
+      "incident_postmortem",
+      "deprecated_decision"
     ],
     "required_local_env": [],
     "optional_local_env": [
@@ -120,11 +131,14 @@
     "store_secrets": false,
     "store_raw_customer_data": false,
     "allowed_scopes": [
+      "framework",
       "project",
-      "task_id",
-      "agent",
-      "run"
+      "task"
     ],
+    "audit_log": ".ai-factory/memory/audit.jsonl",
+    "gateway_policy": ".ai-factory/memory/MEMORY_POLICY.md",
+    "context_pack_template": ".ai-factory/memory/CONTEXT_PACK_TEMPLATE.md",
+    "handoff_memory_template": ".ai-factory/memory/HANDOFF_MEMORY_TEMPLATE.md",
     "notes": "Mem0 is the optional long-term memory provider. Local JSONL is the deterministic framework adapter for internal agent memory and does not require OpenAI, Ollama, or external LLM calls. The Mem0 OSS library via pip/npm is optional for product/app code."
   },
   "project_intake": {

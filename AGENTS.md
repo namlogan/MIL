@@ -110,6 +110,37 @@ Codex session -> mem0 project/task memory -> sanitized facts -> Codex plan/imple
 
 Codex remains the only implementation worker. Augment may provide indexed codebase context, mem0 may provide sanitized long-term project/task memory, and Auggie may provide supervised advisory notes, but none of those context/review lanes may create branches, edit files, write commits, open PRs, or approve merges.
 
+## Memory Preflight
+
+Every agent-runnable task must document the memory preflight in the plan or
+handoff:
+
+- Query:
+- Retrieved decisions:
+- Retrieved lessons:
+- Restricted areas:
+- Conflicts found:
+- Sources to verify:
+
+Use approved memory only. If memory conflicts with GitHub issues, PRD/spec,
+docs, tests, CI, or audit evidence, the source-of-truth wins and the memory must
+be routed to conflict review.
+
+## Memory Candidate After Task
+
+Agents may propose a memory candidate after useful work, but must not mark it
+approved:
+
+- memory_type:
+- content:
+- source_ref:
+- why reusable:
+- scope:
+- suggested status: candidate
+
+Do not store secrets, raw logs, raw artifacts, raw customer data, raw source,
+generated patches, or chain-of-thought.
+
 ## Gate Decisions
 
 Final AI gate decisions must use exactly one of:

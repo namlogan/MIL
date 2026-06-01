@@ -303,10 +303,10 @@ python scripts/agent-flow/mil_flow.py \
 The harness verifies expected routing:
 
 ```text
-issue_to_plan -> augment_context.provide_issue_context -> mem0_memory.retrieve_project_memory -> codex.plan -> mem0_memory.store_plan_memory
-plan_to_pr -> mem0_memory.retrieve_plan_memory -> augment_context.provide_codebase_context -> windmill.dispatch_coding_agent -> codex.prepare_command_pack
-pr_quality_gate -> augment_context.provide_gate_context -> mem0_memory.retrieve_gate_memory -> codex.qa -> mem0_memory.store_qa_memory
-fix_ci_or_review -> augment_context.provide_ci_context -> mem0_memory.retrieve_ci_patterns -> codex.fix -> mem0_memory.store_fix_memory
+issue_to_plan -> mem0_memory.wm_memory_preflight -> augment_context.provide_issue_context -> codex.plan -> mem0_memory.record_memory_candidates
+plan_to_pr -> mem0_memory.wm_task_context_pack -> windmill.dispatch_coding_agent -> codex.implement -> augment_context.provide_review_context -> mem0_memory.wm_agent_handoff_collect
+pr_quality_gate -> augment_context.provide_gate_context -> mem0_memory.wm_memory_preflight -> codex.qa -> mem0_memory.wm_pr_merge_memory_writeback
+fix_ci_or_review -> augment_context.provide_ci_context -> mem0_memory.wm_memory_preflight -> codex.fix -> mem0_memory.wm_agent_handoff_collect
 ```
 
 In Windmill, `f/mil/plan_to_pr` is the real dispatch orchestrator. It calls

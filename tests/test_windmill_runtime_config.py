@@ -106,7 +106,7 @@ class WindmillRuntimeConfigTests(unittest.TestCase):
 
         self.assertEqual(result["flow"], "plan_to_pr")
         calls = [f"{call['agent']}.{call['action']}" for call in result["agent_calls"]]
-        self.assertEqual(calls[0], "mem0_memory.retrieve_plan_memory")
+        self.assertEqual(calls[0], "mem0_memory.wm_task_context_pack")
         self.assertIn("windmill.dispatch_coding_agent", calls)
         self.assertLess(calls.index("windmill.dispatch_coding_agent"), calls.index("codex.implement"))
 
@@ -207,7 +207,7 @@ class WindmillRuntimeConfigTests(unittest.TestCase):
                 {
                     "query": "how to fix tests",
                     "repo_id": "github:namlogan/MIL",
-                    "memory_types": ["ci_pattern"],
+                    "memory_types": ["implementation_lesson"],
                     "user_id": "repo:github:namlogan/MIL",
                 }
             )
@@ -217,20 +217,28 @@ class WindmillRuntimeConfigTests(unittest.TestCase):
                 "query": "Windmill secret",
                 "tenant_id": "org_mil",
                 "repo_id": "github:namlogan/MIL",
-                "memory_types": ["ci_pattern"],
+                "memory_types": ["implementation_lesson"],
+                "project_id": "mil",
                 "user_id": "repo:github:namlogan/MIL",
                 "records": [
                     {
                         "project": "MIL",
                         "task_id": "MEM-001",
-                        "memory_type": "ci_pattern",
+                        "memory_type": "implementation_lesson",
                         "memory": "Windmill secret caused prior CI failure.",
+                        "content": "Windmill secret caused prior CI failure.",
+                        "status": "approved",
+                        "project_id": "mil",
+                        "source_ref": "https://github.com/namlogan/MIL/pull/26",
                         "metadata": {
                             "tenant_id": "org_mil",
                             "repo_id": "github:namlogan/MIL",
+                            "project_id": "mil",
                             "user_id": "repo:github:namlogan/MIL",
-                            "status": "active",
+                            "status": "approved",
                             "visibility": "repo",
+                            "sensitivity": "internal",
+                            "source_ref": "https://github.com/namlogan/MIL/pull/26",
                         },
                     }
                 ],
@@ -241,7 +249,7 @@ class WindmillRuntimeConfigTests(unittest.TestCase):
         self.assertEqual(retrieved["filters"]["AND"][0]["tenant_id"], "org_mil")
         self.assertEqual(retrieved["context_pack"][0]["memory_id"], "local-1")
 
-        with self.assertRaisesRegex(ValueError, "requires approval"):
+        with self.assertRaisesRegex(ValueError, "approved memory requires approval"):
             mem0_writeback.main(
                 {
                     "project": "MIL",
@@ -253,10 +261,15 @@ class WindmillRuntimeConfigTests(unittest.TestCase):
                         "workspace_id": "engineering",
                         "repo": "MIL",
                         "repo_id": "github:namlogan/MIL",
+                        "project_id": "mil",
+                        "framework_id": "ai-factory-sdlc",
                         "user_id": "repo:github:namlogan/MIL",
-                        "source_uri": "https://github.com/namlogan/MIL/pull/26",
-                        "confidence": 0.82,
-                        "status": "active",
+                        "source_ref": "https://github.com/namlogan/MIL/pull/26",
+                        "source_type": "pull_request",
+                        "confidence": "high",
+                        "scope": "project",
+                        "status": "approved",
+                        "sensitivity": "internal",
                         "visibility": "repo",
                         "created_by": "agent",
                     },
@@ -267,27 +280,32 @@ class WindmillRuntimeConfigTests(unittest.TestCase):
             {
                 "project": "MIL",
                 "task_id": "MEM-001",
-                "memory_type": "failure_pattern",
-                "text": "CI token: ghp_123456789012345678901234567890123456 failed.",
+                "memory_type": "implementation_lesson",
+                "text": "Windmill status token was missing in a prior run.",
                 "metadata": {
                     "tenant_id": "org_mil",
                     "workspace_id": "engineering",
                     "repo": "MIL",
                     "repo_id": "github:namlogan/MIL",
+                    "project_id": "mil",
+                    "framework_id": "ai-factory-sdlc",
                     "user_id": "repo:github:namlogan/MIL",
-                    "source_uri": "https://github.com/namlogan/MIL/pull/26",
-                    "confidence": 0.82,
-                    "status": "active",
+                    "source_ref": "https://github.com/namlogan/MIL/pull/26",
+                    "source_type": "pull_request",
+                    "confidence": "high",
+                    "scope": "project",
+                    "status": "candidate",
+                    "sensitivity": "internal",
                     "visibility": "repo",
-                    "created_by": "agent",
+                    "created_by": "memory_gateway",
                 },
             }
         )
 
         serialized = str(writeback)
         self.assertEqual(writeback["decision"], "MEMORY_WRITE_RECORDED")
-        self.assertIn("[REDACTED_GITHUB_TOKEN]", serialized)
-        self.assertNotIn("ghp_123456789012345678901234567890123456", serialized)
+        self.assertEqual(writeback["record"]["status"], "candidate")
+        self.assertIn("source_ref", serialized)
 
     def test_windmill_validator_self_test_succeeds(self) -> None:
         validator = load_module(

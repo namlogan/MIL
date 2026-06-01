@@ -145,9 +145,9 @@ def validate(repo_root: Path) -> list[str]:
             errors.append("sample_plan_to_pr must include windmill.dispatch_coding_agent")
         elif "codex.implement" in calls and calls.index("windmill.dispatch_coding_agent") > calls.index("codex.implement"):
             errors.append("sample_plan_to_pr dispatch must occur before codex.implement")
-        if "mem0_memory.retrieve_plan_memory" not in calls:
-            errors.append("sample_plan_to_pr must retrieve scoped memory before implementation")
-        elif "codex.implement" in calls and calls.index("mem0_memory.retrieve_plan_memory") > calls.index("codex.implement"):
+        if "mem0_memory.wm_task_context_pack" not in calls:
+            errors.append("sample_plan_to_pr must build scoped memory context before implementation")
+        elif "codex.implement" in calls and calls.index("mem0_memory.wm_task_context_pack") > calls.index("codex.implement"):
             errors.append("sample_plan_to_pr memory retrieval must occur before codex.implement")
 
         pr_quality_gate = _read_json(repo_root, FLOW_SAMPLE_FILES["pr_quality_gate"])

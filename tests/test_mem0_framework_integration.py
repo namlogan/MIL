@@ -58,34 +58,39 @@ class Mem0FrameworkIntegrationTests(unittest.TestCase):
 
         self.assertEqual(kwargs["messages"][0]["content"], record["memory"])
         self.assertFalse(kwargs["infer"])
-        self.assertEqual(kwargs["memory_type"], "repo_convention")
+        self.assertEqual(kwargs["memory_type"], "framework_rule")
         self.assertEqual(kwargs["user_id"], "repo:github:namlogan/MIL")
         self.assertEqual(kwargs["agent_id"], "codex")
         self.assertEqual(kwargs["run_id"], "mem0-integration-smoke")
         self.assertNotIn("app_id", kwargs)
         self.assertEqual(kwargs["metadata"]["app_id"], "mil-framework")
 
-    def test_add_and_search_use_mem0_library_shape_without_exposing_secrets(self) -> None:
+    def test_add_and_search_use_mem0_library_shape_for_approved_memory(self) -> None:
         fake = FakeMem0Memory()
         record = self.integration.sample_writeback_record(
-            text="Repo uses mem0ai library. token: ghp_123456789012345678901234567890123456"
+            text="Framework memory uses scoped context packs before Codex work."
         )["record"]
 
         add_result = self.integration.add_record_to_mem0(fake, record)
         context_pack = self.integration.search_mem0_context(
             fake,
-            query="mem0ai library",
+            query="context packs",
             filters=self.integration.sample_filters(),
             limit=3,
         )
 
         serialized = json.dumps({"add": add_result, "context": context_pack}, sort_keys=True)
-        self.assertEqual(fake.add_calls[0]["memory_type"], "repo_convention")
+        self.assertEqual(fake.add_calls[0]["memory_type"], "framework_rule")
         self.assertEqual(fake.search_calls[0]["top_k"], 3)
         self.assertEqual(context_pack[0]["memory_id"], "mem_fake_1")
-        self.assertIn("mem0ai library", context_pack[0]["memory"])
-        self.assertNotIn("ghp_123456789012345678901234567890123456", serialized)
-        self.assertIn("[REDACTED_GITHUB_TOKEN]", serialized)
+        self.assertIn("context packs", context_pack[0]["memory"])
+        self.assertIn("source_ref", serialized)
+
+    def test_writeback_rejects_secret_payload_before_mem0_adapter(self) -> None:
+        with self.assertRaisesRegex(ValueError, "restricted memory payload"):
+            self.integration.sample_writeback_record(
+                text="Repo uses mem0ai library. token: ghp_123456789012345678901234567890123456"
+            )
 
     def test_framework_smoke_routes_mem0_context_into_plan_to_pr(self) -> None:
         result = self.integration.run_framework_smoke(repo_root=REPO_ROOT)
