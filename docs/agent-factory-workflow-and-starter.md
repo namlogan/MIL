@@ -397,6 +397,11 @@ find .ai-factory/queue/webhooks -name '*.result.json' -maxdepth 1 | sort | tail
 jq '{decision, worker_status: .worker_result.status, pr_url: .worker_result.git.pr_url}' .ai-factory/queue/webhooks/<delivery>.result.json
 ```
 
+`daily_status.py` is the preferred first command. It aggregates git cleanliness,
+local tool availability, relay/tunnel sessions, GitHub PRs, latest `main` CI,
+recent Windmill failures, Augment config, Mem0 provider mode, branch protection,
+and recent dispatch queue outcomes.
+
 ### Evidence Locations
 
 ```text
