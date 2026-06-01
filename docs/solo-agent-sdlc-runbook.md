@@ -116,6 +116,7 @@ Start with local JSONL memory while the framework is being developed:
 
 ```bash
 python3 scripts/agent-memory/check_mem0_provider.py
+python3 scripts/agent-memory/mem0_framework_integration.py --self-test
 ```
 
 When the product app or worker needs real Mem0 during development, use the OSS
@@ -125,6 +126,7 @@ library directly:
 pip install mem0ai
 export OPENAI_API_KEY="..."
 python3 scripts/agent-memory/check_mem0_library.py --runtime python
+python3 scripts/agent-memory/mem0_framework_integration.py --self-test
 ```
 
 or for a Node app:
