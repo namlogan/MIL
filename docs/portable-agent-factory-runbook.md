@@ -81,6 +81,7 @@ AGENTS.md
 README.md
 wmill.yaml
 wmill-lock.yaml
+.ai-factory/product-ci.json
 ```
 
 Do not commit runtime folders, local env files, tunnel credentials, tokens, or
@@ -184,6 +185,10 @@ brew install cloudflared
 python3 -m unittest discover -s tests -v
 python3 scripts/ai-factory/bootstrap_runtime.py --check --check-tools
 python3 scripts/agent-memory/memory_contract.py --self-test
+python3 scripts/agent-memory/check_mem0_provider.py
+python3 scripts/project-intake/validate_project_intake.py
+python3 scripts/operator/daily_status.py
+python3 scripts/product-ci/run_product_checks.py
 python3 scripts/agent-gate/validate_ai_factory.py --self-test
 python3 scripts/windmill/validate_windmill_project.py --self-test
 python3 scripts/agent-flow/check_mil_mcp_runtime.py --mcp-smoke
@@ -243,6 +248,32 @@ gh api repos/<owner>/<repo>/hooks \
   -f 'config[content_type]=json' \
   -f 'config[insecure_ssl]=0' \
   -f "config[secret]=$WEBHOOK_SECRET"
+```
+
+## Daily Operation
+
+Run this each morning before letting agents work:
+
+```bash
+python3 scripts/operator/daily_status.py
+```
+
+If the result is `attention`, inspect the failing check before adding
+`agent:auto-build` to new issues.
+
+## New Product Readiness
+
+Copy `docs/templates/project/**` into `docs/project/**`, replace placeholder
+text, then run:
+
+```bash
+python3 scripts/project-intake/validate_project_intake.py
+```
+
+Enable product-specific checks only after the app stack exists:
+
+```bash
+python3 scripts/product-ci/run_product_checks.py
 ```
 
 9. Restore branch protection:

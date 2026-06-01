@@ -60,6 +60,7 @@
       "AUGMENT_MCP_TOKEN"
     ],
     "coding_allowed": false,
+    "strict_read_only_check": "python3 scripts/agent-flow/check_augment_config.py --require-read-only",
     "notes": "Augment exposes codebase index/context to Codex sessions. It is not a MIL coding worker."
   },
   "memory": {
@@ -125,8 +126,44 @@
     ],
     "notes": "Mem0 is the optional long-term memory provider. Local JSONL is the deterministic test adapter until a Mem0 Platform or self-hosted endpoint is configured."
   },
+  "project_intake": {
+    "validator": "scripts/project-intake/validate_project_intake.py",
+    "required_active_docs": [
+      ".ai-factory/DESCRIPTION.md",
+      ".ai-factory/ARCHITECTURE.md",
+      ".ai-factory/RULES.md",
+      "docs/project/PRD.md",
+      "docs/project/MVP_SCOPE.md",
+      "docs/project/USER_FLOWS.md",
+      "docs/project/DATA_MODEL.md",
+      "docs/project/TEST_STRATEGY.md",
+      "docs/project/DEPLOYMENT.md"
+    ]
+  },
+  "operator": {
+    "daily_status": "scripts/operator/daily_status.py",
+    "branch_protection_check": "scripts/github/check_branch_protection.py"
+  },
+  "product_ci": {
+    "config": ".ai-factory/product-ci.json",
+    "runner": "scripts/product-ci/run_product_checks.py",
+    "enabled_default": false
+  },
+  "release": {
+    "template": "docs/templates/release/RELEASE_CHECKLIST.md",
+    "gate": "scripts/release/release_gate.py",
+    "requires_human_approval": true,
+    "requires_rollback_plan": true,
+    "requires_staging_smoke": true
+  },
   "local_checks": [
     "python3 -m unittest discover -s tests -v",
+    "python3 scripts/project-intake/validate_project_intake.py --self-test",
+    "python3 scripts/operator/daily_status.py --self-test",
+    "python3 scripts/product-ci/run_product_checks.py --self-test",
+    "python3 scripts/release/release_gate.py --self-test",
+    "python3 scripts/agent-memory/check_mem0_provider.py --self-test",
+    "python3 scripts/github/check_branch_protection.py --self-test",
     "python3 scripts/agent-memory/memory_contract.py --self-test",
     "python3 scripts/agent-gate/validate_ai_factory.py --self-test",
     "python3 scripts/windmill/validate_windmill_project.py --self-test",

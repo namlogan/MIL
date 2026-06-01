@@ -24,6 +24,21 @@ Recommended protection for `main`:
 - restrict who can bypass protections
 - require signed commits if the project needs stronger provenance
 
+Check the current policy:
+
+```bash
+python3 scripts/github/check_branch_protection.py
+```
+
+For a solo-owner pilot, zero required approving reviews is acceptable only while
+the owner manually controls merge. For team mode or production projects, use:
+
+```bash
+python3 scripts/github/check_branch_protection.py --team-mode
+```
+
+Team mode should require at least one approving review or CODEOWNERS review.
+
 Required checks for the current control-plane gate:
 
 ```text

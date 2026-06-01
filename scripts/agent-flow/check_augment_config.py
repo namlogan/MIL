@@ -74,6 +74,7 @@ def _session_check(raw_session: str | None) -> dict[str, Any]:
 def check_config(
     env: Mapping[str, str] | None = None,
     env_file: str | Path | None = ".env.local",
+    require_read_only: bool = False,
 ) -> dict[str, Any]:
     merged: dict[str, str] = {}
     if env is None:
@@ -109,11 +110,14 @@ def check_config(
     }
 
     warnings: list[str] = []
+    errors: list[str] = []
     scopes = set(session.get("scopes") or [])
     if "write" in scopes:
         warnings.append(
             "Augment credential includes write scope; keep Auggie review workers read-only at the tool/flow layer."
         )
+        if require_read_only:
+            errors.append("Augment credential has write scope but read-only mode is required.")
 
     ok = (
         checks["augment_mcp_token"]["present"]
@@ -124,11 +128,13 @@ def check_config(
         and checks["augment_session_auth"]["valid_json"]
         and checks["augment_session_auth"]["has_access_token"]
         and "read" in scopes
+        and not errors
     )
 
     return {
         "ok": bool(ok),
         "checks": checks,
+        "errors": errors,
         "warnings": warnings,
     }
 
@@ -155,6 +161,11 @@ def run_self_test() -> None:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--env-file", default=".env.local", help="Optional env file to load.")
+    parser.add_argument(
+        "--require-read-only",
+        action="store_true",
+        help="Fail when the Augment session includes write scope.",
+    )
     parser.add_argument("--self-test", action="store_true", help="Run built-in tests.")
     args = parser.parse_args(argv)
 
@@ -163,7 +174,7 @@ def main(argv: list[str] | None = None) -> int:
         print("check_augment_config self-test passed")
         return 0
 
-    result = check_config(env_file=args.env_file)
+    result = check_config(env_file=args.env_file, require_read_only=args.require_read_only)
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0 if result["ok"] else 1
 

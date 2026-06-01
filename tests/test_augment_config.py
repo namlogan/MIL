@@ -64,6 +64,29 @@ class AugmentConfigTests(unittest.TestCase):
         self.assertFalse(result["checks"]["augment_mcp_token"]["present"])
         self.assertFalse(result["checks"]["augment_session_auth"]["present"])
 
+    def test_strict_read_only_mode_rejects_write_scope(self) -> None:
+        session = {
+            "accessToken": "secret-token",
+            "tenantURL": "https://e6.api.augmentcode.com/",
+            "scopes": ["read", "write"],
+        }
+        result = check_augment_config.check_config(
+            env={
+                "AUGMENT_MCP_TOKEN": "secret-token",
+                "AUGMENT_API_TOKEN": "secret-token",
+                "AUGMENT_API_URL": "https://e6.api.augmentcode.com/",
+                "AUGMENT_SESSION_AUTH": json.dumps(session),
+            },
+            env_file=None,
+            require_read_only=True,
+        )
+
+        self.assertFalse(result["ok"])
+        self.assertIn(
+            "Augment credential has write scope but read-only mode is required.",
+            result["errors"],
+        )
+
     def test_mil_mcp_runtime_checker_is_documented(self) -> None:
         checker = REPO_ROOT / "scripts" / "agent-flow" / "check_mil_mcp_runtime.py"
         docs = (REPO_ROOT / "docs" / "augment-setup.md").read_text(encoding="utf-8")

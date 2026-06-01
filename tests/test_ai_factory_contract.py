@@ -63,8 +63,16 @@ class AIFactoryContractTests(unittest.TestCase):
             ".ai-factory/qa",
             ".ai-factory/gates",
             ".ai-factory/memory",
+            ".ai-factory/product-ci.json",
             ".windmill",
             "docs",
+            "docs/project/PRD.md",
+            "docs/templates/project/PRD.md",
+            "docs/templates/release/RELEASE_CHECKLIST.md",
+            "scripts/project-intake/validate_project_intake.py",
+            "scripts/operator/daily_status.py",
+            "scripts/product-ci/run_product_checks.py",
+            "scripts/release/release_gate.py",
         ]
 
         for relative_path in required_paths:
@@ -78,6 +86,12 @@ class AIFactoryContractTests(unittest.TestCase):
             "require_human_for_restricted_changes: true",
             "require_coding_agent_dispatch: true",
             "max_auto_fix_iterations: 2",
+            "project_intake_check_command:",
+            "operator_daily_status_command:",
+            "product_ci_command:",
+            "release_gate_command:",
+            "mem0_provider_check_command:",
+            "branch_protection_check_command:",
         ]:
             self.assertIn(control, config)
 

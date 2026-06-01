@@ -57,6 +57,27 @@ Each agent-runnable issue should include:
 - security/restricted escalation check
 - rollback note
 
+Before the first agent-runnable issue in a new project, these intake documents
+must exist and be specific enough for Codex workers to infer scope and tests:
+
+```text
+.ai-factory/DESCRIPTION.md
+.ai-factory/ARCHITECTURE.md
+.ai-factory/RULES.md
+docs/project/PRD.md
+docs/project/MVP_SCOPE.md
+docs/project/USER_FLOWS.md
+docs/project/DATA_MODEL.md
+docs/project/TEST_STRATEGY.md
+docs/project/DEPLOYMENT.md
+```
+
+Validate intake with:
+
+```bash
+python3 scripts/project-intake/validate_project_intake.py
+```
+
 ## Required PR Evidence
 
 Before review, the developer agent must attach or reference:
@@ -112,4 +133,6 @@ The gate decision is advisory until GitHub branch protection and required status
 6. Every gate result must include decision, reasons, tests, and residual risks.
 7. Restricted areas require human approval before merge: production deploy, secrets, billing, customer data, destructive migrations, legal/compliance behavior, security boundaries.
 8. Memory must store sanitized operational summaries only; never store raw tokens, secrets, customer data, or raw transcripts.
-9. If issue instructions conflict with this file or `.ai-factory/RULES.md`, the stricter rule wins unless the Product Owner approves an exception in writing.
+9. Product-specific CI must be enabled in `.ai-factory/product-ci.json` once app code exists.
+10. Release requires CI pass, AI gate pass, staging smoke evidence, rollback plan, monitoring plan, and human approval.
+11. If issue instructions conflict with this file or `.ai-factory/RULES.md`, the stricter rule wins unless the Product Owner approves an exception in writing.

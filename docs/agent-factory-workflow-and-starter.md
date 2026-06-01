@@ -147,6 +147,29 @@ use.
 
 ## 3. Required Setup For A New Project
 
+### Project Intake
+
+Required active documents:
+
+```text
+.ai-factory/DESCRIPTION.md
+.ai-factory/ARCHITECTURE.md
+.ai-factory/RULES.md
+docs/project/PRD.md
+docs/project/MVP_SCOPE.md
+docs/project/USER_FLOWS.md
+docs/project/DATA_MODEL.md
+docs/project/TEST_STRATEGY.md
+docs/project/DEPLOYMENT.md
+```
+
+Starter templates live under `docs/templates/project/**`. Validate before
+enabling `agent:auto-build`:
+
+```bash
+python3 scripts/project-intake/validate_project_intake.py
+```
+
 ### GitHub
 
 Required:
@@ -278,6 +301,48 @@ Mem0 Platform       hosted memory layer
 Memory must store distilled operational facts only, never secrets, raw source,
 raw transcripts, or generated patches before review.
 
+Check the active provider:
+
+```bash
+python3 scripts/agent-memory/check_mem0_provider.py
+```
+
+Local JSONL is acceptable for the first pilot. Use `MEM0_BASE_URL` for self-hosted
+Mem0 OSS or `MEM0_API_KEY` for Mem0 Platform when cross-session memory becomes
+important.
+
+### Product CI
+
+Framework CI is already enabled. Product CI starts disabled in:
+
+```text
+.ai-factory/product-ci.json
+```
+
+When the app stack exists, set `enabled` to `true` and add command arrays such as
+unit, lint, typecheck, build, integration, and E2E checks. The runner does not
+accept shell strings, so checks are explicit command lists:
+
+```bash
+python3 scripts/product-ci/run_product_checks.py
+```
+
+### Release Gate
+
+Protected merge is not the same as release. Use the release checklist template
+and gate evaluator before staging or production rollout:
+
+```text
+docs/templates/release/RELEASE_CHECKLIST.md
+```
+
+```bash
+python3 scripts/release/release_gate.py --evidence release-evidence.json
+```
+
+Release evidence must include CI pass, AI gate pass, staging smoke, rollback
+plan, monitoring plan, and human approval.
+
 ## 4. How To Track Progress
 
 ### GitHub
@@ -325,6 +390,7 @@ status_publish.state
 ### Local Worker Runtime
 
 ```bash
+python3 scripts/operator/daily_status.py
 tmux list-sessions | rg 'mil-webhook'
 ps aux | rg 'github_webhook_public_relay|ngrok http|auto_dispatcher.py|codex exec'
 find .ai-factory/queue/webhooks -name '*.result.json' -maxdepth 1 | sort | tail
