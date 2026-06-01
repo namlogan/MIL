@@ -1,6 +1,10 @@
 # MIL Description
 
+## Purpose
+
 MIL is initialized with an agent-first software delivery workflow.
+
+## Control Plane
 
 The repository starts with the control plane before application code:
 
@@ -11,5 +15,7 @@ The repository starts with the control plane before application code:
 - Augment provides codebase index and context retrieval for Codex sessions.
 - Mem0 provides optional sanitized long-term project/task memory.
 - Auggie provides supervised advisory review and diagnosis only; it is not a coding worker.
+
+## Product Scope
 
 Application-specific product requirements should be added here once the MIL product scope is defined.

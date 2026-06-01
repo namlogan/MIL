@@ -43,6 +43,19 @@ paths:
   codex_worker_runner: scripts/agent-flow/codex_worker.py
   windmill_codex_worker: f/mil/codex_worker.py
   windmill_codex_worker_contract: f/mil/codex_worker_contract.py
+  project_intake_validator: scripts/project-intake/validate_project_intake.py
+  project_prd: docs/project/PRD.md
+  project_mvp_scope: docs/project/MVP_SCOPE.md
+  project_user_flows: docs/project/USER_FLOWS.md
+  project_data_model: docs/project/DATA_MODEL.md
+  project_test_strategy: docs/project/TEST_STRATEGY.md
+  project_deployment: docs/project/DEPLOYMENT.md
+  project_intake_template_prd: docs/templates/project/PRD.md
+  operator_dashboard: scripts/operator/daily_status.py
+  product_ci_config: .ai-factory/product-ci.json
+  product_ci_runner: scripts/product-ci/run_product_checks.py
+  release_gate: scripts/release/release_gate.py
+  release_template: docs/templates/release/RELEASE_CHECKLIST.md
 
 workflow:
   auto_create_dirs: true
@@ -63,6 +76,12 @@ workflow:
   required_status_contexts:
     - control-plane
     - ai-gate/final-review
+  project_intake_check_command: python3 scripts/project-intake/validate_project_intake.py
+  operator_daily_status_command: python3 scripts/operator/daily_status.py
+  product_ci_command: python3 scripts/product-ci/run_product_checks.py
+  release_gate_command: python3 scripts/release/release_gate.py --evidence <release-evidence.json>
+  mem0_provider_check_command: python3 scripts/agent-memory/check_mem0_provider.py
+  branch_protection_check_command: python3 scripts/github/check_branch_protection.py
 
 git:
   enabled: true

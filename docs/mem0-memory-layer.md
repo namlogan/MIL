@@ -150,6 +150,20 @@ When moving beyond the local adapter, use one of these modes:
 Store those values in Windmill or the workstation secret store. Do not commit
 them and do not paste them into task memory.
 
+Provider preflight:
+
+```bash
+python3 scripts/agent-memory/check_mem0_provider.py
+```
+
+Expected modes:
+
+```text
+local_jsonl        no external credential; acceptable for first solo pilot
+mem0_self_hosted   MEM0_BASE_URL points to Mem0 OSS
+mem0_platform      MEM0_API_KEY is present
+```
+
 The local CLI lives in `scripts/agent-memory/`; the deployable Windmill memory
 contract lives in `f/mil/memory_contract.py`. Windmill entrypoints:
 
@@ -177,6 +191,7 @@ Run these checks after changing memory policy:
 
 ```bash
 python3 scripts/agent-memory/memory_contract.py --self-test
+python3 scripts/agent-memory/check_mem0_provider.py --self-test
 python3 -m unittest tests.test_memory_contract -v
 python3 scripts/ai-factory/bootstrap_runtime.py --check
 python3 scripts/agent-gate/validate_ai_factory.py --self-test

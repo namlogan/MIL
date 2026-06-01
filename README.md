@@ -17,6 +17,8 @@ Start here:
 - [Agent workflow](AGENTS.md)
 - [Operating model](docs/agent-operating-model.md)
 - [Workflow and starter kit](docs/agent-factory-workflow-and-starter.md)
+- [Solo agent SDLC runbook](docs/solo-agent-sdlc-runbook.md)
+- [Project intake template set](docs/templates/project/PRD.md)
 - [Branch protection guide](docs/branch-protection.md)
 - [External blockers](docs/external-blockers.md)
 - [Augment setup](docs/augment-setup.md)
@@ -27,3 +29,15 @@ Start here:
 - [AI Factory rules](.ai-factory/RULES.md)
 - [Windmill cockpit notes](.windmill/README.md)
 - [Portable backup and migration runbook](docs/portable-agent-factory-runbook.md)
+
+Daily operator command:
+
+```bash
+python3 scripts/operator/daily_status.py
+```
+
+New project intake check:
+
+```bash
+python3 scripts/project-intake/validate_project_intake.py
+```

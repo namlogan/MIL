@@ -24,8 +24,22 @@ jobs:
         run: python scripts/agent-gate/final_gate_check.py --self-test
       - name: Validate AI Factory artifacts
         run: python scripts/agent-gate/validate_ai_factory.py --self-test
+      - name: Validate project intake package
+        run: python scripts/project-intake/validate_project_intake.py --self-test
       - name: Validate Windmill project files
         run: python scripts/windmill/validate_windmill_project.py --self-test
+      - name: Check operator dashboard
+        run: python scripts/operator/daily_status.py --self-test
+      - name: Check branch protection policy evaluator
+        run: python scripts/github/check_branch_protection.py --self-test
+      - name: Check Mem0 provider preflight
+        run: python scripts/agent-memory/check_mem0_provider.py --self-test
+      - name: Check release gate
+        run: python scripts/release/release_gate.py --self-test
+      - name: Check product CI config
+        run: python scripts/product-ci/run_product_checks.py --self-test
+      - name: Run configurable product CI
+        run: python scripts/product-ci/run_product_checks.py
       - name: Test GitHub check payload
         run: python scripts/agent-gate/github_check_payload.py --self-test
       - name: Test GitHub status payload
