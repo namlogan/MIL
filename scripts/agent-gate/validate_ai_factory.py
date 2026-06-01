@@ -62,6 +62,7 @@ REQUIRED_CONTROLS = [
     "max_auto_fix_iterations: 2",
     "runtime_check_command: python3 scripts/ai-factory/bootstrap_runtime.py --check",
     "ai-gate/final-review",
+    "merge-controller-policy",
 ]
 
 ALLOWED_GATE_DECISIONS = {

@@ -46,6 +46,7 @@ class WindmillRuntimeConfigTests(unittest.TestCase):
             "mem0_writeback",
             "auggie_supervised_advisory",
             "github_commit_status",
+            "merge_controller",
             "github_webhook_router",
         ]:
             with self.subTest(name=name):
@@ -66,6 +67,7 @@ class WindmillRuntimeConfigTests(unittest.TestCase):
             "mem0_retrieve",
             "mem0_writeback",
             "auggie_supervised_advisory",
+            "merge_controller",
             "github_webhook_router",
         ]:
             with self.subTest(name=name):
@@ -77,6 +79,18 @@ class WindmillRuntimeConfigTests(unittest.TestCase):
                 self.assertNotIn("from codex_worker_contract import", script)
                 self.assertNotIn("from flow_contract import", script)
                 self.assertNotIn("from memory_contract import", script)
+
+    def test_windmill_merge_controller_wrapper_returns_command_contract(self) -> None:
+        merge_controller = load_module("merge_controller_windmill", "f/mil/merge_controller.py")
+
+        result = merge_controller.main({"repo": "namlogan/MIL", "mode": "scan-open", "execute": False})
+
+        self.assertEqual(result["flow"], "merge_controller")
+        self.assertEqual(result["decision"], "MERGE_CONTROLLER_POLICY_COMMAND_READY")
+        self.assertFalse(result["artifacts"]["execute"])
+        self.assertIn("scripts/github/merge_controller.py", result["artifacts"]["command"])
+        self.assertEqual(result["artifacts"]["status_context"], "merge-controller-policy")
+        self.assertFalse(result["artifacts"]["requires_separate_merge_identity"])
 
     def test_github_webhook_http_trigger_is_versioned(self) -> None:
         trigger = REPO_ROOT / "f" / "mil" / "github_webhook.http_trigger.yaml"

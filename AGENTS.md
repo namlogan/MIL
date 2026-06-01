@@ -33,6 +33,7 @@ Windmill is an orchestrator, not the source of truth. AI Factory is the SDLC pro
 | Codex QA | Final AI QA review and gate evidence | Review/test only |
 | Windmill Bot | Run flows, write comments/checks/labels, request approval | No app-code authorship |
 | GitHub Bot | Create status checks and merge only when protections pass | No app-code authorship |
+| Merge Controller Gate | Publish machine approval status and enable auto-merge after policy/check gates pass | No implementation commits |
 
 ## Branch Naming
 
@@ -255,6 +256,29 @@ BLOCKED_NEEDS_HUMAN
 ```
 
 The gate decision is advisory until GitHub branch protection and required status checks pass. Production release and restricted changes always require human approval.
+
+## Merge Controller Gate
+
+Real-project mode uses status-check approval instead of fake human review for
+routine agent PRs:
+
+```text
+namlogan -> owner / restricted approval / release approval
+Codex worker -> PR author/pusher on scoped branches
+merge-controller-policy -> machine approval status check
+GitHub auto-merge -> protected merge after all required checks pass
+```
+
+The merge policy is configured in `.ai-factory/merge-controller.json` and
+implemented by `scripts/github/merge_controller.py`. GitHub Actions runs it
+with `--policy-only` as the required `merge-controller-policy` check.
+
+Automation may enable auto-merge only for PRs with required policy evidence,
+rollback note, and no block labels. Routine low-risk PRs use
+`agent:auto-build` or `automerge:candidate`. Restricted paths, size-limit
+overrides, or restricted labels require `owner:auto-approve`. Labels `hold`,
+`owner-review`, `do-not-merge`, `blocked`, and `security-review` stop
+automation. Production release still requires human approval.
 
 ## Non-Negotiable Rules
 

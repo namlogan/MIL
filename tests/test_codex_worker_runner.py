@@ -63,6 +63,19 @@ class CodexWorkerRunnerTests(unittest.TestCase):
 
         self.assertEqual(runner.main(["--self-test"]), 0)
 
+    def test_pr_create_command_propagates_safe_labels(self) -> None:
+        runner = load_module("codex_worker_runner_labels", "scripts/agent-flow/codex_worker.py")
+
+        command = runner._pr_create_command(
+            {"base_branch": "main", "branch": "agent/mil-041"},
+            {"pr_labels": ["agent:auto-build", "bad label", "owner:auto-approve"]},
+        )
+
+        self.assertIn("--label", command)
+        self.assertIn("agent:auto-build", command)
+        self.assertIn("owner:auto-approve", command)
+        self.assertNotIn("bad label", command)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -19,6 +19,8 @@ Rule priority: `rules.<area> > rules/base.md > paths.rules_file`.
 - Emit the final machine-readable `aif-gate-result` block after the human summary.
 - Allowed MIL merge decisions are `APPROVE_MERGE`, `REQUEST_CHANGES`, `REJECT`, and `BLOCKED_NEEDS_HUMAN`.
 - Never merge, deploy, bypass branch protection, or approve restricted work without human approval.
+- `merge-controller-policy` is the required machine approval status check for low-risk PRs. Do not require fake human review for routine solo-owner agent PRs.
+- Restricted paths, restricted labels, production release, and owner-review labels must stop automation until owner approval is recorded.
 - Never store secrets, raw tokens, customer data, raw proprietary source, or raw transcripts in memory.
 - Restricted changes include production deploy behavior, production secrets, billing, customer data retention/deletion, auth boundaries, destructive migrations, legal/compliance behavior, and safety-critical behavior.
 

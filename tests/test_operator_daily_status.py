@@ -157,6 +157,11 @@ class OperatorDailyStatusTests(unittest.TestCase):
                 json.dumps({"ok": True, "warnings": []}),
                 "",
             ),
+            ("python3", "scripts/github/merge_controller.py", "--self-test"): (
+                0,
+                "merge_controller self-test passed\n",
+                "",
+            ),
         }
 
     def test_build_daily_status_reports_ready_when_core_checks_pass(self) -> None:
@@ -179,6 +184,7 @@ class OperatorDailyStatusTests(unittest.TestCase):
             "augment_config",
             "mem0_provider",
             "branch_protection",
+            "merge_controller",
             "dispatch_queue",
         ]:
             with self.subTest(check=check_name):

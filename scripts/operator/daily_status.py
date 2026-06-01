@@ -12,7 +12,7 @@ from typing import Any, Callable, NamedTuple
 
 
 REPO_SLUG = "namlogan/MIL"
-REQUIRED_PR_CONTEXTS = {"control-plane", "ai-gate/final-review"}
+REQUIRED_PR_CONTEXTS = {"control-plane", "ai-gate/final-review", "merge-controller-policy"}
 PUBLIC_TUNNEL_SESSION_MARKERS = (
     "mil-webhook-ngrok",
     "mil-webhook-cloudflared",
@@ -458,6 +458,12 @@ def build_daily_status(
             repo_root=root,
             runner=runner,
         ),
+        "merge_controller": _command_check(
+            name="merge_controller",
+            command=["python3", "scripts/github/merge_controller.py", "--self-test"],
+            repo_root=root,
+            runner=runner,
+        ),
         "dispatch_queue": _dispatch_queue_check(root),
     }
     overall = "ready" if all(check["ok"] for check in checks.values()) else "attention"
@@ -542,6 +548,11 @@ def run_self_test() -> None:
                 "scripts/product-ci/run_product_checks.py",
             ): (0, '{"ok": true, "status": "skipped", "checks": [], "errors": []}\n', ""),
             ("python3", "scripts/github/check_branch_protection.py"): (0, '{"ok": true}\n', ""),
+            (
+                "python3",
+                "scripts/github/merge_controller.py",
+                "--self-test",
+            ): (0, "merge_controller self-test passed\n", ""),
         }
         return CommandResult(*responses[tuple(command)])
 

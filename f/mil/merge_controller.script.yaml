@@ -1,0 +1,18 @@
+summary: MIL merge controller
+description: Prepare the policy-controlled GitHub PR approval and merge controller command.
+lock: '!inline f/mil/merge_controller.script.lock'
+has_on_behalf_of: false
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    request:
+      type: object
+      description: Merge-controller request.
+      default:
+        mode: scan-open
+        execute: false
+      properties: {}
+  required:
+    - request

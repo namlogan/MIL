@@ -38,14 +38,29 @@ class BranchProtectionPolicyTests(unittest.TestCase):
         )
 
         self.assertFalse(result["ok"])
-        self.assertIn("real project mode requires at least one approving review", result["errors"])
+        self.assertIn("zero required reviews require merge-controller-policy status check", result["errors"])
+
+    def test_status_check_approval_mode_accepts_zero_reviews(self) -> None:
+        result = self.policy.evaluate_branch_protection(
+            {
+                "required_status_checks": {
+                    "strict": True,
+                    "contexts": ["control-plane", "ai-gate/final-review", "merge-controller-policy"],
+                },
+                "required_pull_request_reviews": {"required_approving_review_count": 0},
+            },
+            allow_zero_reviews=False,
+        )
+
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["review_count"], 0)
 
     def test_explicit_override_accepts_zero_reviews_with_warning(self) -> None:
         result = self.policy.evaluate_branch_protection(
             {
                 "required_status_checks": {
                     "strict": True,
-                    "contexts": ["control-plane", "ai-gate/final-review"],
+                    "contexts": ["control-plane", "ai-gate/final-review", "merge-controller-policy"],
                 },
                 "required_pull_request_reviews": {"required_approving_review_count": 0},
             },
@@ -53,19 +68,20 @@ class BranchProtectionPolicyTests(unittest.TestCase):
         )
 
         self.assertTrue(result["ok"])
-        self.assertIn("explicit --allow-zero-reviews", result["warnings"][0])
+        self.assertIn("zero required reviews accepted because merge-controller-policy is required", result["warnings"][0])
 
     def test_reviewed_branch_warns_without_codeowners_or_stale_dismissal(self) -> None:
         result = self.policy.evaluate_branch_protection(
             {
                 "required_status_checks": {
                     "strict": True,
-                    "contexts": ["control-plane", "ai-gate/final-review"],
+                    "contexts": ["control-plane", "ai-gate/final-review", "merge-controller-policy"],
                 },
                 "required_pull_request_reviews": {
                     "required_approving_review_count": 1,
                     "require_code_owner_reviews": False,
                     "dismiss_stale_reviews": False,
+                    "require_last_push_approval": False,
                 },
             },
             allow_zero_reviews=False,
@@ -73,6 +89,10 @@ class BranchProtectionPolicyTests(unittest.TestCase):
 
         self.assertTrue(result["ok"])
         self.assertIn("CODEOWNERS review is recommended", result["warnings"][0])
+        self.assertIn(
+            "last-push approval by a different actor is recommended",
+            result["warnings"][-1],
+        )
 
 
 if __name__ == "__main__":

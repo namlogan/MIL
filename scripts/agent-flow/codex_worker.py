@@ -20,6 +20,8 @@ from f.mil.codex_worker_contract import (
     validate_allowed_changes,
 )
 
+SAFE_PR_LABELS = {"agent:auto-build", "automerge:allowed", "owner:auto-approve"}
+
 
 def _load_json(path: str | Path) -> dict[str, Any]:
     data = json.loads(Path(path).read_text(encoding="utf-8"))
@@ -78,6 +80,29 @@ def _changed_files(worktree_path: str | Path) -> list[str]:
         if path:
             changed.append(path)
     return sorted(set(changed))
+
+
+def _safe_pr_labels(task: dict[str, Any]) -> list[str]:
+    labels = task.get("pr_labels") or []
+    if not isinstance(labels, list):
+        return []
+    return sorted({str(label) for label in labels if str(label) in SAFE_PR_LABELS})
+
+
+def _pr_create_command(plan: dict[str, Any], task: dict[str, Any]) -> list[str]:
+    command = [
+        "gh",
+        "pr",
+        "create",
+        "--fill",
+        "--base",
+        str(plan["base_branch"]),
+        "--head",
+        str(plan["branch"]),
+    ]
+    for label in _safe_pr_labels(task):
+        command.extend(["--label", label])
+    return command
 
 
 def _self_test() -> None:
@@ -254,16 +279,7 @@ def run_worker(
 
     if open_pr and result["git"]["pushed"]:
         pr_result = _run_command(
-            [
-                "gh",
-                "pr",
-                "create",
-                "--fill",
-                "--base",
-                str(plan["base_branch"]),
-                "--head",
-                str(plan["branch"]),
-            ],
+            _pr_create_command(plan, task),
             cwd=worktree_path,
         )
         result["commands"].append(pr_result)

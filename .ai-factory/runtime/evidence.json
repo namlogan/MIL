@@ -71,6 +71,7 @@
     "merge_gate": [
       "control-plane",
       "ai-gate/final-review",
+      "merge-controller-policy",
       "conversation_resolution",
       "restricted_approval_if_needed"
     ]

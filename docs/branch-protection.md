@@ -8,10 +8,13 @@ Status as of 2026-06-01:
 - Repository visibility is public by Product Owner approval.
 - Initial CI passes on `main`.
 - Branch protection is enabled for `main`.
-- Required status checks: `control-plane` and `ai-gate/final-review`.
+- Required status checks: `control-plane`, `ai-gate/final-review`, and
+  `merge-controller-policy`.
 - Pull requests are required.
-- Real project mode requires at least one approving review.
-- CODEOWNERS review and stale-review dismissal should be enabled for app work.
+- Real project mode uses status-check approval. Required approving review count
+  should be `0` for solo-owner automation.
+- CODEOWNERS review is optional and should not be globally required unless a
+  second real reviewer/bot identity is configured.
 - Force pushes and branch deletion are disabled.
 - Conversation resolution is required.
 
@@ -38,21 +41,22 @@ For real project mode, this command must pass without override:
 python3 scripts/github/check_branch_protection.py
 ```
 
-Zero approving reviews are allowed only for temporary local/demo use and require
-an explicit override:
-
-```bash
-python3 scripts/github/check_branch_protection.py --allow-zero-reviews
-```
+Zero approving reviews are valid only when `merge-controller-policy` is a
+required status check.
 
 Required checks for the current control-plane gate:
 
 ```text
 control-plane
 ai-gate/final-review
+merge-controller-policy
 ```
 
-`ai-gate/final-review` is published automatically by Windmill's GitHub webhook router after `pr_quality_gate` runs. The router uses `f/mil/github_commit_status` and the GitHub commit status API. A PR must have both required contexts on the head commit before protected merge is allowed.
+`ai-gate/final-review` is published automatically by Windmill's GitHub webhook
+router after `pr_quality_gate` runs. `merge-controller-policy` is produced by
+GitHub Actions from `scripts/github/merge_controller.py --policy-only`. A PR
+must have all required contexts on the head commit before protected merge is
+allowed.
 
 Add application-specific checks after the product stack exists:
 
@@ -64,11 +68,15 @@ build
 security
 ```
 
-Merge bot policy:
+Auto-merge policy:
 
 - may merge only after GitHub reports required checks passed
-- must not author implementation commits
-- must not merge PRs with restricted-change labels unless human approval is recorded
+- must not use admin bypass
+- must not merge PRs with restricted-change labels unless owner approval evidence is recorded
+- must not merge PRs with `hold`, `owner-review`, `do-not-merge`, `blocked`, or `security-review`
+
+See [Auto-Merge Gate](merge-controller-bot.md) for the solo-owner
+continuous approval model.
 
 Fallback if branch protection must be disabled temporarily:
 

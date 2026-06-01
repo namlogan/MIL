@@ -109,6 +109,7 @@ workflow:
   required_status_contexts:
     - control-plane
     - ai-gate/final-review
+    - merge-controller-policy
   project_intake_check_command: python3 scripts/project-intake/validate_project_intake.py
   delivery_os_check_command: python3 scripts/delivery/validate_delivery_os.py
   contract_check_command: python3 scripts/contracts/validate_contracts.py

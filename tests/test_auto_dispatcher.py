@@ -112,6 +112,7 @@ class AutoDispatcherTests(unittest.TestCase):
         self.assertTrue(captured["push"])
         self.assertTrue(captured["open_pr"])
         self.assertEqual(captured["task"]["task_id"], "MIL-041")
+        self.assertIn("agent:auto-build", captured["task"]["pr_labels"])
         self.assertIn("docs/**", captured["task"]["allowed_files"])
         augment_context = captured["task"]["augment_context"]
         self.assertTrue(augment_context)

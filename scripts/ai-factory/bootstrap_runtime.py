@@ -38,7 +38,7 @@ REQUIRED_DEFAULT_STAGES = [
     "protected_merge",
 ]
 
-REQUIRED_STATUS_CONTEXTS = {"control-plane", "ai-gate/final-review"}
+REQUIRED_STATUS_CONTEXTS = {"control-plane", "ai-gate/final-review", "merge-controller-policy"}
 
 REQUIRED_DELIVERY_PATHS = [
     ".ai-factory/DELIVERY_OPERATING_MODEL.md",
@@ -188,7 +188,7 @@ def _validate_workflows(workflows: dict[str, Any], errors: list[str]) -> None:
         )
     )
     if not REQUIRED_STATUS_CONTEXTS.issubset(contexts):
-        errors.append("protected_merge must require control-plane and ai-gate/final-review")
+        errors.append("protected_merge must require control-plane, ai-gate/final-review, and merge-controller-policy")
 
 
 def _validate_evidence(evidence: dict[str, Any], errors: list[str]) -> None:
@@ -293,7 +293,7 @@ def _validate_environment(
         )
     )
     if not REQUIRED_STATUS_CONTEXTS.issubset(contexts):
-        errors.append("environment must require control-plane and ai-gate/final-review")
+        errors.append("environment must require control-plane, ai-gate/final-review, and merge-controller-policy")
 
     windmill = environment.get("windmill")
     if not isinstance(windmill, dict):
@@ -307,6 +307,7 @@ def _validate_environment(
         "f/mil/codex_worker",
         "f/mil/plan_to_pr_contract",
         "f/mil/github_commit_status",
+        "f/mil/merge_controller",
         "f/mil/memory_contract",
         "f/mil/mem0_retrieve",
         "f/mil/mem0_writeback",
@@ -314,7 +315,33 @@ def _validate_environment(
         if script not in scripts:
             errors.append(f"environment.windmill.required_scripts missing {script}")
     if windmill.get("scoped_sync_include") != "f/mil/**":
-        errors.append("environment.windmill.scoped_sync_include must be f/mil/**")
+            errors.append("environment.windmill.scoped_sync_include must be f/mil/**")
+
+    merge_controller = environment.get("merge_controller")
+    if not isinstance(merge_controller, dict):
+        errors.append("environment.merge_controller must be an object")
+    else:
+        expected = {
+            "config": ".ai-factory/merge-controller.json",
+            "runner": "scripts/github/merge_controller.py",
+            "windmill_script": "f/mil/merge_controller",
+            "status_context": "merge-controller-policy",
+            "approval_model": "required_status_check",
+            "default_mode": "policy_only_status_check",
+        }
+        for field, value in expected.items():
+            if merge_controller.get(field) != value:
+                errors.append(f"environment.merge_controller.{field} must be {value}")
+        for field in [
+            "github_auto_merge",
+            "requires_required_checks",
+            "blocks_restricted_changes_without_owner_label",
+        ]:
+            if merge_controller.get(field) is not True:
+                errors.append(f"environment.merge_controller.{field} must be true")
+        for field in ["execute_requires_separate_identity", "requires_codeowner_bot_membership"]:
+            if merge_controller.get(field) is not False:
+                errors.append(f"environment.merge_controller.{field} must be false")
 
     codex_worker = environment.get("codex_worker")
     if not isinstance(codex_worker, dict):

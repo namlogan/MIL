@@ -159,7 +159,8 @@
       ],
       "required_status_contexts": [
         "control-plane",
-        "ai-gate/final-review"
+        "ai-gate/final-review",
+        "merge-controller-policy"
       ]
     }
   }
