@@ -18,7 +18,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from f.mil.github_webhook_router import route_github_webhook
-from f.mil.plan_to_pr_contract import run_plan_to_pr
+from f.mil.plan_to_pr_contract import build_augment_context_request, run_plan_to_pr
 
 
 AUTO_BUILD_LABEL = "agent:auto-build"
@@ -32,6 +32,16 @@ def load_codex_worker_runner():
     spec = importlib.util.spec_from_file_location("mil_codex_worker_runner", module_path)
     if spec is None or spec.loader is None:
         raise RuntimeError(f"cannot load Codex worker runner from {module_path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def load_augment_context_provider():
+    module_path = REPO_ROOT / "scripts" / "agent-flow" / "augment_context_provider.py"
+    spec = importlib.util.spec_from_file_location("mil_augment_context_provider", module_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"cannot load Augment context provider from {module_path}")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -101,10 +111,14 @@ def _augment_context_item(plan_result: dict[str, Any]) -> dict[str, str]:
 def _runner_task(route: dict[str, Any], plan_result: dict[str, Any]) -> dict[str, Any]:
     artifacts = plan_result.get("artifacts") or {}
     memory = artifacts.get("memory") or {}
+    augment = artifacts.get("augment_context") or {}
     task = dict(route.get("task") or {})
     task["issue_id"] = route.get("github", {}).get("issue_number") or task.get("issue_id", "")
     task["memory_context"] = memory.get("context_pack") or []
-    task["augment_context"] = [_augment_context_item(plan_result)]
+    task["augment_context"] = [
+        *list(augment.get("context_pack") or []),
+        _augment_context_item(plan_result),
+    ]
     return task
 
 
@@ -138,6 +152,9 @@ def dispatch_request(
     evidence_root: str = ".ai-factory/qa/codex_worker",
     lock_root: str | Path = DEFAULT_LOCK_ROOT,
     runner: Callable[..., dict[str, Any]] | None = None,
+    preload_augment_context: bool = False,
+    require_augment_context: bool = False,
+    augment_context_provider: Callable[..., dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     if not is_auto_dispatch_requested(request):
         return {
@@ -159,6 +176,33 @@ def dispatch_request(
             "route": route,
         }
 
+    augment_context = list(request.get("augment_context") or [])
+    augment_preload: dict[str, Any] = {
+        "ok": False,
+        "context_pack": [],
+        "reasons": ["Augment context preload disabled"],
+    }
+    if preload_augment_context:
+        augment_request = build_augment_context_request(route["task"], repo_root)
+        provider = augment_context_provider or load_augment_context_provider().retrieve_context_pack
+        augment_preload = provider(
+            query=augment_request["query"],
+            repo_root=repo_root,
+        )
+        if augment_preload.get("ok"):
+            augment_context = [
+                *list(augment_preload.get("context_pack") or []),
+                *augment_context,
+            ]
+        elif require_augment_context:
+            return {
+                "decision": "AUTO_DISPATCH_BLOCKED",
+                "reason": "Augment context preload is required but unavailable",
+                "route": route,
+                "augment_context_preload": augment_preload,
+                "reasons": augment_preload.get("reasons") or ["Augment context preload failed"],
+            }
+
     plan_options = dict(request.get("options") or {})
     plan_options["repo_root"] = str(Path(repo_root).resolve())
     plan_result = run_plan_to_pr(
@@ -166,7 +210,7 @@ def dispatch_request(
             "task": route["task"],
             "options": plan_options,
             "memory_context": request.get("memory_context", []),
-            "augment_context": request.get("augment_context", []),
+            "augment_context": augment_context,
         }
     )
     if plan_result.get("decision") != "PLAN_TO_PR_COMMAND_PACK_READY":
@@ -206,6 +250,7 @@ def dispatch_request(
         "decision": "AUTO_DISPATCH_COMPLETED" if status in COMPLETED_STATUSES else "AUTO_DISPATCH_FAILED",
         "lock_path": str(lock_path),
         "route": route,
+        "augment_context_preload": augment_preload,
         "plan_result": plan_result,
         "worker_result": worker_result,
     }
@@ -277,6 +322,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--model", help="Optional Codex model override.")
     parser.add_argument("--sandbox", default="workspace-write")
     parser.add_argument("--approval", default="never")
+    parser.add_argument("--preload-augment-context", action="store_true")
+    parser.add_argument("--require-augment-context", action="store_true")
     parser.add_argument("--out", help="Write dispatcher result JSON to this path.")
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args(argv)
@@ -303,6 +350,8 @@ def main(argv: list[str] | None = None) -> int:
             worktree_root=args.worktree_root,
             evidence_root=args.evidence_root,
             lock_root=args.lock_root,
+            preload_augment_context=args.preload_augment_context,
+            require_augment_context=args.require_augment_context,
         )
     except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:
         print(f"auto_dispatcher failed: {exc}", file=sys.stderr)
