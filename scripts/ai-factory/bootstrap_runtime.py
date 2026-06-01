@@ -122,8 +122,9 @@ def _validate_workflows(workflows: dict[str, Any], errors: list[str]) -> None:
             errors,
         )
     )
-    if "issue_to_plan" not in memory_checkpoints or "codex_qa_gate" not in memory_checkpoints:
-        errors.append("default_issue_to_merge must define memory checkpoints")
+    for checkpoint in ["wm_memory_preflight", "wm_task_context_pack", "wm_pr_merge_memory_writeback"]:
+        if checkpoint not in memory_checkpoints:
+            errors.append(f"default_issue_to_merge memory_checkpoints missing {checkpoint}")
     stage_names = [stage.get("name") for stage in stages if isinstance(stage, dict)]
     if stage_names != REQUIRED_DEFAULT_STAGES:
         errors.append(
@@ -326,7 +327,7 @@ def _validate_environment(
             errors,
         )
     )
-    for field in ["tenant_id", "repo_id", "source_uri", "confidence", "status", "visibility"]:
+    for field in ["tenant_id", "repo_id", "source_ref", "confidence", "status", "sensitivity"]:
         if field not in required_metadata:
             errors.append(f"environment.memory.required_metadata_fields missing {field}")
     entity_fields = set(
@@ -338,6 +339,14 @@ def _validate_environment(
     )
     if not {"user_id", "agent_id", "run_id"}.issubset(entity_fields):
         errors.append("environment.memory must define Mem0 entity scope fields")
+    if memory.get("agent_write_status") != "candidate":
+        errors.append("environment.memory.agent_write_status must be candidate")
+    if "approved" not in set(memory.get("retrievable_statuses") or []):
+        errors.append("environment.memory.retrievable_statuses must include approved")
+    taxonomy = set(memory.get("taxonomy_memory_types") or [])
+    for memory_type in ["framework_rule", "architecture_decision", "implementation_lesson", "test_lesson"]:
+        if memory_type not in taxonomy:
+            errors.append(f"environment.memory.taxonomy_memory_types missing {memory_type}")
 
 
 def validate(

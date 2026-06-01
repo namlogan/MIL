@@ -37,6 +37,13 @@ paths:
   runtime_environment: .ai-factory/runtime/environment.json
   gates: .ai-factory/gates
   memory: .ai-factory/memory
+  memory_policy: .ai-factory/memory/MEMORY_POLICY.md
+  memory_types: .ai-factory/memory/MEMORY_TYPES.yaml
+  memory_context_pack_template: .ai-factory/memory/CONTEXT_PACK_TEMPLATE.md
+  memory_handoff_template: .ai-factory/memory/HANDOFF_MEMORY_TEMPLATE.md
+  memory_event_schema: memory/schemas/memory_event.schema.json
+  memory_samples: memory/samples
+  memory_tools: memory/tools
   windmill: .windmill
   setup_doc: docs/ai-factory-setup.md
   runtime_bootstrap: scripts/ai-factory/bootstrap_runtime.py
@@ -133,14 +140,14 @@ agents:
   mem0_memory:
     role: sanitized_long_term_agent_memory_layer
     allowed_default_actions:
-      - retrieve_project_memory
-      - retrieve_plan_memory
-      - retrieve_gate_memory
-      - retrieve_ci_patterns
-      - store_plan_memory
-      - store_handoff_memory
-      - store_qa_memory
-      - store_fix_memory
+      - wm_memory_preflight
+      - wm_task_context_pack
+      - wm_agent_handoff_collect
+      - wm_pr_merge_memory_writeback
+      - wm_memory_maintenance
+      - wm_memory_conflict_review
+      - wm_memory_audit_report
+      - record_memory_candidates
       - summarize_repeated_patterns
       - provide_memory_context
     forbidden_default_actions:

@@ -38,12 +38,12 @@ class FlowSequenceTests(unittest.TestCase):
             f"{call['agent']}.{call['action']}"
             for call in plan_to_pr["agent_calls"]
         ]
-        self.assertEqual(calls[0], "mem0_memory.retrieve_plan_memory")
+        self.assertEqual(calls[0], "mem0_memory.wm_task_context_pack")
         self.assertIn("windmill.dispatch_coding_agent", calls)
         self.assertLess(calls.index("windmill.dispatch_coding_agent"), calls.index("codex.implement"))
-        self.assertLess(calls.index("mem0_memory.retrieve_plan_memory"), calls.index("codex.implement"))
+        self.assertLess(calls.index("mem0_memory.wm_task_context_pack"), calls.index("codex.implement"))
         self.assertEqual(plan_to_pr["artifacts"]["dispatch"]["developer_agent"], "codex")
-        self.assertIn("developer_handoff", plan_to_pr["artifacts"]["memory"]["records"])
+        self.assertIn("agent_handoff", plan_to_pr["artifacts"]["memory"]["records"])
         self.assertFalse(result["blocking"])
 
     def test_cli_writes_sequence_artifact(self) -> None:

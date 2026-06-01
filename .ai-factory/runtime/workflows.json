@@ -7,10 +7,11 @@
       "memory_retrieve_script": "f/mil/mem0_retrieve",
       "memory_writeback_script": "f/mil/mem0_writeback",
       "memory_checkpoints": [
-        "issue_to_plan",
-        "plan_to_pr",
-        "codex_qa_gate",
-        "protected_merge"
+        "wm_memory_preflight",
+        "wm_task_context_pack",
+        "wm_agent_handoff_collect",
+        "wm_pr_merge_memory_writeback",
+        "wm_memory_maintenance"
       ],
       "stages": [
         {
@@ -30,7 +31,8 @@
             "rollback_note"
           ],
           "outputs": [
-            "plan"
+            "plan",
+            "memory_candidate"
           ]
         },
         {
@@ -47,7 +49,8 @@
           "outputs": [
             "branch",
             "pull_request",
-            "developer_handoff"
+            "developer_handoff",
+            "agent_handoff_memory_candidate"
           ]
         },
         {
@@ -79,6 +82,7 @@
           "owner": "codex_qa",
           "context_provider": "augment_context_provider",
           "memory_provider": "mem0_memory",
+          "memory_preflight": "wm_memory_preflight",
           "windmill_script": "f/mil/pr_quality_gate",
           "publishes_status_with": "f/mil/github_commit_status",
           "required_context": "ai-gate/final-review",
@@ -125,6 +129,18 @@
           "windmill_script": "f/mil/pr_quality_gate"
         }
       ]
+    },
+    "standard_memory_flows": {
+      "wm_project_bootstrap": ".windmill/flows/memory_preflight.md",
+      "wm_memory_preflight": ".windmill/flows/memory_preflight.md",
+      "wm_task_context_pack": ".windmill/flows/task_context_pack.md",
+      "wm_agent_handoff_collect": ".ai-factory/memory/HANDOFF_MEMORY_TEMPLATE.md",
+      "wm_pr_merge_memory_writeback": ".windmill/flows/pr_merge_writeback.md",
+      "wm_release_memory_pack": "docs/templates/release/RELEASE_CHECKLIST.md",
+      "wm_incident_digest": ".windmill/flows/incident_digest.md",
+      "wm_memory_conflict_review": ".windmill/flows/memory_conflict_review.md",
+      "wm_memory_maintenance": ".windmill/flows/memory_maintenance.md",
+      "wm_memory_audit_report": ".windmill/flows/memory_audit_report.md"
     }
   }
 }

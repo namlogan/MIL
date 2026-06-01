@@ -16,7 +16,11 @@ Codex is the only implementation worker for scoped code changes, tests, refactor
 
 Augment is the codebase context provider for Codex sessions. It exposes indexed repository context, symbol summaries, and retrieval results so Codex can plan, implement, and QA with better local context.
 
-Mem0 is the optional long-term memory provider for sanitized project/task facts. It can retrieve prior plans, gate notes, CI patterns, and review lessons, then store sanitized summaries after each step. It is not allowed to write code, approve merge, bypass branch protection, or store secrets.
+Memory0/Mem0 is the optional long-term memory provider for approved framework,
+project, and task lessons. It can retrieve approved context through
+`wm_memory_preflight` / `wm_task_context_pack` and collect memory candidates
+after handoff or merge review. It is not allowed to write code, approve merge,
+bypass branch protection, or store secrets.
 
 Auggie may provide supervised advisory review, diagnosis, and risk notes when a human/Codex operator starts an interactive session. It is not a developer worker in MIL and must not create branches, edit files, write commits, open PRs, or approve merges.
 
@@ -80,9 +84,18 @@ Auggie output is advisory evidence only. Augment context retrieval is input cont
 
 ## Memory Layer
 
-Mem0-backed memory is scoped by project, task ID, repo ID, tenant ID, and at least one Mem0 entity (`user_id`, `agent_id`, `app_id`, or `run_id`). MIL stores only concise operational facts such as accepted plan summaries, developer handoff summaries, QA gate notes, CI failure patterns, and merge rationale. Raw tokens, customer data, raw transcripts, production credentials, and deployment secrets must not be stored in memory.
+Memory0-backed memory is scoped by framework/project/task, repo ID, tenant ID,
+and at least one Mem0 entity (`user_id`, `agent_id`, `app_id`, or `run_id`).
+MIL stores only concise operational facts such as architecture decisions,
+domain glossary entries, implementation lessons, test lessons, review lessons,
+deployment runbooks, incident summaries, agent handoff summaries, open
+questions, and deprecated decisions.
 
-Retrieval must use strict filters. Writeback must include source provenance and confidence. Architecture decisions, team preferences, repo conventions, review rules, and security policy memories require human approval and must point back to the source artifact.
+Retrieval must use strict filters and `status=approved`. Writeback must include
+`source_ref`, source type, lifecycle status, sensitivity, and confidence.
+Agents propose `candidate` memory only; review/approval is a separate gateway
+step. If memory conflicts with docs/spec/tests/CI/GitHub evidence, the
+source-of-truth wins and the memory goes to conflict review.
 
 ## Gate Philosophy
 

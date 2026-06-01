@@ -7,7 +7,7 @@
       "task_id": "MIL-001"
     },
     {
-      "action": "retrieve_gate_memory",
+      "action": "wm_memory_preflight",
       "agent": "mem0_memory",
       "role": "sanitized_long_term_agent_memory_layer",
       "task_id": "MIL-001"
@@ -19,7 +19,7 @@
       "task_id": "MIL-001"
     },
     {
-      "action": "store_qa_memory",
+      "action": "wm_pr_merge_memory_writeback",
       "agent": "mem0_memory",
       "role": "sanitized_long_term_agent_memory_layer",
       "task_id": "MIL-001"
@@ -39,7 +39,8 @@
     "memory": {
       "provider": "mem0_memory",
       "records": [
-        "qa_gate"
+        "test_lesson",
+        "review_lesson"
       ],
       "sanitization_required": true,
       "scope": {

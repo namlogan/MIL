@@ -7,7 +7,7 @@
       "task_id": "MIL-001"
     },
     {
-      "action": "retrieve_ci_patterns",
+      "action": "wm_memory_preflight",
       "agent": "mem0_memory",
       "role": "sanitized_long_term_agent_memory_layer",
       "task_id": "MIL-001"
@@ -19,7 +19,7 @@
       "task_id": "MIL-001"
     },
     {
-      "action": "store_fix_memory",
+      "action": "wm_agent_handoff_collect",
       "agent": "mem0_memory",
       "role": "sanitized_long_term_agent_memory_layer",
       "task_id": "MIL-001"
@@ -29,8 +29,8 @@
     "memory": {
       "provider": "mem0_memory",
       "records": [
-        "ci_pattern",
-        "review_note"
+        "implementation_lesson",
+        "test_lesson"
       ],
       "sanitization_required": true,
       "scope": {

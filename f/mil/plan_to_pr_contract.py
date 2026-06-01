@@ -66,7 +66,9 @@ def _compact_context_items(value: Any, *, text_key: str) -> list[dict[str, str]]
     context: list[dict[str, str]] = []
     for index, item in enumerate(value[:12], start=1):
         if isinstance(item, dict):
-            source_uri = redact_secrets(item.get("source_uri") or item.get("uri") or "")
+            source_ref = redact_secrets(
+                item.get("source_ref") or item.get("source_uri") or item.get("uri") or ""
+            )
             summary = redact_secrets(
                 item.get(text_key)
                 or item.get("summary")
@@ -77,7 +79,7 @@ def _compact_context_items(value: Any, *, text_key: str) -> list[dict[str, str]]
             context.append(
                 {
                     "memory_id": redact_secrets(item.get("memory_id") or item.get("id") or f"context-{index}"),
-                    "source_uri": source_uri,
+                    "source_ref": source_ref,
                     text_key: summary[:MAX_CONTEXT_TEXT],
                 }
             )
@@ -86,7 +88,7 @@ def _compact_context_items(value: Any, *, text_key: str) -> list[dict[str, str]]
         context.append(
             {
                 "memory_id": f"context-{index}",
-                "source_uri": "",
+                "source_ref": "",
                 text_key: redact_secrets(item)[:MAX_CONTEXT_TEXT],
             }
         )
@@ -208,7 +210,7 @@ def run_plan_to_pr(request: dict[str, Any]) -> dict[str, Any]:
         }
 
         agent_calls = [
-            _agent_call("mem0_memory", "retrieve_plan_memory", task_id),
+            _agent_call("mem0_memory", "wm_task_context_pack", task_id),
             _agent_call("augment_context", "provide_codebase_context", task_id),
             _agent_call("windmill", "dispatch_coding_agent", task_id),
         ]

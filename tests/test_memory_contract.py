@@ -32,49 +32,64 @@ def required_metadata(**overrides: object) -> dict[str, object]:
         "workspace_id": "engineering",
         "repo": "MIL",
         "repo_id": "github:namlogan/MIL",
+        "project_id": "mil",
+        "framework_id": "ai-factory-sdlc",
         "user_id": "repo:github:namlogan/MIL",
         "agent_id": "codex",
         "run_id": "windmill-job-123",
-        "source_uri": "https://github.com/namlogan/MIL/pull/26",
-        "confidence": 0.82,
-        "status": "active",
+        "source_ref": "https://github.com/namlogan/MIL/pull/26",
+        "source_type": "pull_request",
+        "confidence": "high",
+        "scope": "project",
+        "status": "approved",
+        "sensitivity": "internal",
         "visibility": "repo",
-        "created_by": "agent",
+        "created_by": "memory_gateway",
+        "approved_by": "logan",
     }
     metadata.update(overrides)
     return metadata
 
 
 class MemoryContractTests(unittest.TestCase):
-    def test_build_memory_record_sanitizes_text_and_metadata(self) -> None:
+    def test_build_memory_record_rejects_sensitive_text_and_metadata(self) -> None:
+        with self.assertRaisesRegex(ValueError, "restricted memory payload"):
+            memory_contract.build_memory_record(
+                project="MIL",
+                task_id="MEM-001",
+                memory_type="implementation_lesson",
+                text="ngrok authtoken: 3EU0LPOk9SAsOmGvcR4XsCwcbDq_7819BPj7BSFG13Wc7fwPs",
+                metadata=required_metadata(token="ghp_123456789012345678901234567890123456"),
+            )
+
         record = memory_contract.build_memory_record(
             project="MIL",
             task_id="MEM-001",
-            memory_type="operator_note",
-            text="ngrok authtoken: 3EU0LPOk9SAsOmGvcR4XsCwcbDq_7819BPj7BSFG13Wc7fwPs",
-            metadata=required_metadata(token="ghp_123456789012345678901234567890123456"),
+            memory_type="implementation_lesson",
+            text="Run focused memory gateway tests after changing Windmill memory wrappers.",
+            metadata=required_metadata(),
+            approved=True,
         )
 
         serialized = json.dumps(record, sort_keys=True)
-        self.assertNotIn("3EU0LPOk9SAsOmGvcR4XsCwcbDq_7819BPj7BSFG13Wc7fwPs", serialized)
-        self.assertNotIn("ghp_123456789012345678901234567890123456", serialized)
         self.assertTrue(record["sanitized"])
-        self.assertEqual(record["metadata"]["source"], "mil-ai-factory")
+        self.assertEqual(record["metadata"]["source"], "mil-memory-gateway")
         self.assertEqual(record["metadata"]["repo_id"], "github:namlogan/MIL")
         self.assertEqual(record["entity_scope"]["user_id"], "repo:github:namlogan/MIL")
+        self.assertIn("source_ref", serialized)
 
     def test_requires_provenance_metadata(self) -> None:
         with self.assertRaisesRegex(ValueError, "metadata.tenant_id is required"):
             memory_contract.build_memory_record(
                 project="MIL",
                 task_id="MEM-001",
-                memory_type="ci_pattern",
+                memory_type="implementation_lesson",
                 text="CI failed because Windmill secret was missing",
                 metadata={"repo_id": "github:namlogan/MIL"},
             )
 
     def test_requires_mem0_entity_scope(self) -> None:
-        metadata = required_metadata()
+        metadata = required_metadata(status="candidate", approved_by="")
         for field in ["user_id", "agent_id", "run_id"]:
             metadata.pop(field)
 
@@ -82,19 +97,19 @@ class MemoryContractTests(unittest.TestCase):
             memory_contract.build_memory_record(
                 project="MIL",
                 task_id="MEM-001",
-                memory_type="ci_pattern",
+                memory_type="implementation_lesson",
                 text="CI failed because Windmill secret was missing",
                 metadata=metadata,
             )
 
     def test_approval_required_memory_requires_human_approval(self) -> None:
-        with self.assertRaisesRegex(ValueError, "requires approval"):
+        with self.assertRaisesRegex(ValueError, "approved memory requires approval"):
             memory_contract.build_memory_record(
                 project="MIL",
                 task_id="MEM-001",
                 memory_type="architecture_decision",
                 text="Billing must use PaymentGateway only.",
-                metadata=required_metadata(created_by="agent"),
+                metadata=required_metadata(created_by="agent", status="approved", approved_by=""),
             )
 
         record = memory_contract.build_memory_record(
@@ -113,33 +128,33 @@ class MemoryContractTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "tenant_id is required"):
             memory_contract.build_search_filters(
                 repo_id="github:namlogan/MIL",
-                memory_types=["ci_pattern"],
+                memory_types=["implementation_lesson"],
                 user_id="repo:github:namlogan/MIL",
             )
         with self.assertRaisesRegex(ValueError, "repo_id is required"):
             memory_contract.build_search_filters(
                 tenant_id="org_mil",
-                memory_types=["ci_pattern"],
+                memory_types=["implementation_lesson"],
                 user_id="repo:github:namlogan/MIL",
             )
         with self.assertRaisesRegex(ValueError, "at least one Mem0 entity scope"):
             memory_contract.build_search_filters(
                 tenant_id="org_mil",
                 repo_id="github:namlogan/MIL",
-                memory_types=["ci_pattern"],
+                memory_types=["implementation_lesson"],
             )
 
         filters = memory_contract.build_search_filters(
             tenant_id="org_mil",
             repo_id="github:namlogan/MIL",
-            memory_types=["ci_pattern", "review_rule"],
+            memory_types=["implementation_lesson", "review_lesson"],
             user_id="repo:github:namlogan/MIL",
         )
 
         serialized = json.dumps(filters, sort_keys=True)
         self.assertIn("org_mil", serialized)
         self.assertIn("github:namlogan/MIL", serialized)
-        self.assertIn("ci_pattern", serialized)
+        self.assertIn("implementation_lesson", serialized)
         self.assertIn("repo:github:namlogan/MIL", serialized)
 
     def test_rejects_unsupported_memory_type(self) -> None:
@@ -159,30 +174,34 @@ class MemoryContractTests(unittest.TestCase):
                 memory_contract.build_memory_record(
                     project="MIL",
                     task_id="MEM-001",
-                    memory_type="ci_pattern",
+                    memory_type="implementation_lesson",
                     text="control-plane failure was caused by missing Windmill secret",
                     metadata=required_metadata(),
+                    approved=True,
                 )
             )
             store.add(
                 memory_contract.build_memory_record(
                     project="OTHER",
                     task_id="MEM-002",
-                    memory_type="ci_pattern",
+                    memory_type="implementation_lesson",
                     text="different project memory",
                     metadata=required_metadata(
                         tenant_id="org_other",
                         repo="OTHER",
                         repo_id="github:namlogan/OTHER",
+                        project_id="other",
                         user_id="repo:github:namlogan/OTHER",
                     ),
+                    approved=True,
                 )
             )
 
             filters = memory_contract.build_search_filters(
                 tenant_id="org_mil",
                 repo_id="github:namlogan/MIL",
-                memory_types=["ci_pattern"],
+                memory_types=["implementation_lesson"],
+                project_id="mil",
                 user_id="repo:github:namlogan/MIL",
             )
             results = store.search("Windmill secret", filters=filters)
@@ -202,9 +221,10 @@ class MemoryContractTests(unittest.TestCase):
         record = memory_contract.build_memory_record(
             project="MIL",
             task_id="MEM-001",
-            memory_type="failure_pattern",
+            memory_type="implementation_lesson",
             text="Prior CI failures in this area were caused by non-idempotent retries.",
             metadata=required_metadata(),
+            approved=True,
         )
 
         add_payload = memory_contract.build_mem0_add_payload(record)
@@ -213,7 +233,8 @@ class MemoryContractTests(unittest.TestCase):
             filters=memory_contract.build_search_filters(
                 tenant_id="org_mil",
                 repo_id="github:namlogan/MIL",
-                memory_types=["failure_pattern"],
+                memory_types=["implementation_lesson"],
+                project_id="mil",
                 user_id="repo:github:namlogan/MIL",
             ),
             limit=3,
@@ -221,7 +242,7 @@ class MemoryContractTests(unittest.TestCase):
 
         self.assertFalse(add_payload["infer"])
         self.assertEqual(add_payload["user_id"], "repo:github:namlogan/MIL")
-        self.assertEqual(add_payload["metadata"]["memory_type"], "failure_pattern")
+        self.assertEqual(add_payload["metadata"]["memory_type"], "implementation_lesson")
         self.assertEqual(search_payload["limit"], 3)
         self.assertIn("filters", search_payload)
 

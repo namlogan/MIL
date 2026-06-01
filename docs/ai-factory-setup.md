@@ -117,14 +117,14 @@ empty restricted changes, AI Factory rules, and branch-protected PR review.
 
 GitHub webhook ingress is handled by `f/mil/github_webhook_router` through the Windmill HTTP route `mil/github-webhook`. The route is public at the HTTP layer, but the router rejects unsigned or incorrectly signed GitHub deliveries using the Windmill secret `f/mil/github_webhook_secret`.
 
-Mem0 is configured as optional project memory through `mem0_memory`. During
-framework development, the local JSONL adapter at
+Memory0/Mem0 is configured as optional project memory through `mem0_memory`.
+During framework development, the local JSONL adapter at
 `.ai-factory/memory/local_memory.jsonl` is used for deterministic tests and
-local dry-runs. When the product app needs real memory, use the Mem0 OSS
-library in the app or worker process first; external provider/server mode is a
-later team/production concern.
+local dry-runs. The Memory Gateway contract in `f/mil/memory_contract.py`
+validates schema, rejects restricted payloads, enforces `source_ref`, writes
+audit events, and emits optional Mem0-compatible payloads.
 
-Memory writes require provenance metadata, one Mem0 entity scope, sanitization,
-and a write policy. Architecture decisions, human preferences, repo
-conventions, review rules, and security policy memories require explicit human
-approval before writeback.
+Agent-created memory starts as `candidate`. Only `status=approved` memory can
+enter `wm_memory_preflight` or `wm_task_context_pack`. Memory0 is context only:
+GitHub issues/PRs, project docs, tests, CI, and audit evidence remain source of
+truth.

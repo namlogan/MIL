@@ -18,3 +18,14 @@ Rule priority: `rules.<area> > rules/base.md > paths.rules_file`.
 - Never merge, deploy, bypass branch protection, or approve restricted work without human approval.
 - Never store secrets, raw tokens, customer data, raw proprietary source, or raw transcripts in memory.
 - Restricted changes include production deploy behavior, production secrets, billing, customer data retention/deletion, auth boundaries, destructive migrations, legal/compliance behavior, and safety-critical behavior.
+
+## Memory Policy
+
+- Read approved memory before task planning.
+- Use memory only as context, never as source of truth.
+- If memory conflicts with docs/spec/tests, docs/spec/tests win.
+- Do not write approved memory directly from an agent session.
+- Propose `memory_candidate` in handoff after completing task.
+- Every memory candidate must include `source_ref`.
+- Never store secrets, raw data, credentials, private logs, raw artifacts, database dumps, model weights, or chain-of-thought.
+- Route all Memory0 add/search/update/supersede/retire operations through the Memory Gateway contract.

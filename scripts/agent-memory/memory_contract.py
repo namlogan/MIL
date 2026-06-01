@@ -56,6 +56,10 @@ def _filter_args(args: argparse.Namespace) -> dict[str, Any]:
         status=args.status,
         visibility=args.visibility,
         workspace_id=args.workspace_id,
+        project_id=args.project_id,
+        framework_id=args.framework_id,
+        scope=args.scope,
+        sensitivity=args.sensitivity,
         branch=args.branch,
         **scope,
     )
@@ -81,9 +85,13 @@ def main(argv: list[str] | None = None) -> int:
     search_parser.add_argument("--tenant-id", required=True)
     search_parser.add_argument("--workspace-id")
     search_parser.add_argument("--repo-id", required=True)
+    search_parser.add_argument("--project-id", default="mil")
+    search_parser.add_argument("--framework-id")
+    search_parser.add_argument("--scope")
     search_parser.add_argument("--memory-type", action="append", required=True)
-    search_parser.add_argument("--status", default="active")
+    search_parser.add_argument("--status", default="approved")
     search_parser.add_argument("--visibility", default="repo")
+    search_parser.add_argument("--sensitivity", default="internal")
     search_parser.add_argument("--branch")
     search_parser.add_argument("--user-id")
     search_parser.add_argument("--agent-id")

@@ -293,6 +293,7 @@ def _compact_context(items: Any, label: str) -> str:
             memory_id = redact_secrets(
                 item.get("memory_id")
                 or item.get("id")
+                or item.get("source_ref")
                 or item.get("source_uri")
                 or f"context_{index}"
             )
@@ -302,7 +303,7 @@ def _compact_context(items: Any, label: str) -> str:
                 or item.get("content")
                 or item
             )
-            source = redact_secrets(item.get("source_uri", "")).strip()
+            source = redact_secrets(item.get("source_ref") or item.get("source_uri") or "").strip()
             suffix = f" ({source})" if source else ""
             lines.append(f"- [{memory_id}]{suffix} {text[:MAX_PROMPT_TEXT]}")
         else:

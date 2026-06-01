@@ -64,7 +64,7 @@ class AIFactoryRuntimeConfigTests(unittest.TestCase):
         self.assertEqual(memory["runtime"], "mem0_optional")
         self.assertFalse(memory["writes_code"])
         self.assertTrue(memory["requires_sanitization"])
-        self.assertIn("retrieve_project_memory", memory["allowed_actions"])
+        self.assertIn("wm_memory_preflight", memory["allowed_actions"])
         for forbidden in [
             "store_secrets",
             "implement_scoped_issue",
@@ -95,9 +95,10 @@ class AIFactoryRuntimeConfigTests(unittest.TestCase):
             "mem0_memory",
         )
         self.assertIn(
-            "codex_qa_gate",
+            "wm_pr_merge_memory_writeback",
             workflows["workflows"]["default_issue_to_merge"]["memory_checkpoints"],
         )
+        self.assertIn("standard_memory_flows", workflows["workflows"])
 
         self.assertIn("developer_handoff", evidence["required_evidence"])
         self.assertIn("codex_worker_run", evidence["required_evidence"])
@@ -132,10 +133,13 @@ class AIFactoryRuntimeConfigTests(unittest.TestCase):
         )
         self.assertIn("tenant_id", environment["memory"]["required_metadata_fields"])
         self.assertIn("repo_id", environment["memory"]["required_metadata_fields"])
-        self.assertIn("source_uri", environment["memory"]["required_metadata_fields"])
+        self.assertIn("source_ref", environment["memory"]["required_metadata_fields"])
+        self.assertIn("sensitivity", environment["memory"]["required_metadata_fields"])
         self.assertIn("user_id", environment["memory"]["required_entity_scope_fields_any_of"])
         self.assertIn("architecture_decision", environment["memory"]["approval_required_memory_types"])
-        self.assertIn("failure_pattern", environment["memory"]["auto_write_memory_types"])
+        self.assertIn("implementation_lesson", environment["memory"]["taxonomy_memory_types"])
+        self.assertEqual(environment["memory"]["agent_write_status"], "candidate")
+        self.assertIn("approved", environment["memory"]["retrievable_statuses"])
         for script in [
             "f/mil/codex_worker_contract",
             "f/mil/codex_worker",

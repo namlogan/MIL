@@ -1,0 +1,21 @@
+{
+  "memory_type": "implementation_lesson",
+  "scope": "project",
+  "framework_id": "ai-factory-sdlc",
+  "project_id": "mil",
+  "repo": "MIL",
+  "repo_id": "github:namlogan/MIL",
+  "task_id": "MIL-MEMORY-BOOTSTRAP",
+  "agent_id": "codex_worker",
+  "run_id": "windmill-run-local",
+  "status": "candidate",
+  "source_ref": "https://github.com/namlogan/MIL/pull/50",
+  "source_type": "pull_request",
+  "content": "When changing framework memory behavior, update gateway policy tests before changing docs or flow wrappers.",
+  "tags": ["memory", "tests", "gateway"],
+  "confidence": "medium",
+  "sensitivity": "internal",
+  "valid_until": "until_superseded",
+  "created_by": "memory_gateway",
+  "user_id": "repo:github:namlogan/MIL"
+}

@@ -66,9 +66,10 @@ class PlanToPrOrchestratorTests(unittest.TestCase):
                 "memory_context": [
                     {
                         "memory_id": "mem-plan-1",
-                        "memory_type": "repo_convention",
+                        "memory_type": "framework_rule",
                         "memory": "Use python3 -m unittest discover -s tests -v.",
-                        "source_uri": "https://github.com/namlogan/MIL/pull/29",
+                        "source_ref": "https://github.com/namlogan/MIL/pull/29",
+                        "status": "approved",
                     }
                 ],
                 "augment_context": [
@@ -86,7 +87,7 @@ class PlanToPrOrchestratorTests(unittest.TestCase):
         self.assertEqual(
             calls,
             [
-                "mem0_memory.retrieve_plan_memory",
+                "mem0_memory.wm_task_context_pack",
                 "augment_context.provide_codebase_context",
                 "windmill.dispatch_coding_agent",
                 "codex.prepare_command_pack",

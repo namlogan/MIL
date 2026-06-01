@@ -1,9 +1,14 @@
-"""MIL scoped memory contract for local and Windmill execution."""
+"""MIL Memory0 gateway contract for local and Windmill execution.
+
+Memory0/Mem0 is a controlled memory layer for SDLC continuity. It is not a
+source of truth and agents must not write approved memories directly.
+"""
 
 from __future__ import annotations
 
 import json
 import re
+import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -11,63 +16,152 @@ from typing import Any, Iterable
 
 
 DEFAULT_PROJECT = "MIL"
+DEFAULT_PROJECT_ID = "mil"
+DEFAULT_FRAMEWORK_ID = "ai-factory-sdlc"
 DEFAULT_STORE_PATH = Path(".ai-factory/memory/local_memory.jsonl")
+DEFAULT_AUDIT_PATH = Path(".ai-factory/memory/audit.jsonl")
 
-AUTO_WRITE_MEMORY_TYPES = {
-    "plan",
-    "developer_handoff",
-    "qa_gate",
-    "merge_gate",
-    "ci_pattern",
-    "review_note",
-    "operator_note",
-    "failure_pattern",
-    "agent_performance",
-    "incident_learning",
-    "run_summary",
-    "tool_failure",
+ALLOWED_MEMORY_TYPES = {
+    "framework_rule",
+    "security_rule",
+    "product_rule",
+    "architecture_decision",
+    "adr_summary",
+    "domain_glossary",
+    "requirement_interpretation",
+    "implementation_lesson",
+    "test_lesson",
+    "review_lesson",
+    "deployment_runbook",
+    "incident_postmortem",
+    "agent_handoff",
+    "open_question",
+    "deprecated_decision",
 }
 APPROVAL_REQUIRED_MEMORY_TYPES = {
-    "repo_convention",
+    "framework_rule",
+    "security_rule",
+    "product_rule",
     "architecture_decision",
-    "human_preference",
-    "review_rule",
-    "security_policy",
+    "adr_summary",
+    "requirement_interpretation",
+    "deployment_runbook",
+    "incident_postmortem",
+    "deprecated_decision",
 }
-ALLOWED_MEMORY_TYPES = AUTO_WRITE_MEMORY_TYPES | APPROVAL_REQUIRED_MEMORY_TYPES
+AUTO_CANDIDATE_MEMORY_TYPES = ALLOWED_MEMORY_TYPES - APPROVAL_REQUIRED_MEMORY_TYPES
+
+ALLOWED_SCOPES = {"framework", "project", "task"}
+ALLOWED_STATUSES = {"candidate", "reviewed", "approved", "superseded", "retired", "needs_review"}
+RETRIEVABLE_STATUSES = {"approved"}
+ALLOWED_SENSITIVITIES = {"public", "internal", "confidential"}
+ALLOWED_CONFIDENCE = {"low", "medium", "high"}
+ALLOWED_SOURCE_TYPES = {
+    "pull_request",
+    "issue",
+    "commit",
+    "docs",
+    "adr",
+    "test",
+    "ci_run",
+    "windmill_run",
+    "release",
+    "incident",
+}
+ALLOWED_VISIBILITIES = {"repo", "workspace", "tenant", "private"}
+ENTITY_SCOPE_FIELDS = ("user_id", "agent_id", "app_id", "run_id")
+REQUIRED_EVENT_FIELDS = (
+    "memory_type",
+    "scope",
+    "status",
+    "source_ref",
+    "content",
+    "sensitivity",
+)
 REQUIRED_METADATA_FIELDS = (
     "tenant_id",
     "workspace_id",
     "repo",
     "repo_id",
-    "source_uri",
+    "source_ref",
     "confidence",
     "status",
-    "visibility",
+    "sensitivity",
     "created_by",
 )
-ENTITY_SCOPE_FIELDS = ("user_id", "agent_id", "app_id", "run_id")
-ALLOWED_STATUSES = {"active", "draft", "superseded", "retired"}
-ALLOWED_VISIBILITIES = {"repo", "workspace", "tenant", "private"}
+
+SOURCE_OF_TRUTH_PRIORITY = [
+    "compliance_legal_security",
+    "current_prd_spec_sop_contract",
+    "git_code_and_tests",
+    "approved_adr",
+    "approved_memory",
+    "candidate_memory",
+    "conversation_context",
+]
 
 SECRET_PATTERNS = [
-    (re.compile(r"github_pat_[A-Za-z0-9_]{20,}"), "[REDACTED_GITHUB_TOKEN]"),
-    (re.compile(r"(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{20,}"), "[REDACTED_GITHUB_TOKEN]"),
-    (re.compile(r"sk-[A-Za-z0-9_-]{20,}"), "[REDACTED_API_KEY]"),
-    (re.compile(r"(?i)bearer\s+[A-Za-z0-9._-]{20,}"), "Bearer [REDACTED_TOKEN]"),
-    (
-        re.compile(
-            r"(?i)\b(accessToken|authtoken|api[_-]?key|token|secret|password)"
-            r"(\s*[:=]\s*)[\"']?[A-Za-z0-9._:/+=-]{12,}[\"']?"
-        ),
-        r"\1\2[REDACTED_SECRET]",
+    re.compile(r"github_pat_[A-Za-z0-9_]{20,}"),
+    re.compile(r"(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{20,}"),
+    re.compile(r"sk-[A-Za-z0-9_-]{20,}"),
+    re.compile(r"(?i)bearer\s+[A-Za-z0-9._-]{20,}"),
+    re.compile(
+        r"(?i)\b(accessToken|authtoken|api[_-]?key|token|secret|password)"
+        r"(\s*[:=]\s*)[\"']?[A-Za-z0-9._:/+=-]{12,}[\"']?"
     ),
+    re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----"),
 ]
+RESTRICTED_PAYLOAD_PATTERNS = [
+    *SECRET_PATTERNS,
+    re.compile(r"(?im)^\s*[A-Z0-9_]*(SECRET|TOKEN|PASSWORD|API_KEY)\s*="),
+    re.compile(r"(?i)\bchain[- ]of[- ]thought\b"),
+    re.compile(r"(?i)\braw customer data\b"),
+    re.compile(r"(?i)\bdatabase dump\b"),
+    re.compile(r"(?i)\bmodel weights?\b"),
+    re.compile(r"(?i)\braw factory (image|video)\b"),
+]
+
+
+def _utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+def _memory_id() -> str:
+    return f"mem_{uuid.uuid4().hex[:16]}"
+
+
+def _required_text(value: Any, label: str) -> str:
+    text = str(value or "").strip()
+    if not text:
+        raise ValueError(f"{label} is required")
+    return text
+
+
+def _canonical_confidence(value: Any) -> str:
+    if isinstance(value, (int, float)):
+        number = float(value)
+        if number >= 0.75:
+            return "high"
+        if number >= 0.45:
+            return "medium"
+        return "low"
+    text = str(value or "").strip().lower()
+    if text in ALLOWED_CONFIDENCE:
+        return text
+    raise ValueError(f"confidence must be one of {sorted(ALLOWED_CONFIDENCE)}")
 
 
 def sanitize_text(text: str) -> str:
     sanitized = text
-    for pattern, replacement in SECRET_PATTERNS:
+    replacements = [
+        (SECRET_PATTERNS[0], "[REDACTED_GITHUB_TOKEN]"),
+        (SECRET_PATTERNS[1], "[REDACTED_GITHUB_TOKEN]"),
+        (SECRET_PATTERNS[2], "[REDACTED_API_KEY]"),
+        (SECRET_PATTERNS[3], "Bearer [REDACTED_TOKEN]"),
+        (SECRET_PATTERNS[4], r"\1\2[REDACTED_SECRET]"),
+        (SECRET_PATTERNS[5], "[REDACTED_PRIVATE_KEY]"),
+    ]
+    for pattern, replacement in replacements:
         sanitized = pattern.sub(replacement, sanitized)
     return sanitized
 
@@ -82,25 +176,19 @@ def sanitize_value(value: Any) -> Any:
     return value
 
 
-def _utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+def _contains_restricted_payload(value: Any) -> bool:
+    if isinstance(value, dict):
+        return any(_contains_restricted_payload(key) or _contains_restricted_payload(item) for key, item in value.items())
+    if isinstance(value, list):
+        return any(_contains_restricted_payload(item) for item in value)
+    if not isinstance(value, str):
+        return False
+    return any(pattern.search(value) for pattern in RESTRICTED_PAYLOAD_PATTERNS)
 
 
-def _required_text(value: Any, label: str) -> str:
-    text = str(value or "").strip()
-    if not text:
-        raise ValueError(f"{label} is required")
-    return text
-
-
-def _coerce_confidence(value: Any) -> float:
-    try:
-        confidence = float(value)
-    except (TypeError, ValueError) as exc:
-        raise ValueError("metadata.confidence must be a number between 0 and 1") from exc
-    if confidence < 0 or confidence > 1:
-        raise ValueError("metadata.confidence must be a number between 0 and 1")
-    return confidence
+def _reject_restricted_payload(value: Any) -> None:
+    if _contains_restricted_payload(value):
+        raise ValueError("restricted memory payload is not allowed")
 
 
 def _entity_scope(metadata: dict[str, Any]) -> dict[str, str]:
@@ -114,41 +202,127 @@ def _entity_scope(metadata: dict[str, Any]) -> dict[str, str]:
     return scope
 
 
-def _validate_metadata(
+def write_policy_for(memory_type: str) -> str:
+    memory_type = _required_text(memory_type, "memory_type")
+    if memory_type not in ALLOWED_MEMORY_TYPES:
+        raise ValueError(f"unsupported memory_type: {memory_type}")
+    if memory_type in APPROVAL_REQUIRED_MEMORY_TYPES:
+        return "approval_required"
+    return "candidate_then_review"
+
+
+def _normalize_metadata(
     metadata: dict[str, Any],
     *,
     memory_type: str,
     approved: bool,
 ) -> dict[str, Any]:
+    if not isinstance(metadata, dict):
+        raise ValueError("metadata must be a JSON object")
+    metadata = dict(metadata)
+    if "source_ref" not in metadata and metadata.get("source_uri"):
+        metadata["source_ref"] = metadata["source_uri"]
+    if "source_uri" not in metadata and metadata.get("source_ref"):
+        metadata["source_uri"] = metadata["source_ref"]
+    metadata.setdefault("scope", "project")
+    metadata.setdefault("project_id", DEFAULT_PROJECT_ID)
+    metadata.setdefault("framework_id", DEFAULT_FRAMEWORK_ID)
+    metadata.setdefault("sensitivity", "internal")
+    metadata.setdefault("status", "approved" if approved else "candidate")
+    metadata.setdefault("visibility", "repo")
+    metadata.setdefault("source_type", "docs")
+    metadata.setdefault("valid_until", "until_superseded")
+    metadata.setdefault("tags", [])
+
     for field in REQUIRED_METADATA_FIELDS:
         if not str(metadata.get(field) or "").strip():
-            raise ValueError(f"metadata.{field} is required")
+            raise ValueError(f"{field} is required" if field == "source_ref" else f"metadata.{field} is required")
 
-    metadata = dict(metadata)
-    metadata["confidence"] = _coerce_confidence(metadata["confidence"])
+    scope = str(metadata["scope"]).strip()
+    if scope not in ALLOWED_SCOPES:
+        raise ValueError(f"scope must be one of {sorted(ALLOWED_SCOPES)}")
+    if scope == "framework" and not str(metadata.get("framework_id") or "").strip():
+        raise ValueError("framework_id is required for framework memory")
+    if scope in {"project", "task"} and not str(metadata.get("project_id") or "").strip():
+        raise ValueError("project_id is required for project/task memory")
+    if scope == "task" and not str(metadata.get("task_id") or "").strip():
+        raise ValueError("task_id is required for task memory")
 
     status = str(metadata["status"]).strip()
     if status not in ALLOWED_STATUSES:
-        raise ValueError(f"metadata.status must be one of {sorted(ALLOWED_STATUSES)}")
+        raise ValueError(f"status must be one of {sorted(ALLOWED_STATUSES)}")
+    sensitivity = str(metadata["sensitivity"]).strip()
+    if sensitivity not in ALLOWED_SENSITIVITIES:
+        raise ValueError(f"sensitivity must be one of {sorted(ALLOWED_SENSITIVITIES)}")
     visibility = str(metadata["visibility"]).strip()
     if visibility not in ALLOWED_VISIBILITIES:
         raise ValueError(f"metadata.visibility must be one of {sorted(ALLOWED_VISIBILITIES)}")
 
-    if memory_type in APPROVAL_REQUIRED_MEMORY_TYPES:
-        if not approved or not str(metadata.get("approved_by") or "").strip():
-            raise ValueError(f"memory_type {memory_type} requires approval")
+    source_type = str(metadata.get("source_type") or "docs").strip()
+    if source_type not in ALLOWED_SOURCE_TYPES:
+        raise ValueError(f"source_type must be one of {sorted(ALLOWED_SOURCE_TYPES)}")
 
-    metadata.setdefault("source", "mil-ai-factory")
+    metadata["confidence"] = _canonical_confidence(metadata["confidence"])
     metadata["memory_type"] = memory_type
+    metadata["status"] = status
+    metadata["scope"] = scope
+    metadata["sensitivity"] = sensitivity
+    metadata["visibility"] = visibility
+    metadata["source_type"] = source_type
+    metadata.setdefault("source", "mil-memory-gateway")
+
+    if status == "approved" and (
+        not approved or not str(metadata.get("approved_by") or "").strip()
+    ):
+        raise ValueError("approved memory requires approval flag and metadata.approved_by")
+    if memory_type in APPROVAL_REQUIRED_MEMORY_TYPES and status == "approved" and not approved:
+        raise ValueError(f"memory_type {memory_type} requires approval")
+
     return metadata
 
 
-def write_policy_for(memory_type: str) -> str:
-    if memory_type in AUTO_WRITE_MEMORY_TYPES:
-        return "auto"
-    if memory_type in APPROVAL_REQUIRED_MEMORY_TYPES:
-        return "approval_required"
-    raise ValueError(f"unsupported memory_type: {memory_type}")
+def validate_memory_event(event: dict[str, Any]) -> dict[str, Any]:
+    if not isinstance(event, dict):
+        raise ValueError("memory event must be a JSON object")
+    for field in REQUIRED_EVENT_FIELDS:
+        if not str(event.get(field) or "").strip():
+            raise ValueError(f"{field} is required")
+    write_policy_for(str(event["memory_type"]))
+    metadata = {
+        "tenant_id": event.get("tenant_id", "org_mil"),
+        "workspace_id": event.get("workspace_id", "engineering"),
+        "repo": event.get("repo", DEFAULT_PROJECT),
+        "repo_id": event.get("repo_id", "github:namlogan/MIL"),
+        "project_id": event.get("project_id"),
+        "framework_id": event.get("framework_id"),
+        "source_ref": event.get("source_ref"),
+        "source_type": event.get("source_type", "docs"),
+        "confidence": event.get("confidence", "medium"),
+        "scope": event.get("scope"),
+        "status": event.get("status"),
+        "sensitivity": event.get("sensitivity"),
+        "visibility": event.get("visibility", "repo"),
+        "created_by": event.get("created_by", "memory_gateway"),
+        "user_id": event.get("user_id"),
+        "agent_id": event.get("agent_id"),
+        "app_id": event.get("app_id"),
+        "run_id": event.get("run_id"),
+        "task_id": event.get("task_id"),
+        "approved_by": event.get("approved_by"),
+        "tags": event.get("tags", []),
+        "valid_until": event.get("valid_until", "until_superseded"),
+    }
+    _normalize_metadata(
+        metadata,
+        memory_type=str(event["memory_type"]),
+        approved=bool(event.get("approved_by")),
+    )
+    _entity_scope(metadata)
+    _reject_restricted_payload(event)
+    normalized = dict(event)
+    normalized.setdefault("memory_id", _memory_id())
+    normalized.setdefault("created_at", _utc_now())
+    return normalized
 
 
 def build_memory_record(
@@ -164,40 +338,71 @@ def build_memory_record(
     task_id = _required_text(task_id, "task_id")
     memory_type = _required_text(memory_type, "memory_type")
     policy = write_policy_for(memory_type)
+    content = _required_text(text, "text")
+    _reject_restricted_payload({"content": content, "metadata": metadata or {}})
 
-    sanitized_text = sanitize_text(text).strip()
-    if not sanitized_text:
-        raise ValueError("text is required")
-
-    record_metadata = sanitize_value(metadata or {})
-    if not isinstance(record_metadata, dict):
-        raise ValueError("metadata must be a JSON object")
-    record_metadata = _validate_metadata(
-        record_metadata,
+    record_metadata = _normalize_metadata(
+        dict(metadata or {}),
         memory_type=memory_type,
         approved=approved,
     )
+    record_metadata.setdefault("task_id", task_id)
     entity_scope = _entity_scope(record_metadata)
 
-    return {
-        "version": 2,
+    status = str(record_metadata["status"])
+    content = sanitize_text(content).strip()
+    memory_id = str(record_metadata.get("memory_id") or _memory_id())
+    record = {
+        "version": 3,
+        "memory_id": memory_id,
+        "memory_type": memory_type,
+        "scope": record_metadata["scope"],
+        "framework_id": record_metadata.get("framework_id"),
+        "project_id": record_metadata.get("project_id"),
+        "repo": record_metadata["repo"],
+        "repo_id": record_metadata["repo_id"],
         "project": project,
         "task_id": task_id,
-        "memory_type": memory_type,
-        "memory": sanitized_text,
+        "agent_id": record_metadata.get("agent_id"),
+        "run_id": record_metadata.get("run_id"),
+        "status": status,
+        "source_ref": record_metadata["source_ref"],
+        "source_type": record_metadata["source_type"],
+        "content": content,
+        "memory": content,
+        "tags": record_metadata.get("tags") if isinstance(record_metadata.get("tags"), list) else [],
+        "confidence": record_metadata["confidence"],
+        "sensitivity": record_metadata["sensitivity"],
+        "valid_until": record_metadata.get("valid_until", "until_superseded"),
+        "created_by": record_metadata["created_by"],
+        "created_at": _utc_now(),
         "metadata": record_metadata,
         "entity_scope": entity_scope,
         "retention_scope": {
             "tenant_id": record_metadata["tenant_id"],
             "workspace_id": record_metadata["workspace_id"],
             "repo_id": record_metadata["repo_id"],
+            "project_id": record_metadata.get("project_id"),
+            "framework_id": record_metadata.get("framework_id"),
+            "scope": record_metadata["scope"],
             "visibility": record_metadata["visibility"],
-            "status": record_metadata["status"],
+            "status": status,
+            "sensitivity": record_metadata["sensitivity"],
         },
         "write_policy": policy,
-        "created_at": _utc_now(),
         "sanitized": True,
     }
+    validate_memory_event(
+        {
+            **record,
+            "tenant_id": record_metadata["tenant_id"],
+            "workspace_id": record_metadata["workspace_id"],
+            "visibility": record_metadata["visibility"],
+            **entity_scope,
+            "approved_by": record_metadata.get("approved_by"),
+        }
+    )
+    return record
 
 
 def _memory_type_conditions(memory_types: list[str]) -> dict[str, Any]:
@@ -218,9 +423,13 @@ def build_search_filters(
     tenant_id: str | None = None,
     repo_id: str | None = None,
     memory_types: list[str] | tuple[str, ...] | None = None,
-    status: str = "active",
+    status: str = "approved",
     visibility: str = "repo",
     workspace_id: str | None = None,
+    project_id: str | None = None,
+    framework_id: str | None = None,
+    scope: str | None = None,
+    sensitivity: str = "internal",
     user_id: str | None = None,
     agent_id: str | None = None,
     app_id: str | None = None,
@@ -235,6 +444,13 @@ def build_search_filters(
         raise ValueError("at least one memory_type is required")
     for memory_type in normalized_types:
         write_policy_for(memory_type)
+
+    status = str(status or "approved").strip()
+    if status not in RETRIEVABLE_STATUSES:
+        raise ValueError("memory preflight may retrieve only approved memory")
+    sensitivity = str(sensitivity or "internal").strip()
+    if sensitivity not in ALLOWED_SENSITIVITIES:
+        raise ValueError(f"sensitivity must be one of {sorted(ALLOWED_SENSITIVITIES)}")
 
     entity_scope = {
         "user_id": user_id,
@@ -253,13 +469,21 @@ def build_search_filters(
     filters: list[dict[str, Any]] = [
         {"tenant_id": tenant_id},
         {"repo_id": repo_id},
-        {"status": status},
+        {"status": "approved"},
         {"visibility": visibility},
+        {"sensitivity": sensitivity},
         _memory_type_conditions(normalized_types),
         _entity_conditions(entity_scope),
+        {"NOT": [{"status": "retired"}, {"status": "superseded"}]},
     ]
     if workspace_id:
         filters.insert(1, {"workspace_id": str(workspace_id).strip()})
+    if project_id:
+        filters.append({"project_id": str(project_id).strip()})
+    if framework_id:
+        filters.append({"framework_id": str(framework_id).strip()})
+    if scope:
+        filters.append({"scope": str(scope).strip()})
     if branch:
         filters.append({"branch": str(branch).strip()})
     return {"AND": filters}
@@ -312,7 +536,7 @@ def _ensure_strict_filters(filters: dict[str, Any] | None) -> dict[str, Any]:
     if not isinstance(filters, dict) or "AND" not in filters:
         raise ValueError("strict filters are required for memory search")
     serialized = json.dumps(filters, sort_keys=True)
-    for required in ["tenant_id", "repo_id", "memory_type"]:
+    for required in ["tenant_id", "repo_id", "memory_type", "approved"]:
         if required not in serialized:
             raise ValueError(f"strict filters are required for memory search: missing {required}")
     if not any(field in serialized for field in ENTITY_SCOPE_FIELDS):
@@ -320,14 +544,71 @@ def _ensure_strict_filters(filters: dict[str, Any] | None) -> dict[str, Any]:
     return filters
 
 
+def _write_records(path: Path, records: list[dict[str, Any]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        "".join(json.dumps(record, sort_keys=True) + "\n" for record in records),
+        encoding="utf-8",
+    )
+
+
+def _audit_payload(action: str, record: dict[str, Any], *, actor: str, source_ref: str) -> dict[str, Any]:
+    return {
+        "action": action,
+        "memory_id": record.get("memory_id"),
+        "memory_type": record.get("memory_type"),
+        "scope": record.get("scope"),
+        "project_id": record.get("project_id"),
+        "framework_id": record.get("framework_id"),
+        "status": record.get("status"),
+        "source_ref": source_ref,
+        "actor": actor,
+        "created_at": _utc_now(),
+    }
+
+
+def append_audit_event(
+    audit_path: Path,
+    *,
+    action: str,
+    record: dict[str, Any],
+    actor: str,
+    source_ref: str,
+) -> dict[str, Any]:
+    _reject_restricted_payload({"actor": actor, "source_ref": source_ref})
+    event = _audit_payload(action, record, actor=actor, source_ref=source_ref)
+    audit_path.parent.mkdir(parents=True, exist_ok=True)
+    with audit_path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(event, sort_keys=True) + "\n")
+    return event
+
+
 @dataclass(frozen=True)
 class LocalJsonlMemoryStore:
     path: Path
 
-    def add(self, record: dict[str, Any]) -> dict[str, Any]:
+    def add(self, record: dict[str, Any], audit_path: Path | None = None) -> dict[str, Any]:
+        validate_memory_event(
+            {
+                **record,
+                "tenant_id": record.get("metadata", {}).get("tenant_id"),
+                "workspace_id": record.get("metadata", {}).get("workspace_id"),
+                "visibility": record.get("metadata", {}).get("visibility", "repo"),
+                **(record.get("entity_scope") if isinstance(record.get("entity_scope"), dict) else {}),
+                "approved_by": record.get("metadata", {}).get("approved_by"),
+            }
+        )
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with self.path.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(record, sort_keys=True) + "\n")
+        if audit_path:
+            append_audit_event(
+                audit_path,
+                action="add",
+                record=record,
+                actor=str(record.get("created_by") or "memory_gateway"),
+                source_ref=str(record.get("source_ref") or ""),
+            )
         return record
 
     def iter_records(self) -> Iterable[dict[str, Any]]:
@@ -352,8 +633,70 @@ class LocalJsonlMemoryStore:
         *,
         filters: dict[str, Any] | None = None,
         limit: int = 5,
+        audit_path: Path | None = None,
     ) -> list[dict[str, Any]]:
-        return search_records(self.iter_records(), query, filters=filters, limit=limit)
+        results = search_records(self.iter_records(), query, filters=filters, limit=limit)
+        if audit_path:
+            audit_record = results[0] if results else {"memory_id": "", "memory_type": "", "status": "approved"}
+            append_audit_event(
+                audit_path,
+                action="search",
+                record=audit_record,
+                actor="memory_gateway",
+                source_ref="memory_search",
+            )
+        return results
+
+    def update_status(
+        self,
+        memory_id: str,
+        status: str,
+        *,
+        source_ref: str,
+        actor: str,
+        audit_path: Path | None = None,
+    ) -> dict[str, Any]:
+        memory_id = _required_text(memory_id, "memory_id")
+        status = _required_text(status, "status")
+        source_ref = _required_text(source_ref, "source_ref")
+        actor = _required_text(actor, "actor")
+        if status not in ALLOWED_STATUSES:
+            raise ValueError(f"status must be one of {sorted(ALLOWED_STATUSES)}")
+
+        records = list(self.iter_records())
+        updated: dict[str, Any] | None = None
+        for index, record in enumerate(records):
+            if record.get("memory_id") != memory_id:
+                continue
+            metadata = dict(record.get("metadata") or {})
+            metadata["status"] = status
+            metadata["last_reviewed_by"] = actor
+            metadata["last_status_source_ref"] = source_ref
+            if status == "approved":
+                metadata["approved_by"] = actor
+            record = {
+                **record,
+                "status": status,
+                "metadata": metadata,
+                "updated_at": _utc_now(),
+            }
+            records[index] = record
+            updated = record
+            break
+        if updated is None:
+            raise ValueError(f"memory_id not found: {memory_id}")
+
+        _write_records(self.path, records)
+        if audit_path:
+            action = "supersede" if status == "superseded" else "retire" if status == "retired" else "update"
+            append_audit_event(
+                audit_path,
+                action=action,
+                record=updated,
+                actor=actor,
+                source_ref=source_ref,
+            )
+        return updated
 
 
 def search_records(
@@ -369,8 +712,10 @@ def search_records(
     for record in records:
         if not _condition_matches(record, strict_filters):
             continue
+        if str(record.get("status") or record.get("metadata", {}).get("status") or "") != "approved":
+            continue
 
-        memory = str(record.get("memory") or "")
+        memory = str(record.get("memory") or record.get("content") or "")
         record_tokens = _tokens(memory)
         score = len(query_tokens & record_tokens)
         if query.lower() and query.lower() in memory.lower():
@@ -391,14 +736,20 @@ def build_mem0_add_payload(record: dict[str, Any]) -> dict[str, Any]:
     metadata = dict(record.get("metadata") or {})
     metadata.update(
         {
+            "memory_id": record.get("memory_id"),
             "project": record.get("project"),
+            "project_id": record.get("project_id"),
+            "framework_id": record.get("framework_id"),
             "task_id": record.get("task_id"),
             "memory_type": record.get("memory_type"),
-            "source_uri": metadata.get("source_uri"),
+            "scope": record.get("scope"),
+            "status": record.get("status"),
+            "source_ref": record.get("source_ref"),
+            "sensitivity": record.get("sensitivity"),
         }
     )
     payload: dict[str, Any] = {
-        "messages": [{"role": "user", "content": str(record.get("memory") or "")}],
+        "messages": [{"role": "user", "content": str(record.get("memory") or record.get("content") or "")}],
         "metadata": metadata,
         "infer": False,
     }
@@ -419,20 +770,67 @@ def build_mem0_search_payload(
     }
 
 
-def build_context_pack(records: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
+def build_context_pack(records: Iterable[dict[str, Any]], *, top_k: int = 10) -> list[dict[str, Any]]:
     pack: list[dict[str, Any]] = []
     for index, record in enumerate(records, 1):
+        if index > top_k:
+            break
         metadata = record.get("metadata") if isinstance(record.get("metadata"), dict) else {}
+        status = str(record.get("status") or metadata.get("status") or "")
+        if status != "approved":
+            continue
         pack.append(
             {
                 "memory_id": str(record.get("memory_id") or record.get("id") or f"local-{index}"),
                 "memory_type": str(record.get("memory_type") or metadata.get("memory_type") or ""),
-                "memory": str(record.get("memory") or ""),
-                "source_uri": str(metadata.get("source_uri") or ""),
-                "confidence": metadata.get("confidence"),
+                "scope": str(record.get("scope") or metadata.get("scope") or ""),
+                "content": str(record.get("content") or record.get("memory") or ""),
+                "memory": str(record.get("memory") or record.get("content") or ""),
+                "source_ref": str(record.get("source_ref") or metadata.get("source_ref") or metadata.get("source_uri") or ""),
+                "confidence": record.get("confidence") or metadata.get("confidence"),
+                "status": status,
             }
         )
     return pack
+
+
+def build_memory_conflict_event(
+    memory_record: dict[str, Any],
+    *,
+    source_ref: str,
+    reason: str,
+) -> dict[str, Any]:
+    source_ref = _required_text(source_ref, "source_ref")
+    reason = _required_text(reason, "reason")
+    _reject_restricted_payload({"source_ref": source_ref, "reason": reason})
+    metadata = memory_record.get("metadata") if isinstance(memory_record.get("metadata"), dict) else {}
+    content = (
+        f"Memory {memory_record.get('memory_id')} conflicts with source-of-truth {source_ref}: "
+        f"{reason}"
+    )
+    event = {
+        "memory_id": _memory_id(),
+        "memory_type": "deprecated_decision",
+        "scope": memory_record.get("scope") or metadata.get("scope") or "project",
+        "framework_id": memory_record.get("framework_id") or metadata.get("framework_id") or DEFAULT_FRAMEWORK_ID,
+        "project_id": memory_record.get("project_id") or metadata.get("project_id") or DEFAULT_PROJECT_ID,
+        "repo": memory_record.get("repo") or metadata.get("repo") or DEFAULT_PROJECT,
+        "repo_id": memory_record.get("repo_id") or metadata.get("repo_id") or "github:namlogan/MIL",
+        "task_id": memory_record.get("task_id") or metadata.get("task_id") or "",
+        "status": "candidate",
+        "source_ref": source_ref,
+        "source_type": "docs",
+        "content": content,
+        "memory": content,
+        "tags": ["memory_conflict"],
+        "confidence": "high",
+        "sensitivity": "internal",
+        "created_by": "memory_gateway",
+        "created_at": _utc_now(),
+        "conflicts_with_memory_id": memory_record.get("memory_id"),
+        "conflict_policy": SOURCE_OF_TRUTH_PRIORITY,
+    }
+    return event
 
 
 def run_self_test() -> None:
@@ -441,47 +839,62 @@ def run_self_test() -> None:
         "workspace_id": "engineering",
         "repo": "MIL",
         "repo_id": "github:namlogan/MIL",
+        "project_id": DEFAULT_PROJECT_ID,
+        "framework_id": DEFAULT_FRAMEWORK_ID,
         "user_id": "repo:github:namlogan/MIL",
         "agent_id": "codex",
         "run_id": "windmill-job-123",
-        "source_uri": "https://github.com/namlogan/MIL/pull/26",
-        "confidence": 0.82,
-        "status": "active",
+        "source_ref": "https://github.com/namlogan/MIL/pull/26",
+        "source_type": "pull_request",
+        "confidence": "high",
+        "status": "approved",
+        "scope": "project",
+        "sensitivity": "internal",
         "visibility": "repo",
-        "created_by": "agent",
-        "github": "ghp_123456789012345678901234567890123456",
+        "created_by": "memory_gateway",
+        "approved_by": "logan",
     }
     record = build_memory_record(
         project=DEFAULT_PROJECT,
         task_id="MEM-SELF-TEST",
-        memory_type="plan",
-        text=(
-            "Use mem0 for project memory. accessToken: "
-            "13f6f4f5c84c0ce8ec2b780595dcb28ca2019c2f36f313ac8146497702999318"
-        ),
+        memory_type="implementation_lesson",
+        text="Use Memory0 only as a scoped SDLC learning layer.",
         metadata=metadata,
+        approved=True,
     )
     filters = build_search_filters(
         tenant_id="org_mil",
         repo_id="github:namlogan/MIL",
-        memory_types=["plan"],
+        project_id=DEFAULT_PROJECT_ID,
+        memory_types=["implementation_lesson"],
         user_id="repo:github:namlogan/MIL",
     )
-    results = search_records([record], "project memory", filters=filters)
-    serialized = json.dumps(results[0], sort_keys=True)
-    assert "13f6f4f5c84c0ce8ec2b780595dcb28ca2019c2f36f313ac8146497702999318" not in serialized
-    assert "ghp_123456789012345678901234567890123456" not in serialized
-    assert "[REDACTED_SECRET]" in serialized
-    assert "[REDACTED_GITHUB_TOKEN]" in serialized
+    results = search_records([record], "SDLC learning", filters=filters)
+    assert results and results[0]["memory_id"] == record["memory_id"]
+    try:
+        build_memory_record(
+            project=DEFAULT_PROJECT,
+            task_id="MEM-SELF-TEST",
+            memory_type="implementation_lesson",
+            text="accessToken: 13f6f4f5c84c0ce8ec2b780595dcb28ca2019c2f36f313ac8146497702999318",
+            metadata={**metadata, "status": "candidate"},
+        )
+    except ValueError as exc:
+        assert "restricted memory payload" in str(exc)
+    else:
+        raise AssertionError("restricted payload was not rejected")
 
 
 def main(request: dict[str, Any] | None = None) -> dict[str, Any]:
     if request and request.get("self_test"):
         run_self_test()
     return {
-        "decision": "MEMORY_CONTRACT_READY",
+        "decision": "MEMORY_GATEWAY_CONTRACT_READY",
         "allowed_memory_types": sorted(ALLOWED_MEMORY_TYPES),
         "approval_required_memory_types": sorted(APPROVAL_REQUIRED_MEMORY_TYPES),
         "required_metadata_fields": list(REQUIRED_METADATA_FIELDS),
+        "required_event_fields": list(REQUIRED_EVENT_FIELDS),
         "entity_scope_fields": list(ENTITY_SCOPE_FIELDS),
+        "source_of_truth_priority": SOURCE_OF_TRUTH_PRIORITY,
+        "retrievable_statuses": sorted(RETRIEVABLE_STATUSES),
     }

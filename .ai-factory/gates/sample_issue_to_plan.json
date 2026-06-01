@@ -1,15 +1,15 @@
 {
   "agent_calls": [
     {
-      "action": "provide_issue_context",
-      "agent": "augment_context",
-      "role": "codebase_index_and_context_provider",
+      "action": "wm_memory_preflight",
+      "agent": "mem0_memory",
+      "role": "sanitized_long_term_agent_memory_layer",
       "task_id": "MIL-001"
     },
     {
-      "action": "retrieve_project_memory",
-      "agent": "mem0_memory",
-      "role": "sanitized_long_term_agent_memory_layer",
+      "action": "provide_issue_context",
+      "agent": "augment_context",
+      "role": "codebase_index_and_context_provider",
       "task_id": "MIL-001"
     },
     {
@@ -19,7 +19,7 @@
       "task_id": "MIL-001"
     },
     {
-      "action": "store_plan_memory",
+      "action": "record_memory_candidates",
       "agent": "mem0_memory",
       "role": "sanitized_long_term_agent_memory_layer",
       "task_id": "MIL-001"
@@ -29,7 +29,8 @@
     "memory": {
       "provider": "mem0_memory",
       "records": [
-        "plan"
+        "requirement_interpretation",
+        "open_question"
       ],
       "sanitization_required": true,
       "scope": {

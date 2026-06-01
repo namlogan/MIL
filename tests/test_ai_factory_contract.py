@@ -184,10 +184,10 @@ class AIFactoryContractTests(unittest.TestCase):
             for call in sample["agent_calls"]
         ]
 
-        self.assertEqual(calls[0], "mem0_memory.retrieve_plan_memory")
+        self.assertEqual(calls[0], "mem0_memory.wm_task_context_pack")
         self.assertIn("windmill.dispatch_coding_agent", calls)
         self.assertLess(calls.index("windmill.dispatch_coding_agent"), calls.index("codex.implement"))
-        self.assertLess(calls.index("mem0_memory.retrieve_plan_memory"), calls.index("codex.implement"))
+        self.assertLess(calls.index("mem0_memory.wm_task_context_pack"), calls.index("codex.implement"))
         self.assertEqual(sample["artifacts"]["dispatch"]["developer_agent"], "codex")
 
     def test_pr_quality_gate_sample_is_accepted_by_final_gate_checker(self) -> None:

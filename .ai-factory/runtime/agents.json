@@ -92,18 +92,18 @@
     },
     "mem0_memory": {
       "runtime": "mem0_optional",
-      "role": "sanitized_long_term_agent_memory_layer",
-      "allowed_actions": [
-        "retrieve_project_memory",
-        "retrieve_plan_memory",
-        "retrieve_gate_memory",
-        "retrieve_ci_patterns",
-        "store_plan_memory",
-        "store_handoff_memory",
-        "store_qa_memory",
-        "store_fix_memory",
-        "summarize_repeated_patterns",
-        "provide_memory_context"
+            "role": "sanitized_long_term_agent_memory_layer",
+            "allowed_actions": [
+                "wm_memory_preflight",
+                "wm_task_context_pack",
+                "wm_agent_handoff_collect",
+                "wm_pr_merge_memory_writeback",
+                "wm_memory_maintenance",
+                "wm_memory_conflict_review",
+                "wm_memory_audit_report",
+                "record_memory_candidates",
+                "summarize_repeated_patterns",
+                "provide_memory_context"
       ],
       "forbidden_actions": [
         "store_secrets",
@@ -119,10 +119,11 @@
         "read_production_secrets"
       ],
       "requires_sanitization": true,
-      "requires_scope": [
-        "project",
-        "task_id"
-      ],
+            "requires_scope": [
+                "framework",
+                "project",
+                "task"
+            ],
       "writes_code": false
     },
     "windmill_orchestrator": {
