@@ -14,14 +14,18 @@ Current state:
 - `main` exists and CI runs.
 - Branch protection is enabled for `main`.
 - `control-plane` is required and branches must be up to date.
-- Pull requests are required with zero required approvals for the solo-owner pilot.
+- Pull requests are required.
+- Real project mode requires at least one approving review before merge.
+- CODEOWNERS and stale-review dismissal should be enabled for app work.
 - Force pushes and branch deletion are disabled.
 - Conversation resolution is required.
 - `ai-gate/final-review` is required by branch protection and is now published automatically by the Windmill webhook router after `pr_quality_gate` runs.
 
-Required decision:
+Required action:
 
 - Keep the Windmill publisher secret healthy so every PR head receives `ai-gate/final-review` from the normal webhook flow.
+- Keep GitHub review protection enabled for real project work. Do not return to
+  zero-review mode except for explicit temporary diagnostics.
 
 ## Augment Context Provider / Auggie Advisory
 

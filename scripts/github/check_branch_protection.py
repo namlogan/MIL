@@ -16,7 +16,7 @@ REQUIRED_CONTEXTS = {"control-plane", "ai-gate/final-review"}
 def evaluate_branch_protection(
     protection: dict[str, Any],
     *,
-    solo_pilot: bool,
+    allow_zero_reviews: bool = False,
 ) -> dict[str, Any]:
     errors: list[str] = []
     warnings: list[str] = []
@@ -31,10 +31,14 @@ def evaluate_branch_protection(
     reviews = protection.get("required_pull_request_reviews") or {}
     review_count = int(reviews.get("required_approving_review_count") or 0)
     if review_count < 1:
-        if solo_pilot:
-            warnings.append("zero required reviews is accepted only for the solo-owner pilot")
+        if allow_zero_reviews:
+            warnings.append("zero required reviews allowed only with explicit --allow-zero-reviews")
         else:
-            errors.append("team mode requires at least one approving review")
+            errors.append("real project mode requires at least one approving review")
+    if review_count >= 1 and reviews.get("require_code_owner_reviews") is not True:
+        warnings.append("CODEOWNERS review is recommended for real project mode")
+    if review_count >= 1 and reviews.get("dismiss_stale_reviews") is not True:
+        warnings.append("stale review dismissal is recommended for real project mode")
 
     return {
         "ok": not errors,
@@ -64,9 +68,9 @@ def run_self_test() -> None:
                 "strict": True,
                 "contexts": ["control-plane", "ai-gate/final-review"],
             },
-            "required_pull_request_reviews": {"required_approving_review_count": 0},
+            "required_pull_request_reviews": {"required_approving_review_count": 1},
         },
-        solo_pilot=True,
+        allow_zero_reviews=False,
     )
     assert result["ok"], result
 
@@ -76,7 +80,16 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--repo", default="namlogan/MIL")
     parser.add_argument("--branch", default="main")
     parser.add_argument("--from-file", help="Evaluate a saved branch protection JSON file.")
-    parser.add_argument("--team-mode", action="store_true", help="Require at least one review.")
+    parser.add_argument(
+        "--allow-zero-reviews",
+        action="store_true",
+        help="Explicitly allow zero approving reviews for temporary local/demo use.",
+    )
+    parser.add_argument(
+        "--team-mode",
+        action="store_true",
+        help="Deprecated no-op; real project mode is the default.",
+    )
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args(argv)
 
@@ -89,7 +102,10 @@ def main(argv: list[str] | None = None) -> int:
         protection = json.loads(Path(args.from_file).read_text(encoding="utf-8"))
     else:
         protection = _load_from_github(args.repo, args.branch)
-    result = evaluate_branch_protection(protection, solo_pilot=not args.team_mode)
+    result = evaluate_branch_protection(
+        protection,
+        allow_zero_reviews=args.allow_zero_reviews,
+    )
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0 if result["ok"] else 1
 

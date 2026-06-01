@@ -75,6 +75,11 @@ class OperatorDailyStatusTests(unittest.TestCase):
                 "sdlc_metrics_report self-test passed\n",
                 "",
             ),
+            ("python3", "scripts/product-ci/run_product_checks.py"): (
+                0,
+                json.dumps({"ok": True, "status": "skipped", "checks": [], "errors": []}),
+                "",
+            ),
             ("python3", "scripts/agent-flow/check_agent_tools.py"): (
                 0,
                 json.dumps({"ok": True, "tools": {"codex": {"available": True}}}),
@@ -170,6 +175,7 @@ class OperatorDailyStatusTests(unittest.TestCase):
             "delivery_os",
             "contract_skeletons",
             "sdlc_metrics",
+            "product_ci",
             "augment_config",
             "mem0_provider",
             "branch_protection",
