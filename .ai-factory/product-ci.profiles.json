@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "profiles": {
+    "python-unittest": {
+      "description": "Generic Python app checks for a stdlib unittest codebase.",
+      "checks": [
+        {
+          "name": "python-compile",
+          "command": ["python3", "-m", "compileall", "-q", "scripts", "tests", "f"],
+          "required": true
+        },
+        {
+          "name": "python-unit",
+          "command": ["python3", "-m", "unittest", "discover", "-s", "tests", "-v"],
+          "required": true
+        }
+      ]
+    },
+    "node-pnpm": {
+      "description": "Generic Node/pnpm app checks. Enable only after package.json and pnpm-lock.yaml exist.",
+      "checks": [
+        {
+          "name": "pnpm-install",
+          "command": ["pnpm", "install", "--frozen-lockfile"],
+          "required": true
+        },
+        {
+          "name": "pnpm-lint",
+          "command": ["pnpm", "lint"],
+          "required": true
+        },
+        {
+          "name": "pnpm-test",
+          "command": ["pnpm", "test"],
+          "required": true
+        },
+        {
+          "name": "pnpm-build",
+          "command": ["pnpm", "build"],
+          "required": true
+        }
+      ]
+    },
+    "fastapi-pytest": {
+      "description": "FastAPI/Python service checks. Enable after app dependencies and pytest config exist.",
+      "checks": [
+        {
+          "name": "python-compile",
+          "command": ["python3", "-m", "compileall", "-q", "app", "tests"],
+          "required": true
+        },
+        {
+          "name": "pytest",
+          "command": ["python3", "-m", "pytest", "-q"],
+          "required": true
+        }
+      ]
+    },
+    "nextjs-pnpm": {
+      "description": "Next.js/pnpm app checks. Enable after the frontend app exists.",
+      "checks": [
+        {
+          "name": "pnpm-install",
+          "command": ["pnpm", "install", "--frozen-lockfile"],
+          "required": true
+        },
+        {
+          "name": "next-lint",
+          "command": ["pnpm", "lint"],
+          "required": true
+        },
+        {
+          "name": "next-typecheck",
+          "command": ["pnpm", "typecheck"],
+          "required": true
+        },
+        {
+          "name": "next-test",
+          "command": ["pnpm", "test"],
+          "required": true
+        },
+        {
+          "name": "next-build",
+          "command": ["pnpm", "build"],
+          "required": true
+        }
+      ]
+    }
+  }
+}

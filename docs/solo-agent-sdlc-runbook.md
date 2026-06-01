@@ -32,6 +32,16 @@ The dashboard checks:
 - branch protection policy
 - recent local auto-dispatch queue results
 
+For the temporary ngrok endpoint, also run:
+
+```bash
+python3 scripts/windmill/check_public_endpoint.py \
+  --public-url https://<assigned-name>.ngrok-free.dev/mil/github-webhook
+```
+
+This confirms that the public URL reaches the signed local relay health route
+without exposing the full Windmill UI/API.
+
 ## Project Intake
 
 Before agents build product features, fill these files:
@@ -66,7 +76,20 @@ python3 scripts/project-intake/validate_project_intake.py
 
 ## Product CI
 
-When the product stack exists, edit `.ai-factory/product-ci.json`:
+When the product stack exists, edit `.ai-factory/product-ci.json`. You can use
+inline checks or select a profile from `.ai-factory/product-ci.profiles.json`.
+
+Profile example:
+
+```json
+{
+  "enabled": true,
+  "profile": "python-unittest",
+  "checks": []
+}
+```
+
+Inline example:
 
 ```json
 {
@@ -89,11 +112,27 @@ python3 scripts/product-ci/run_product_checks.py
 
 ## Memory
 
-Start with local JSONL memory. Move to Mem0 OSS when repeated tasks need durable
-cross-session memory:
+Start with local JSONL memory while the framework is being developed:
 
 ```bash
 python3 scripts/agent-memory/check_mem0_provider.py
+```
+
+When the product app or worker needs real Mem0 during development, use the OSS
+library directly:
+
+```bash
+pip install mem0ai
+export OPENAI_API_KEY="..."
+python3 scripts/agent-memory/check_mem0_library.py --runtime python
+```
+
+or for a Node app:
+
+```bash
+npm install mem0ai
+export OPENAI_API_KEY="..."
+python3 scripts/agent-memory/check_mem0_library.py --runtime node
 ```
 
 Mem0 may store scoped, sanitized operational facts. It must not store secrets,
@@ -111,3 +150,11 @@ python3 scripts/release/release_gate.py --evidence release-evidence.json
 
 Release requires CI pass, AI gate pass, staging smoke, rollback plan, monitoring
 plan, and human approval.
+
+Configure the deploy provider separately in `.ai-factory/deploy-provider.json`.
+The default is disabled manual release. When an app provider exists, validate
+the deploy plan before release:
+
+```bash
+python3 scripts/release/deploy_provider.py --plan --environment staging
+```

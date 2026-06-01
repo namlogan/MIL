@@ -33,6 +33,20 @@ class ProductCIConfigTests(unittest.TestCase):
         self.assertFalse(config["enabled"])
         self.assertEqual(config["checks"], [])
 
+    def test_product_ci_stack_profiles_are_versioned(self) -> None:
+        profiles = self.product_ci.load_profiles(REPO_ROOT / ".ai-factory/product-ci.profiles.json")
+
+        self.assertIn("python-unittest", profiles["profiles"])
+        self.assertIn("node-pnpm", profiles["profiles"])
+        self.assertTrue(
+            self.product_ci.validate_config(
+                {
+                    "enabled": True,
+                    "checks": profiles["profiles"]["python-unittest"]["checks"],
+                }
+            )["ok"]
+        )
+
     def test_validates_enabled_product_checks(self) -> None:
         config = {
             "enabled": True,
@@ -71,6 +85,39 @@ class ProductCIConfigTests(unittest.TestCase):
 
         self.assertFalse(result["ok"])
         self.assertIn("check unsafe command must be a non-empty list", result["errors"])
+
+    def test_applies_named_stack_profile_when_checks_are_not_inline(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            config_path = root / "product-ci.json"
+            profiles_path = root / "product-ci.profiles.json"
+            config_path.write_text(
+                json.dumps({"enabled": True, "profile": "python-unittest", "checks": []}),
+                encoding="utf-8",
+            )
+            profiles_path.write_text(
+                json.dumps(
+                    {
+                        "profiles": {
+                            "python-unittest": {
+                                "checks": [
+                                    {
+                                        "name": "unit",
+                                        "command": ["python3", "-m", "unittest"],
+                                        "required": True,
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            config = self.product_ci.load_effective_config(config_path, profiles_path)
+
+        self.assertTrue(config["enabled"])
+        self.assertEqual(config["checks"][0]["name"], "unit")
 
 
 if __name__ == "__main__":

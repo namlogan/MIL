@@ -14,6 +14,9 @@ DEFAULT_CONFIG = {
     "enabled": False,
     "checks": [],
 }
+DEFAULT_PROFILES = {
+    "profiles": {},
+}
 
 
 def load_config(path: str | Path) -> dict[str, Any]:
@@ -26,10 +29,39 @@ def load_config(path: str | Path) -> dict[str, Any]:
     return data
 
 
+def load_profiles(path: str | Path) -> dict[str, Any]:
+    profiles_path = Path(path)
+    if not profiles_path.exists():
+        return dict(DEFAULT_PROFILES)
+    data = json.loads(profiles_path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError("product CI profiles config must be a JSON object")
+    profiles = data.get("profiles", {})
+    if not isinstance(profiles, dict):
+        raise ValueError("product CI profiles must be an object")
+    return data
+
+
+def load_effective_config(path: str | Path, profiles_path: str | Path) -> dict[str, Any]:
+    config = load_config(path)
+    profile_name = str(config.get("profile", "")).strip()
+    checks = config.get("checks", [])
+    if profile_name and not checks:
+        profiles = load_profiles(profiles_path).get("profiles", {})
+        profile = profiles.get(profile_name, {}) if isinstance(profiles, dict) else {}
+        if not isinstance(profile, dict):
+            raise ValueError(f"product CI profile {profile_name} must be an object")
+        config = {**config, "checks": profile.get("checks", [])}
+    return config
+
+
 def validate_config(config: dict[str, Any]) -> dict[str, Any]:
     errors: list[str] = []
     enabled = bool(config.get("enabled", False))
+    profile = config.get("profile")
     checks = config.get("checks", [])
+    if profile is not None and not isinstance(profile, str):
+        errors.append("profile must be a string when present")
     if not isinstance(checks, list):
         errors.append("checks must be a list")
         checks = []
@@ -91,12 +123,17 @@ def run_self_test() -> None:
     assert validate_config(
         {"enabled": True, "checks": [{"name": "unit", "command": ["python3", "--version"]}]}
     )["ok"] is True
+    assert load_effective_config(
+        Path(__file__).resolve().parents[2] / ".ai-factory/product-ci.json",
+        Path(__file__).resolve().parents[2] / ".ai-factory/product-ci.profiles.json",
+    )["enabled"] is False
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo", default=str(Path(__file__).resolve().parents[2]))
     parser.add_argument("--config", default=".ai-factory/product-ci.json")
+    parser.add_argument("--profiles-config", default=".ai-factory/product-ci.profiles.json")
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args(argv)
 
@@ -106,7 +143,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     repo = Path(args.repo).resolve()
-    config = load_config(repo / args.config)
+    config = load_effective_config(repo / args.config, repo / args.profiles_config)
     result = run_checks(config, repo)
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0 if result["ok"] else 1

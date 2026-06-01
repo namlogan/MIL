@@ -117,7 +117,12 @@ empty restricted changes, AI Factory rules, and branch-protected PR review.
 
 GitHub webhook ingress is handled by `f/mil/github_webhook_router` through the Windmill HTTP route `mil/github-webhook`. The route is public at the HTTP layer, but the router rejects unsigned or incorrectly signed GitHub deliveries using the Windmill secret `f/mil/github_webhook_secret`.
 
-Mem0 is configured as optional project memory through `mem0_memory`. Until a Mem0 Platform or self-hosted endpoint is configured, the local JSONL adapter at `.ai-factory/memory/local_memory.jsonl` is used only for deterministic tests and local dry-runs. Runtime memory files are ignored by git.
+Mem0 is configured as optional project memory through `mem0_memory`. During
+framework development, the local JSONL adapter at
+`.ai-factory/memory/local_memory.jsonl` is used for deterministic tests and
+local dry-runs. When the product app needs real memory, use the Mem0 OSS
+library in the app or worker process first; external provider/server mode is a
+later team/production concern.
 
 Memory writes require provenance metadata, one Mem0 entity scope, sanitization,
 and a write policy. Architecture decisions, human preferences, repo

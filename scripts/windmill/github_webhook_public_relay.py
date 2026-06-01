@@ -28,6 +28,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_LISTEN_HOST = "127.0.0.1"
 DEFAULT_LISTEN_PORT = 18090
 DEFAULT_PUBLIC_ROUTE = "/mil/github-webhook"
+DEFAULT_HEALTH_ROUTE = "/healthz"
 DEFAULT_WINDMILL_URL = "http://localhost:8090/api/r/admins/mil/github-webhook"
 DEFAULT_MAX_BODY_BYTES = 2 * 1024 * 1024
 DEFAULT_TIMEOUT_SECONDS = 20
@@ -83,6 +84,26 @@ def evaluate_request(
     if not verify_github_signature(headers, body, secret):
         return RelayDecision(False, 401, "invalid GitHub webhook signature")
     return RelayDecision(True, 200, "signature verified")
+
+
+def is_health_request(method: str, path: str) -> bool:
+    clean_path = path.split("?", 1)[0]
+    return method.upper() == "GET" and clean_path == DEFAULT_HEALTH_ROUTE
+
+
+def build_health_payload(
+    *,
+    public_route: str,
+    windmill_url: str,
+    auto_dispatch_enabled: bool,
+) -> dict[str, Any]:
+    return {
+        "ok": True,
+        "service": "mil-github-webhook-relay",
+        "public_route": public_route,
+        "windmill_url": windmill_url,
+        "auto_dispatch_enabled": bool(auto_dispatch_enabled),
+    }
 
 
 def build_forward_headers(headers: dict[str, Any], body_length: int) -> dict[str, str]:
@@ -215,6 +236,16 @@ class RelayHandler(BaseHTTPRequestHandler):
     server: "RelayServer"
 
     def do_GET(self) -> None:  # noqa: N802 - BaseHTTPRequestHandler API
+        if is_health_request("GET", self.path):
+            self._send_json(
+                200,
+                build_health_payload(
+                    public_route=self.server.public_route,
+                    windmill_url=self.server.windmill_url,
+                    auto_dispatch_enabled=self.server.auto_dispatch_enabled,
+                ),
+            )
+            return
         self._reject_without_body("GET")
 
     def do_PUT(self) -> None:  # noqa: N802 - BaseHTTPRequestHandler API

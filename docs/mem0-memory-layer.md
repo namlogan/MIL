@@ -139,28 +139,63 @@ Local runtime memory is written to:
 That file is ignored by git. Keep `.ai-factory/memory/.gitkeep` committed so
 the portable directory exists.
 
-## Production Provider
+## Development Library Mode
 
-When moving beyond the local adapter, use one of these modes:
+For the development phase, use Mem0 as an OSS library inside the app or worker
+process. Do not start a Mem0 server unless the project explicitly needs a
+shared team service.
 
-- `MEM0_API_KEY`: Mem0 Platform.
-- `MEM0_BASE_URL`: self-hosted Mem0 server endpoint.
+Python app:
+
+```bash
+pip install mem0ai
+export OPENAI_API_KEY="..."
+python3 -c 'from mem0 import Memory; print("MEM0_LIBRARY_OK")'
+python3 scripts/agent-memory/check_mem0_library.py --runtime python
+```
+
+The official Python quickstart initializes `Memory()` from the `mem0` module.
+By default it uses OpenAI for fact extraction/embeddings, Qdrant with on-disk
+data at `/tmp/qdrant`, and SQLite history at `~/.mem0/history.db`.
+
+Node app:
+
+```bash
+npm install mem0ai
+export OPENAI_API_KEY="..."
+node -e 'import("mem0ai/oss").then(() => console.log("MEM0_LIBRARY_OK"))'
+python3 scripts/agent-memory/check_mem0_library.py --runtime node
+```
+
+The official Node quickstart imports `Memory` from `mem0ai/oss`; its default
+development profile uses a local-friendly memory vector store and SQLite
+history. Node apps should keep `mem0ai` in `package.json` so the preflight can
+detect it without network calls.
+
+Use Ollama instead of OpenAI by exporting `OLLAMA_HOST` or setting
+`MEM0_LLM_PROVIDER=ollama` and passing the matching Mem0 config in app code.
+
+## External Provider Mode
+
+External provider mode is for a later team or production setup, not the default
+development path.
+
+- `MEM0_API_KEY`: Mem0 Platform or authenticated provider.
+- `MEM0_BASE_URL`: REST server endpoint, if a shared server exists.
 - `MEM0_ORG_ID` and `MEM0_PROJECT_ID`: optional provider metadata.
-
-Store those values in Windmill or the workstation secret store. Do not commit
-them and do not paste them into task memory.
 
 Provider preflight:
 
 ```bash
 python3 scripts/agent-memory/check_mem0_provider.py
+python3 scripts/agent-memory/check_mem0_provider.py --live-check
 ```
 
 Expected modes:
 
 ```text
-local_jsonl        no external credential; acceptable for first solo pilot
-mem0_self_hosted   MEM0_BASE_URL points to Mem0 OSS
+local_jsonl        framework adapter; acceptable before app memory is enabled
+mem0_self_hosted   MEM0_BASE_URL points to a REST server
 mem0_platform      MEM0_API_KEY is present
 ```
 
