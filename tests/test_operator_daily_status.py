@@ -60,6 +60,21 @@ class OperatorDailyStatusTests(unittest.TestCase):
                 "Windmill project validation passed\n",
                 "",
             ),
+            ("python3", "scripts/delivery/validate_delivery_os.py", "--self-test"): (
+                0,
+                "validate_delivery_os self-test passed\n",
+                "",
+            ),
+            ("python3", "scripts/contracts/validate_contracts.py", "--self-test"): (
+                0,
+                "validate_contracts self-test passed\n",
+                "",
+            ),
+            ("python3", "scripts/operator/sdlc_metrics_report.py", "--self-test"): (
+                0,
+                "sdlc_metrics_report self-test passed\n",
+                "",
+            ),
             ("python3", "scripts/agent-flow/check_agent_tools.py"): (
                 0,
                 json.dumps({"ok": True, "tools": {"codex": {"available": True}}}),
@@ -152,6 +167,9 @@ class OperatorDailyStatusTests(unittest.TestCase):
             "github_open_prs",
             "github_main_ci",
             "windmill_failed_jobs",
+            "delivery_os",
+            "contract_skeletons",
+            "sdlc_metrics",
             "augment_config",
             "mem0_provider",
             "branch_protection",

@@ -13,6 +13,9 @@ GitHub Issue -> requirement, acceptance criteria, risk, allowed files
 GitHub PR -> implementation diff, CI state, review discussion, merge decision
 .ai-factory/** -> local agent rules, plans, QA artifacts, gate contracts
 .windmill/** -> cockpit flow definitions and worker policy
+contracts/** -> contract-first interface skeletons
+docs/adr/** -> approved architecture decisions
+docs/release/** -> release manifests and approval evidence
 ```
 
 Windmill is an orchestrator, not the source of truth. AI Factory is the SDLC protocol and artifact layer, not a merge authority.
@@ -78,6 +81,37 @@ Validate intake with:
 python3 scripts/project-intake/validate_project_intake.py
 ```
 
+## Delivery OS Gates
+
+Agent work must follow the repo Delivery Operating System:
+
+```text
+project intake -> definition of ready -> context pack -> exactly one Codex worker
+-> quality gate router -> contract/security/product checks -> Codex QA
+-> protected merge -> release candidate -> rollback drill -> human release approval
+```
+
+Required framework documents:
+
+```text
+.ai-factory/DELIVERY_OPERATING_MODEL.md
+.ai-factory/DEFINITION_OF_READY.md
+.ai-factory/DEFINITION_OF_DONE.md
+.ai-factory/QUALITY_GATES.md
+.ai-factory/RELEASE_POLICY.md
+.ai-factory/ESCALATION_POLICY.md
+.ai-factory/SOURCE_OF_TRUTH_MATRIX.md
+contracts/**
+templates/**
+```
+
+Validate this layer with:
+
+```bash
+python3 scripts/delivery/validate_delivery_os.py --self-test
+python3 scripts/contracts/validate_contracts.py --self-test
+```
+
 ## Required PR Evidence
 
 Before review, the developer agent must attach or reference:
@@ -90,6 +124,8 @@ Before review, the developer agent must attach or reference:
 - gate artifacts generated
 - residual risks
 - rollback note
+- Definition of Ready and Definition of Done evidence
+- contract, security, product, release, or memory gate evidence when routed
 
 ## Coding Agent Dispatch
 

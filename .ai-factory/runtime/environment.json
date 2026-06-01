@@ -155,8 +155,25 @@
       "docs/project/DEPLOYMENT.md"
     ]
   },
+  "delivery_operating_system": {
+    "validator": "scripts/delivery/validate_delivery_os.py",
+    "contract_validator": "scripts/contracts/validate_contracts.py",
+    "definition_of_ready": ".ai-factory/DEFINITION_OF_READY.md",
+    "definition_of_done": ".ai-factory/DEFINITION_OF_DONE.md",
+    "quality_gates": ".ai-factory/QUALITY_GATES.md",
+    "release_policy": ".ai-factory/RELEASE_POLICY.md",
+    "escalation_policy": ".ai-factory/ESCALATION_POLICY.md",
+    "source_of_truth_matrix": ".ai-factory/SOURCE_OF_TRUTH_MATRIX.md",
+    "require_definition_of_ready": true,
+    "require_definition_of_done": true,
+    "require_contract_tests_for_contract_changes": true,
+    "require_rollback_drill_for_production": true,
+    "max_preferred_pr_loc": 300,
+    "max_unapproved_pr_loc": 800
+  },
   "operator": {
     "daily_status": "scripts/operator/daily_status.py",
+    "sdlc_metrics_report": "scripts/operator/sdlc_metrics_report.py",
     "branch_protection_check": "scripts/github/check_branch_protection.py"
   },
   "product_ci": {
@@ -174,7 +191,10 @@
   "local_checks": [
     "python3 -m unittest discover -s tests -v",
     "python3 scripts/project-intake/validate_project_intake.py --self-test",
+    "python3 scripts/delivery/validate_delivery_os.py --self-test",
+    "python3 scripts/contracts/validate_contracts.py --self-test",
     "python3 scripts/operator/daily_status.py --self-test",
+    "python3 scripts/operator/sdlc_metrics_report.py --self-test",
     "python3 scripts/product-ci/run_product_checks.py --self-test",
     "python3 scripts/release/release_gate.py --self-test",
     "python3 scripts/agent-memory/check_mem0_provider.py --self-test",

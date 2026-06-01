@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MIL Agent Job Manifest",
+  "type": "object",
+  "required": [
+    "task_id",
+    "source_ref",
+    "owner_agent",
+    "branch",
+    "allowed_files",
+    "required_checks",
+    "evidence_outputs"
+  ],
+  "properties": {
+    "task_id": {"type": "string", "minLength": 1},
+    "source_ref": {"type": "string", "minLength": 1},
+    "owner_agent": {"type": "string", "minLength": 1},
+    "qa_agent": {"type": "string"},
+    "branch": {"type": "string", "minLength": 1},
+    "allowed_files": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 1
+    },
+    "restricted_areas": {"type": "array", "items": {"type": "string"}},
+    "required_checks": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 1
+    },
+    "evidence_outputs": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 1
+    },
+    "rollback_note": {"type": "string"},
+    "memory_preflight": {"type": "object"}
+  },
+  "additionalProperties": true
+}

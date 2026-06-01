@@ -13,6 +13,9 @@ Rule priority: `rules.<area> > rules/base.md > paths.rules_file`.
 - Run implementation through the configured `codex_worker` runner or an explicitly approved local equivalent.
 - Write tests or record why tests are not applicable.
 - Record developer handoff, checks, risks, rollback note, and worker evidence in the PR or `.ai-factory/qa/`.
+- Do not dispatch agent work until Definition of Ready is satisfied.
+- Do not mark work done until Definition of Done evidence is complete.
+- Write or update contracts before implementation when APIs, events, payloads, jobs, database migrations, or memory events change.
 - Emit the final machine-readable `aif-gate-result` block after the human summary.
 - Allowed MIL merge decisions are `APPROVE_MERGE`, `REQUEST_CHANGES`, `REJECT`, and `BLOCKED_NEEDS_HUMAN`.
 - Never merge, deploy, bypass branch protection, or approve restricted work without human approval.
@@ -29,3 +32,14 @@ Rule priority: `rules.<area> > rules/base.md > paths.rules_file`.
 - Every memory candidate must include `source_ref`.
 - Never store secrets, raw data, credentials, private logs, raw artifacts, database dumps, model weights, or chain-of-thought.
 - Route all Memory0 add/search/update/supersede/retire operations through the Memory Gateway contract.
+
+## Delivery OS Policy
+
+- Delivery Operating Model, Definition of Ready, Definition of Done, Quality
+  Gates, Release Policy, Escalation Policy, and Source of Truth Matrix are
+  binding framework rules for agent-runnable work.
+- Preferred PR size is below 300 LOC. PRs from 300 to 800 LOC require stronger
+  test evidence. PRs above 800 LOC require human approval or splitting.
+- Contract changes require `scripts/contracts/validate_contracts.py`.
+- Production release requires release manifest, staging smoke evidence,
+  rollback drill, monitoring plan, and human approval.

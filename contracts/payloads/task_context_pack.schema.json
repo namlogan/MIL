@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MIL Task Context Pack",
+  "type": "object",
+  "required": [
+    "task_id",
+    "source_ref",
+    "goal",
+    "acceptance_criteria",
+    "allowed_files",
+    "quality_gates",
+    "memory",
+    "context_sources"
+  ],
+  "properties": {
+    "task_id": {"type": "string", "minLength": 1},
+    "source_ref": {"type": "string", "minLength": 1},
+    "goal": {"type": "string", "minLength": 1},
+    "business_reason": {"type": "string"},
+    "acceptance_criteria": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 1
+    },
+    "allowed_files": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 1
+    },
+    "restricted_areas": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "quality_gates": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "memory": {
+      "type": "object",
+      "required": ["retrieved_ids", "conflicts"],
+      "properties": {
+        "retrieved_ids": {"type": "array", "items": {"type": "string"}},
+        "conflicts": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "context_sources": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "rollback_note": {"type": "string"}
+  },
+  "additionalProperties": true
+}
