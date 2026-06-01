@@ -16,6 +16,7 @@ Start here:
 
 - [Agent workflow](AGENTS.md)
 - [Operating model](docs/agent-operating-model.md)
+- [Workflow and starter kit](docs/agent-factory-workflow-and-starter.md)
 - [Branch protection guide](docs/branch-protection.md)
 - [External blockers](docs/external-blockers.md)
 - [Augment setup](docs/augment-setup.md)

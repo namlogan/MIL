@@ -1,9 +1,13 @@
 # Portable Agent Factory Runbook
 
-Status date: 2026-05-31.
+Status date: 2026-06-01.
 
 This document describes the current MIL automation frame and how to back it up
 or move it into another repository.
+
+For the current workflow diagram, new-project setup paths, and progress
+tracking commands, start with
+[MIL Agent Factory Workflow And Starter Kit](agent-factory-workflow-and-starter.md).
 
 ## Current Model
 
@@ -85,7 +89,24 @@ git and must not be used as source-controlled evidence.
 
 ### Non-Secret Snapshot
 
-Use a git bundle or archive for a clean source backup:
+Use the backup packager for a clean source archive, git bundle, and non-secret
+manifest:
+
+```bash
+python3 scripts/portable/create_agent_factory_backup.py \
+  --project-id MIL \
+  --output-dir "$HOME/Backups/MIL"
+```
+
+The script uses tracked files, excludes runtime/secret paths, and writes:
+
+```text
+MIL-agent-factory-<timestamp>.tar.gz
+MIL-agent-factory-<timestamp>.bundle
+MIL-agent-factory-<timestamp>.manifest.json
+```
+
+Manual equivalent:
 
 ```bash
 mkdir -p "$HOME/Backups/MIL"
