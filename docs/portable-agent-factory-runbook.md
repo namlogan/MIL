@@ -321,10 +321,12 @@ Windmill job created_by -> HTTP-f/mil/github_webhook
 4. Create new Windmill secret values. Do not reuse the MIL webhook secret.
 5. Register a project-scoped MCP wrapper so Augment indexes the new repo path.
 6. Configure a project-scoped mem0 namespace or keep the local JSONL adapter for
-   dry-runs. Do not reuse MIL runtime memory files in another repo.
+   development. Do not reuse MIL runtime memory files in another repo.
 7. Configure branch protection with required checks:
    - `control-plane`
    - `ai-gate/final-review`
+   - at least one approving review for real project mode
+   - CODEOWNERS review for restricted paths when collaborators are available
 8. Create a new public webhook endpoint and GitHub hook.
 9. Run the full verification suite.
 10. Open one real issue and trigger `/agent plan`.
@@ -333,13 +335,14 @@ Windmill job created_by -> HTTP-f/mil/github_webhook
 
 ## Current Readiness
 
-The framework is usable for controlled pilot work. It is not yet a fully
-hands-off production system because:
+The framework is usable for real project development with human-controlled
+merge and release gates. It is not a fully hands-off production system because:
 
 - ngrok and relay currently depend on local `tmux` sessions;
 - secrets must be rotated after being pasted into chat;
 - nested Codex MCP tool approval remains a known limitation, but local
   auto-dispatch preloads Augment context before Codex worker execution;
 - branch protection and Windmill secrets must be recreated per new repo;
-- real implementation dispatch should still be supervised until several tasks
-  complete cleanly end to end.
+- real implementation dispatch should remain supervised for high-risk tasks,
+  restricted changes, production release, and any task whose intake/DoR is not
+  complete.

@@ -1,4 +1,4 @@
-# Solo Agent SDLC Runbook
+# One-Owner Agent SDLC Runbook
 
 Status date: 2026-06-01.
 

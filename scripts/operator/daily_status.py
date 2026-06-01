@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""One-command operator dashboard for the MIL solo-agent factory."""
+"""One-command operator dashboard for the MIL real-project agent factory."""
 
 from __future__ import annotations
 
@@ -429,6 +429,12 @@ def build_daily_status(
             repo_root=root,
             runner=runner,
         ),
+        "product_ci": _json_health_check(
+            name="product_ci",
+            command=["python3", "scripts/product-ci/run_product_checks.py"],
+            repo_root=root,
+            runner=runner,
+        ),
         "agent_tools": _agent_tools_check(root, runner),
         "runtime_sessions": _runtime_sessions_check(root, runner),
         "github_open_prs": _github_open_prs_check(root, runner),
@@ -531,6 +537,10 @@ def run_self_test() -> None:
             ): (0, "[]\n", ""),
             ("python3", "scripts/agent-flow/check_augment_config.py"): (0, '{"ok": true}\n', ""),
             ("python3", "scripts/agent-memory/check_mem0_provider.py"): (0, '{"ok": true}\n', ""),
+            (
+                "python3",
+                "scripts/product-ci/run_product_checks.py",
+            ): (0, '{"ok": true, "status": "skipped", "checks": [], "errors": []}\n', ""),
             ("python3", "scripts/github/check_branch_protection.py"): (0, '{"ok": true}\n', ""),
         }
         return CommandResult(*responses[tuple(command)])

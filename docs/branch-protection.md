@@ -9,7 +9,9 @@ Status as of 2026-06-01:
 - Initial CI passes on `main`.
 - Branch protection is enabled for `main`.
 - Required status checks: `control-plane` and `ai-gate/final-review`.
-- Pull requests are required with zero required approvals for the solo-owner pilot.
+- Pull requests are required.
+- Real project mode requires at least one approving review.
+- CODEOWNERS review and stale-review dismissal should be enabled for app work.
 - Force pushes and branch deletion are disabled.
 - Conversation resolution is required.
 
@@ -30,14 +32,18 @@ Check the current policy:
 python3 scripts/github/check_branch_protection.py
 ```
 
-For a solo-owner pilot, zero required approving reviews is acceptable only while
-the owner manually controls merge. For team mode or production projects, use:
+For real project mode, this command must pass without override:
 
 ```bash
-python3 scripts/github/check_branch_protection.py --team-mode
+python3 scripts/github/check_branch_protection.py
 ```
 
-Team mode should require at least one approving review or CODEOWNERS review.
+Zero approving reviews are allowed only for temporary local/demo use and require
+an explicit override:
+
+```bash
+python3 scripts/github/check_branch_protection.py --allow-zero-reviews
+```
 
 Required checks for the current control-plane gate:
 
@@ -70,3 +76,4 @@ Fallback if branch protection must be disabled temporarily:
 - require agents to work on `agent/*` or `fix/*` branches only
 - use PRs even though GitHub cannot hard-enforce them yet
 - record gate decisions in PR comments and issues
+- restore real project protection before dispatching implementation work

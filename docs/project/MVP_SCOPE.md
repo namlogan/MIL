@@ -2,9 +2,9 @@
 
 ## Release Target
 
-The MVP is a controlled pilot framework that can run a doc-level and code-level
-task through issue intake, Codex implementation, CI, AI gate, and protected PR
-merge.
+The MVP is a real-project framework that can run doc-level and code-level tasks
+through issue intake, Codex implementation, CI, AI gate, mandatory review, and
+protected PR merge.
 
 ## Must Have
 
@@ -13,6 +13,8 @@ merge.
 - Codex worker dispatch with isolated branch/PR creation.
 - Augment context preload before complex Codex work.
 - Local memory contract with optional Mem0 provider.
+- Branch protection with required status checks and at least one approving
+  review for real project mode.
 
 ## Should Have
 
@@ -23,12 +25,14 @@ merge.
 ## Later
 
 - Hosted Windmill or Cloudflare named tunnel for long-running operation.
-- Team-mode branch protection with mandatory human review.
+- External Mem0 provider if local JSONL memory becomes insufficient for
+  multi-machine or multi-project work.
 
 ## Cut Rules
 
 Do not cut branch protection, CI, gate evidence, or restricted human approval.
-Optional memory and advisory review can be disabled for small pilot tasks.
+Optional memory and advisory review can be disabled only when the issue says
+they are not relevant and the gate records that decision.
 
 ## Definition Of Done
 

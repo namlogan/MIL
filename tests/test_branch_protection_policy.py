@@ -25,7 +25,7 @@ class BranchProtectionPolicyTests(unittest.TestCase):
             "scripts/github/check_branch_protection.py",
         )
 
-    def test_solo_pilot_accepts_zero_reviews_when_required_checks_exist(self) -> None:
+    def test_real_project_rejects_zero_reviews_when_required_checks_exist(self) -> None:
         result = self.policy.evaluate_branch_protection(
             {
                 "required_status_checks": {
@@ -34,26 +34,45 @@ class BranchProtectionPolicyTests(unittest.TestCase):
                 },
                 "required_pull_request_reviews": {"required_approving_review_count": 0},
             },
-            solo_pilot=True,
-        )
-
-        self.assertTrue(result["ok"])
-        self.assertIn("solo-owner pilot", result["warnings"][0])
-
-    def test_team_mode_requires_at_least_one_review(self) -> None:
-        result = self.policy.evaluate_branch_protection(
-            {
-                "required_status_checks": {
-                    "strict": True,
-                    "contexts": ["control-plane", "ai-gate/final-review"],
-                },
-                "required_pull_request_reviews": {"required_approving_review_count": 0},
-            },
-            solo_pilot=False,
+            allow_zero_reviews=False,
         )
 
         self.assertFalse(result["ok"])
-        self.assertIn("team mode requires at least one approving review", result["errors"])
+        self.assertIn("real project mode requires at least one approving review", result["errors"])
+
+    def test_explicit_override_accepts_zero_reviews_with_warning(self) -> None:
+        result = self.policy.evaluate_branch_protection(
+            {
+                "required_status_checks": {
+                    "strict": True,
+                    "contexts": ["control-plane", "ai-gate/final-review"],
+                },
+                "required_pull_request_reviews": {"required_approving_review_count": 0},
+            },
+            allow_zero_reviews=True,
+        )
+
+        self.assertTrue(result["ok"])
+        self.assertIn("explicit --allow-zero-reviews", result["warnings"][0])
+
+    def test_reviewed_branch_warns_without_codeowners_or_stale_dismissal(self) -> None:
+        result = self.policy.evaluate_branch_protection(
+            {
+                "required_status_checks": {
+                    "strict": True,
+                    "contexts": ["control-plane", "ai-gate/final-review"],
+                },
+                "required_pull_request_reviews": {
+                    "required_approving_review_count": 1,
+                    "require_code_owner_reviews": False,
+                    "dismiss_stale_reviews": False,
+                },
+            },
+            allow_zero_reviews=False,
+        )
+
+        self.assertTrue(result["ok"])
+        self.assertIn("CODEOWNERS review is recommended", result["warnings"][0])
 
 
 if __name__ == "__main__":
