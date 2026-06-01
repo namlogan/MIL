@@ -152,7 +152,8 @@ Windmill f/mil/github_webhook_secret
 Windmill f/mil/github_status_token
 ngrok authtoken
 Augment / Auggie local credentials
-Mem0 API key or self-host credentials, if mem0 Platform/self-host is enabled
+OpenAI or Ollama credentials for Mem0 library mode, if app memory is enabled
+Mem0 API key or REST endpoint, if an external provider is enabled later
 OpenAI / Codex credentials, if not handled by the local app
 GitHub token or GitHub App credentials for status publishing
 ```

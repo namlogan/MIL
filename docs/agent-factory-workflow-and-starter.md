@@ -293,9 +293,9 @@ Memory is optional at first.
 Start modes:
 
 ```text
-local JSONL adapter  simplest pilot mode
-Mem0 OSS            self-hosted team mode
-Mem0 Platform       hosted memory layer
+local JSONL adapter    framework/default dry-run mode
+Mem0 OSS library       development app/worker mode
+Mem0 external provider later team/production mode
 ```
 
 Memory must store distilled operational facts only, never secrets, raw source,
@@ -307,9 +307,23 @@ Check the active provider:
 python3 scripts/agent-memory/check_mem0_provider.py
 ```
 
-Local JSONL is acceptable for the first pilot. Use `MEM0_BASE_URL` for self-hosted
-Mem0 OSS or `MEM0_API_KEY` for Mem0 Platform when cross-session memory becomes
-important.
+Local JSONL is acceptable before the app starts using memory. For development,
+install Mem0 as a library in the product stack:
+
+```bash
+pip install mem0ai
+python3 scripts/agent-memory/check_mem0_library.py --runtime python
+```
+
+or:
+
+```bash
+npm install mem0ai
+python3 scripts/agent-memory/check_mem0_library.py --runtime node
+```
+
+Only move to `MEM0_BASE_URL` or `MEM0_API_KEY` when the project needs a shared
+service, hosted provider, dashboard, team keys, or audit log.
 
 ### Product CI
 
@@ -327,6 +341,16 @@ accept shell strings, so checks are explicit command lists:
 python3 scripts/product-ci/run_product_checks.py
 ```
 
+Reusable stack profiles live in:
+
+```text
+.ai-factory/product-ci.profiles.json
+```
+
+Set `"profile": "python-unittest"`, `"node-pnpm"`, `"fastapi-pytest"`, or
+`"nextjs-pnpm"` and leave `"checks": []` to use a profile as the initial
+product CI baseline.
+
 ### Release Gate
 
 Protected merge is not the same as release. Use the release checklist template
@@ -342,6 +366,18 @@ python3 scripts/release/release_gate.py --evidence release-evidence.json
 
 Release evidence must include CI pass, AI gate pass, staging smoke, rollback
 plan, monitoring plan, and human approval.
+
+Deploy provider config lives in:
+
+```text
+.ai-factory/deploy-provider.json
+```
+
+Validate it before attaching release evidence:
+
+```bash
+python3 scripts/release/deploy_provider.py --plan --environment staging
+```
 
 ## 4. How To Track Progress
 

@@ -23,6 +23,7 @@ Start here:
 - [External blockers](docs/external-blockers.md)
 - [Augment setup](docs/augment-setup.md)
 - [Mem0 memory layer](docs/mem0-memory-layer.md)
+- [Deployment](docs/project/DEPLOYMENT.md)
 - [Codex worker runner](docs/codex-worker-runner.md)
 - [Auggie supervised loop](docs/auggie-human-loop-runbook.md)
 - [Windmill coding dispatch](.windmill/flows/coding_agent_dispatch.md)
@@ -34,6 +35,13 @@ Daily operator command:
 
 ```bash
 python3 scripts/operator/daily_status.py
+```
+
+Temporary ngrok endpoint check:
+
+```bash
+python3 scripts/windmill/check_public_endpoint.py \
+  --public-url https://<assigned-name>.ngrok-free.dev/mil/github-webhook
 ```
 
 New project intake check:

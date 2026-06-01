@@ -84,6 +84,21 @@ class GitHubWebhookPublicRelayTests(unittest.TestCase):
                 self.assertFalse(decision.forward)
                 self.assertEqual(decision.status_code, expected_status)
 
+    def test_healthz_route_is_read_only_and_does_not_need_signature(self) -> None:
+        self.assertTrue(self.relay.is_health_request("GET", "/healthz"))
+        self.assertFalse(self.relay.is_health_request("POST", "/healthz"))
+
+        payload = self.relay.build_health_payload(
+            public_route="/mil/github-webhook",
+            windmill_url="http://localhost:8090/api/r/admins/mil/github-webhook",
+            auto_dispatch_enabled=True,
+        )
+
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["public_route"], "/mil/github-webhook")
+        self.assertTrue(payload["auto_dispatch_enabled"])
+        self.assertNotIn("secret", json.dumps(payload).lower())
+
     def test_forward_headers_are_allowlisted(self) -> None:
         headers = {
             "X-Hub-Signature-256": "sha256=sig",

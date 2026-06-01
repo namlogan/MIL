@@ -63,6 +63,7 @@ http://127.0.0.1:18090/mil/github-webhook
 The relay:
 
 - accepts only `POST /mil/github-webhook`;
+- exposes `GET /healthz` for non-secret liveness checks;
 - rejects unsigned or incorrectly signed GitHub deliveries before forwarding;
 - forwards only a small allowlist of GitHub webhook headers;
 - forwards to local Windmill at `http://localhost:8090/api/r/admins/mil/github-webhook`.
@@ -177,6 +178,14 @@ python3 scripts/windmill/setup_ngrok_static_endpoint.py \
   --domain <assigned-name>.ngrok-free.app
 ```
 
+Validate the public endpoint shape without sending a GitHub delivery:
+
+```bash
+python3 scripts/windmill/check_public_endpoint.py \
+  --public-url https://<assigned-name>.ngrok-free.app/mil/github-webhook \
+  --skip-health
+```
+
 Run the relay:
 
 ```bash
@@ -211,6 +220,18 @@ https://<assigned-name>.ngrok-free.app/mil/github-webhook
 Use the same GitHub settings listed above. The local MIL relay still accepts
 only `POST /mil/github-webhook` and still verifies the GitHub HMAC signature
 before forwarding to Windmill.
+
+Health check the local relay and public ngrok route:
+
+```bash
+python3 scripts/windmill/check_public_endpoint.py \
+  --public-url https://<assigned-name>.ngrok-free.app/mil/github-webhook
+```
+
+Expected result: both `http://127.0.0.1:18090/healthz` and
+`https://<assigned-name>.ngrok-free.app/healthz` return `ok=true`. This does not
+replace a real GitHub webhook ping; it only proves the tunnel reaches the
+signed relay and not the Windmill UI/API.
 
 Implemented routing:
 

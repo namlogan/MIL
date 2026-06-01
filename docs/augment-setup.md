@@ -179,6 +179,31 @@ AUGMENT_SESSION_AUTH
 
 The current credential includes `write` scope. Keep Augment/Auggie usage read-only at the Windmill/tool-permission layer for MIL. Codex is the only coding worker.
 
+## Read-Only Credential Policy
+
+Augment service account tokens are managed from the Enterprise service account
+UI. The current public service-account documentation shows Auggie automation
+`session.json` with both `read` and `write` scopes. It does not document a
+read-only-only service account token shape for Auggie automation yet.
+
+MIL therefore enforces read-only Augment behavior in three layers:
+
+1. Augment is used only by `augment_context_provider.py`, MCP retrieval, and
+   supervised advisory notes.
+2. Augment/Auggie lanes must not create branches, edit files, commit, push,
+   open PRs, approve gates, or merge.
+3. Any Git provider token used by Context Connectors must be repo read-only.
+
+If Augment later supports read-only service account tokens for this tenant,
+rotate the token, update `.env.local` and Windmill secrets, then run:
+
+```bash
+python3 scripts/agent-flow/check_augment_config.py --require-read-only
+```
+
+Until that strict check passes, treat Augment as credentialed for read/write at
+the provider layer but constrained to read-only by MIL's tool and flow policy.
+
 ## Rotation Note
 
 If an Augment token is pasted into a chat or terminal log, treat it as exposed. After Windmill secrets and local env are configured, rotate the token and update:

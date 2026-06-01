@@ -24,6 +24,31 @@
 4. Confirm branch protection required contexts.
 5. Run a doc-only smoke issue before app code tasks.
 
+## Deploy Provider
+
+The framework deploy provider is configured in:
+
+```text
+.ai-factory/deploy-provider.json
+```
+
+It defaults to disabled manual release until the product app stack and hosting
+provider are selected. Validate the config:
+
+```bash
+python3 scripts/release/deploy_provider.py
+```
+
+Print a staging deploy plan:
+
+```bash
+python3 scripts/release/deploy_provider.py --plan --environment staging
+```
+
+Command-based providers must use command arrays, not shell strings. Store only
+secret names in config, for example `VERCEL_TOKEN`; secret values belong in
+Windmill, GitHub Actions, or the local secret store.
+
 ## Rollback
 
 Stop the relay or remove the GitHub webhook to halt automation. Revert workflow

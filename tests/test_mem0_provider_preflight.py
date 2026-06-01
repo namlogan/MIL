@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import unittest
 from pathlib import Path
 
@@ -44,6 +45,27 @@ class Mem0ProviderPreflightTests(unittest.TestCase):
         self.assertTrue(result["ok"])
         self.assertEqual(result["mode"], "mem0_self_hosted")
         self.assertEqual(result["base_url"], "http://localhost:8888")
+
+    def test_self_hosted_live_check_uses_health_endpoint_without_exposing_key(self) -> None:
+        calls: list[tuple[str, dict[str, str], float]] = []
+
+        def fake_get(url: str, headers: dict[str, str], timeout: float) -> tuple[int, bytes]:
+            calls.append((url, headers, timeout))
+            return 200, b'{"ok":true}'
+
+        result = self.preflight.check_provider(
+            {
+                "MEM0_BASE_URL": "http://localhost:8888/",
+                "MEM0_API_KEY": "secret-mem0-key",
+            },
+            live_check=True,
+            http_get=fake_get,
+        )
+
+        self.assertTrue(result["ok"], result)
+        self.assertEqual(result["live_check"]["url"], "http://localhost:8888/health")
+        self.assertEqual(calls[0][1]["X-API-Key"], "secret-mem0-key")
+        self.assertNotIn("secret-mem0-key", json.dumps(result))
 
 
 if __name__ == "__main__":
