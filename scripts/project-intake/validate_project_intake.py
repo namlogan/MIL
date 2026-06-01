@@ -16,6 +16,10 @@ REQUIRED_TEMPLATE_PATHS = [
     "docs/templates/project/DATA_MODEL.md",
     "docs/templates/project/TEST_STRATEGY.md",
     "docs/templates/project/DEPLOYMENT.md",
+    "docs/templates/project/RISK_REGISTER.md",
+    "docs/templates/project/OPEN_QUESTIONS.md",
+    "docs/templates/project/SOURCE_OF_TRUTH.md",
+    "docs/templates/project/QUALITY_GATE_MATRIX.md",
     "docs/templates/release/RELEASE_CHECKLIST.md",
 ]
 
@@ -29,6 +33,10 @@ REQUIRED_ACTIVE_DOCS = [
     "docs/project/DATA_MODEL.md",
     "docs/project/TEST_STRATEGY.md",
     "docs/project/DEPLOYMENT.md",
+    "docs/project/RISK_REGISTER.md",
+    "docs/project/OPEN_QUESTIONS.md",
+    "docs/project/SOURCE_OF_TRUTH.md",
+    "docs/project/QUALITY_GATE_MATRIX.md",
 ]
 
 MINIMUM_MARKER = "##"

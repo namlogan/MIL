@@ -72,7 +72,20 @@ Rule priority: `rules.<area> > rules/base.md > paths.rules_file`.
   test evidence. PRs above 800 LOC require human approval or splitting.
 - Contract changes require `scripts/contracts/validate_contracts.py`.
 - Production release requires release manifest, staging smoke evidence,
-  rollback drill, monitoring plan, and human approval.""",
+  rollback drill, monitoring plan, and human approval.
+
+## New Project Startup Pipeline
+
+- No implementation task may start before the startup pipeline gates pass.
+- New projects must follow: Project Intake -> Memory Preflight -> Bootstrap
+  Docs -> Architecture / ADR Gate -> Contract & Backlog Gate -> Repo + CI
+  Bootstrap -> Agent Delivery Loop -> QA / Review / Merge Gate -> Release /
+  Rollback Gate -> Operate / Learn / Memory Maintenance.
+- Git/docs/tests/issues are source of truth for new project work.
+- Memory0 is not source of truth and must not leak project-specific context
+  across projects.
+- Open questions are not requirements until resolved by an owner in a source of
+  truth artifact.""",
     },
     {
         "name": "rules.base",

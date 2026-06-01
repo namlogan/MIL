@@ -148,6 +148,45 @@
       "release_memory_writeback": ".windmill/flows/release_memory_writeback.md",
       "sdlc_metrics_report": ".windmill/flows/sdlc_metrics_report.md"
     },
+    "new_project_startup_pipeline": {
+      "source_of_truth": "git_docs_tests_issues",
+      "memory_policy": "approved_memory_context_only",
+      "allow_agent_implementation_before_ready": false,
+      "stage_order": [
+        "project_intake",
+        "memory_preflight",
+        "bootstrap_docs",
+        "architecture_adr_gate",
+        "contract_backlog_gate",
+        "repo_ci_bootstrap",
+        "agent_delivery_loop",
+        "qa_review_merge_gate",
+        "release_rollback_gate",
+        "operate_learn_memory_maintenance"
+      ],
+      "flows": {
+        "project_intake": ".windmill/flows/project_intake_gate.md",
+        "memory_preflight": ".windmill/flows/memory_preflight.md",
+        "bootstrap_docs": ".windmill/flows/project_bootstrap.md",
+        "architecture_adr_gate": ".windmill/flows/architecture_review.md",
+        "contract_bootstrap": ".windmill/flows/contract_bootstrap.md",
+        "task_generation": ".windmill/flows/task_generation.md",
+        "repo_bootstrap": ".windmill/flows/repo_bootstrap.md",
+        "ci_baseline_check": ".windmill/flows/ci_baseline_check.md",
+        "agent_assignment": ".windmill/flows/agent_assignment.md",
+        "task_context_pack": ".windmill/flows/task_context_pack.md",
+        "pr_review_gate": ".windmill/flows/pr_review_gate.md",
+        "test_gate": ".windmill/flows/test_gate.md",
+        "contract_gate": ".windmill/flows/contract_gate.md",
+        "security_gate": ".windmill/flows/security_gate.md",
+        "release_gate": ".windmill/flows/release_gate.md",
+        "deployment_gate": ".windmill/flows/deployment_gate.md",
+        "rollback_pack": ".windmill/flows/rollback_pack.md",
+        "postmortem_to_memory": ".windmill/flows/postmortem_to_memory.md",
+        "sdlc_metrics_report": ".windmill/flows/sdlc_metrics_report.md",
+        "memory_maintenance": ".windmill/flows/memory_maintenance.md"
+      }
+    },
     "standard_memory_flows": {
       "wm_project_bootstrap": ".windmill/flows/project_bootstrap.md",
       "wm_memory_preflight": ".windmill/flows/memory_preflight.md",

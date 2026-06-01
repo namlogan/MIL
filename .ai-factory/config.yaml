@@ -51,6 +51,7 @@ paths:
   release_policy: .ai-factory/RELEASE_POLICY.md
   escalation_policy: .ai-factory/ESCALATION_POLICY.md
   source_of_truth_matrix: .ai-factory/SOURCE_OF_TRUTH_MATRIX.md
+  new_project_startup_runbook: docs/runbooks/new_project_startup_pipeline.md
   delivery_checklists: .ai-factory/checklists
   contracts: contracts
   templates: templates
@@ -69,6 +70,10 @@ paths:
   project_data_model: docs/project/DATA_MODEL.md
   project_test_strategy: docs/project/TEST_STRATEGY.md
   project_deployment: docs/project/DEPLOYMENT.md
+  project_risk_register: docs/project/RISK_REGISTER.md
+  project_open_questions: docs/project/OPEN_QUESTIONS.md
+  project_source_of_truth: docs/project/SOURCE_OF_TRUTH.md
+  project_quality_gate_matrix: docs/project/QUALITY_GATE_MATRIX.md
   project_intake_template_prd: docs/templates/project/PRD.md
   operator_dashboard: scripts/operator/daily_status.py
   product_ci_config: .ai-factory/product-ci.json
@@ -96,6 +101,8 @@ workflow:
   require_definition_of_done: true
   require_contract_tests_for_contract_changes: true
   require_rollback_drill_for_production: true
+  require_new_project_startup_pipeline: true
+  forbid_implementation_before_startup_gates: true
   max_preferred_pr_loc: 300
   max_unapproved_pr_loc: 800
   runtime_check_command: python3 scripts/ai-factory/bootstrap_runtime.py --check

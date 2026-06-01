@@ -34,6 +34,28 @@ allowed to act and what evidence is required before moving forward.
    gates, review latency, memory conflicts, release readiness, and postmortem
    actions.
 
+## New Project Startup Pipeline
+
+Use `docs/runbooks/new_project_startup_pipeline.md` when applying the framework
+to a new repo or product. The startup sequence is:
+
+```text
+Project Intake
+-> Memory Preflight
+-> Bootstrap Docs
+-> Architecture / ADR Gate
+-> Contract & Backlog Gate
+-> Repo + CI Bootstrap
+-> Agent Delivery Loop
+-> QA / Review / Merge Gate
+-> Release / Rollback Gate
+-> Operate / Learn / Memory Maintenance
+```
+
+The key constraint is timing: implementation starts only after project intake,
+source-of-truth docs, architecture baseline, minimum contracts, backlog slicing,
+and CI baseline are ready.
+
 ## Windmill Flow Map
 
 - `wm_project_intake_gate`: validates intake completeness before bootstrap.

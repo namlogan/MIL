@@ -112,6 +112,39 @@ python3 scripts/delivery/validate_delivery_os.py --self-test
 python3 scripts/contracts/validate_contracts.py --self-test
 ```
 
+## New Project Startup Pipeline
+
+When this framework is applied to a new project, use this gate-first pipeline
+before any implementation task:
+
+```text
+Project Intake
+-> Memory Preflight
+-> Bootstrap Docs
+-> Architecture / ADR Gate
+-> Contract & Backlog Gate
+-> Repo + CI Bootstrap
+-> Agent Delivery Loop
+-> QA / Review / Merge Gate
+-> Release / Rollback Gate
+-> Operate / Learn / Memory Maintenance
+```
+
+The binding runbook is `docs/runbooks/new_project_startup_pipeline.md`.
+
+Rules for new projects:
+
+- Git/docs/tests/issues are source of truth.
+- Memory0 is not source of truth.
+- Prior projects are lessons, not requirements for the new project.
+- Do not code before PRD/MVP/Architecture/Test Strategy.
+- No implementation task may start before the startup pipeline gates pass.
+- Do not dispatch agent work without Definition of Ready.
+- Do not merge without tests, handoff, review, and required gates.
+- Do not release without rollback evidence.
+- Do not write Memory0 without `source_ref`.
+- Do not let project-specific memory leak into another project.
+
 ## Required PR Evidence
 
 Before review, the developer agent must attach or reference:

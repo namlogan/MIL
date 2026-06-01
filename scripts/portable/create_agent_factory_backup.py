@@ -133,6 +133,7 @@ def _manifest(
             ".ai-factory/DEFINITION_OF_DONE.md",
             ".ai-factory/QUALITY_GATES.md",
             ".ai-factory/SOURCE_OF_TRUTH_MATRIX.md",
+            "docs/runbooks/new_project_startup_pipeline.md",
             "contracts/README.md",
             "templates/project_bootstrap/README.md",
             "docs/agent-factory-workflow-and-starter.md",
