@@ -1,0 +1,43 @@
+openapi: 3.1.0
+info:
+  title: MIL Delivery Framework API
+  version: 0.1.0
+  description: Minimal contract-first API skeleton for project bootstrap.
+paths:
+  /health:
+    get:
+      summary: Health check
+      operationId: getHealth
+      responses:
+        "200":
+          description: Service is healthy.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - ok
+                properties:
+                  ok:
+                    type: boolean
+                  service:
+                    type: string
+                  version:
+                    type: string
+  /sdlc/tasks/{task_id}/context-pack:
+    get:
+      summary: Read a compact context pack for an agent-runnable task.
+      operationId: getTaskContextPack
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Context pack is available.
+          content:
+            application/json:
+              schema:
+                $ref: "../payloads/task_context_pack.schema.json"

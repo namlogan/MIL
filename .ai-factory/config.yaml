@@ -44,9 +44,21 @@ paths:
   memory_event_schema: memory/schemas/memory_event.schema.json
   memory_samples: memory/samples
   memory_tools: memory/tools
+  delivery_operating_model: .ai-factory/DELIVERY_OPERATING_MODEL.md
+  definition_of_ready: .ai-factory/DEFINITION_OF_READY.md
+  definition_of_done: .ai-factory/DEFINITION_OF_DONE.md
+  delivery_quality_gates: .ai-factory/QUALITY_GATES.md
+  release_policy: .ai-factory/RELEASE_POLICY.md
+  escalation_policy: .ai-factory/ESCALATION_POLICY.md
+  source_of_truth_matrix: .ai-factory/SOURCE_OF_TRUTH_MATRIX.md
+  delivery_checklists: .ai-factory/checklists
+  contracts: contracts
+  templates: templates
   windmill: .windmill
   setup_doc: docs/ai-factory-setup.md
   runtime_bootstrap: scripts/ai-factory/bootstrap_runtime.py
+  delivery_os_validator: scripts/delivery/validate_delivery_os.py
+  contract_validator: scripts/contracts/validate_contracts.py
   codex_worker_runner: scripts/agent-flow/codex_worker.py
   windmill_codex_worker: f/mil/codex_worker.py
   windmill_codex_worker_contract: f/mil/codex_worker_contract.py
@@ -63,6 +75,7 @@ paths:
   product_ci_runner: scripts/product-ci/run_product_checks.py
   release_gate: scripts/release/release_gate.py
   release_template: docs/templates/release/RELEASE_CHECKLIST.md
+  sdlc_metrics_report: scripts/operator/sdlc_metrics_report.py
 
 workflow:
   auto_create_dirs: true
@@ -79,12 +92,21 @@ workflow:
   require_human_for_release: true
   require_human_for_restricted_changes: true
   require_coding_agent_dispatch: true
+  require_definition_of_ready: true
+  require_definition_of_done: true
+  require_contract_tests_for_contract_changes: true
+  require_rollback_drill_for_production: true
+  max_preferred_pr_loc: 300
+  max_unapproved_pr_loc: 800
   runtime_check_command: python3 scripts/ai-factory/bootstrap_runtime.py --check
   required_status_contexts:
     - control-plane
     - ai-gate/final-review
   project_intake_check_command: python3 scripts/project-intake/validate_project_intake.py
+  delivery_os_check_command: python3 scripts/delivery/validate_delivery_os.py
+  contract_check_command: python3 scripts/contracts/validate_contracts.py
   operator_daily_status_command: python3 scripts/operator/daily_status.py
+  sdlc_metrics_report_command: python3 scripts/operator/sdlc_metrics_report.py
   product_ci_command: python3 scripts/product-ci/run_product_checks.py
   release_gate_command: python3 scripts/release/release_gate.py --evidence <release-evidence.json>
   mem0_provider_check_command: python3 scripts/agent-memory/check_mem0_provider.py

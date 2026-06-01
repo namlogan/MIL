@@ -130,13 +130,31 @@
         }
       ]
     },
+    "delivery_operating_system": {
+      "project_intake_gate": ".windmill/flows/project_intake_gate.md",
+      "project_bootstrap": ".windmill/flows/project_bootstrap.md",
+      "project_readiness_score": ".windmill/flows/project_readiness_score.md",
+      "definition_of_ready_check": ".windmill/flows/definition_of_ready_check.md",
+      "memory_preflight": ".windmill/flows/memory_preflight.md",
+      "task_context_pack": ".windmill/flows/task_context_pack.md",
+      "quality_gate_router": ".windmill/flows/quality_gate_router.md",
+      "contract_test_gate": ".windmill/flows/contract_test_gate.md",
+      "security_gate": ".windmill/flows/security_gate.md",
+      "release_candidate_pack": ".windmill/flows/release_candidate_pack.md",
+      "staging_deploy": ".windmill/flows/staging_deploy.md",
+      "shadow_deploy": ".windmill/flows/shadow_deploy.md",
+      "production_approval": ".windmill/flows/production_approval.md",
+      "rollback_drill": ".windmill/flows/rollback_drill.md",
+      "release_memory_writeback": ".windmill/flows/release_memory_writeback.md",
+      "sdlc_metrics_report": ".windmill/flows/sdlc_metrics_report.md"
+    },
     "standard_memory_flows": {
-      "wm_project_bootstrap": ".windmill/flows/memory_preflight.md",
+      "wm_project_bootstrap": ".windmill/flows/project_bootstrap.md",
       "wm_memory_preflight": ".windmill/flows/memory_preflight.md",
       "wm_task_context_pack": ".windmill/flows/task_context_pack.md",
       "wm_agent_handoff_collect": ".ai-factory/memory/HANDOFF_MEMORY_TEMPLATE.md",
       "wm_pr_merge_memory_writeback": ".windmill/flows/pr_merge_writeback.md",
-      "wm_release_memory_pack": "docs/templates/release/RELEASE_CHECKLIST.md",
+      "wm_release_memory_writeback": ".windmill/flows/release_memory_writeback.md",
       "wm_incident_digest": ".windmill/flows/incident_digest.md",
       "wm_memory_conflict_review": ".windmill/flows/memory_conflict_review.md",
       "wm_memory_maintenance": ".windmill/flows/memory_maintenance.md",

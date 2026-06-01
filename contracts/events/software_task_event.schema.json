@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MIL Software Task Event",
+  "type": "object",
+  "required": [
+    "event_type",
+    "task_id",
+    "source_ref",
+    "status",
+    "created_at"
+  ],
+  "properties": {
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "project_intake_checked",
+        "task_ready_checked",
+        "agent_dispatched",
+        "handoff_collected",
+        "quality_gate_completed",
+        "release_candidate_created",
+        "rollback_drill_completed"
+      ]
+    },
+    "task_id": {"type": "string", "minLength": 1},
+    "source_ref": {"type": "string", "minLength": 1},
+    "status": {
+      "type": "string",
+      "enum": ["ready", "blocked", "running", "passed", "failed", "needs_human"]
+    },
+    "actor": {"type": "string"},
+    "run_id": {"type": "string"},
+    "created_at": {"type": "string"},
+    "metadata": {"type": "object"}
+  },
+  "additionalProperties": false
+}

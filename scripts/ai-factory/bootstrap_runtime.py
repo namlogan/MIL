@@ -40,6 +40,39 @@ REQUIRED_DEFAULT_STAGES = [
 
 REQUIRED_STATUS_CONTEXTS = {"control-plane", "ai-gate/final-review"}
 
+REQUIRED_DELIVERY_PATHS = [
+    ".ai-factory/DELIVERY_OPERATING_MODEL.md",
+    ".ai-factory/DEFINITION_OF_READY.md",
+    ".ai-factory/DEFINITION_OF_DONE.md",
+    ".ai-factory/QUALITY_GATES.md",
+    ".ai-factory/RELEASE_POLICY.md",
+    ".ai-factory/ESCALATION_POLICY.md",
+    ".ai-factory/SOURCE_OF_TRUTH_MATRIX.md",
+    "contracts/README.md",
+    "templates/project_bootstrap/README.md",
+    "scripts/delivery/validate_delivery_os.py",
+    "scripts/contracts/validate_contracts.py",
+    "scripts/operator/sdlc_metrics_report.py",
+]
+
+REQUIRED_DELIVERY_CONFIG_MARKERS = [
+    "delivery_operating_model: .ai-factory/DELIVERY_OPERATING_MODEL.md",
+    "definition_of_ready: .ai-factory/DEFINITION_OF_READY.md",
+    "definition_of_done: .ai-factory/DEFINITION_OF_DONE.md",
+    "delivery_quality_gates: .ai-factory/QUALITY_GATES.md",
+    "release_policy: .ai-factory/RELEASE_POLICY.md",
+    "escalation_policy: .ai-factory/ESCALATION_POLICY.md",
+    "source_of_truth_matrix: .ai-factory/SOURCE_OF_TRUTH_MATRIX.md",
+    "contracts: contracts",
+    "templates: templates",
+    "require_definition_of_ready: true",
+    "require_definition_of_done: true",
+    "require_contract_tests_for_contract_changes: true",
+    "max_preferred_pr_loc: 300",
+    "max_unapproved_pr_loc: 800",
+    "require_rollback_drill_for_production: true",
+]
+
 
 def _read_json(repo_root: Path, relative_path: str) -> tuple[dict[str, Any] | None, str | None]:
     path = repo_root / relative_path
@@ -213,6 +246,10 @@ def _validate_ai_factory_v2_config(repo_root: Path, errors: list[str]) -> None:
         if required not in config:
             errors.append(f"config.yaml missing AI Factory v2 key: {required}")
 
+    for required in REQUIRED_DELIVERY_CONFIG_MARKERS:
+        if required not in config:
+            errors.append(f"config.yaml missing Delivery OS key: {required}")
+
     for relative_path in [
         ".ai-factory/RULES.md",
         ".ai-factory/rules/base.md",
@@ -221,6 +258,7 @@ def _validate_ai_factory_v2_config(repo_root: Path, errors: list[str]) -> None:
         ".ai-factory/rules/security.md",
         ".ai-factory/rules/memory.md",
         ".ai-factory/rules/windmill.md",
+        *REQUIRED_DELIVERY_PATHS,
     ]:
         if not (repo_root / relative_path).exists():
             errors.append(f"missing AI Factory rule source: {relative_path}")
@@ -347,6 +385,36 @@ def _validate_environment(
     for memory_type in ["framework_rule", "architecture_decision", "implementation_lesson", "test_lesson"]:
         if memory_type not in taxonomy:
             errors.append(f"environment.memory.taxonomy_memory_types missing {memory_type}")
+
+    delivery = environment.get("delivery_operating_system")
+    if not isinstance(delivery, dict):
+        errors.append("environment.delivery_operating_system must be an object")
+    else:
+        expected_paths = {
+            "validator": "scripts/delivery/validate_delivery_os.py",
+            "contract_validator": "scripts/contracts/validate_contracts.py",
+            "definition_of_ready": ".ai-factory/DEFINITION_OF_READY.md",
+            "definition_of_done": ".ai-factory/DEFINITION_OF_DONE.md",
+            "quality_gates": ".ai-factory/QUALITY_GATES.md",
+            "release_policy": ".ai-factory/RELEASE_POLICY.md",
+            "escalation_policy": ".ai-factory/ESCALATION_POLICY.md",
+            "source_of_truth_matrix": ".ai-factory/SOURCE_OF_TRUTH_MATRIX.md",
+        }
+        for field, value in expected_paths.items():
+            if delivery.get(field) != value:
+                errors.append(f"environment.delivery_operating_system.{field} must be {value}")
+        for field in [
+            "require_definition_of_ready",
+            "require_definition_of_done",
+            "require_contract_tests_for_contract_changes",
+            "require_rollback_drill_for_production",
+        ]:
+            if delivery.get(field) is not True:
+                errors.append(f"environment.delivery_operating_system.{field} must be true")
+        if delivery.get("max_preferred_pr_loc") != 300:
+            errors.append("environment.delivery_operating_system.max_preferred_pr_loc must be 300")
+        if delivery.get("max_unapproved_pr_loc") != 800:
+            errors.append("environment.delivery_operating_system.max_unapproved_pr_loc must be 800")
 
 
 def validate(
