@@ -214,6 +214,9 @@ def _status_contexts(status_rollup: Any) -> dict[str, str]:
 
 
 def _github_main_ci_check(repo_root: Path, runner: Runner) -> dict[str, Any]:
+    sha_command = ["gh", "api", f"repos/{REPO_SLUG}/branches/main", "--jq", ".commit.sha"]
+    sha_result = runner(sha_command, repo_root)
+    current_main_sha = sha_result.stdout.strip()
     command = [
         "gh",
         "run",
@@ -223,32 +226,54 @@ def _github_main_ci_check(repo_root: Path, runner: Runner) -> dict[str, Any]:
         "--branch",
         "main",
         "--limit",
-        "3",
+        "10",
         "--json",
-        "conclusion,status,databaseId,displayTitle,createdAt,url",
+        "conclusion,status,databaseId,displayTitle,createdAt,url,headSha",
     ]
     result = runner(command, repo_root)
     runs = _parse_json(result.stdout, [])
     latest = runs[0] if isinstance(runs, list) and runs else {}
-    status = latest.get("status", "") if isinstance(latest, dict) else ""
-    conclusion = latest.get("conclusion", "") if isinstance(latest, dict) else ""
-    ok = result.returncode == 0 and status == "completed" and conclusion == "success"
-    if result.returncode != 0:
+    matching_run = next(
+        (
+            run
+            for run in runs
+            if isinstance(run, dict) and run.get("headSha") == current_main_sha
+        ),
+        {},
+    )
+    status = matching_run.get("status", "") if isinstance(matching_run, dict) else ""
+    conclusion = matching_run.get("conclusion", "") if isinstance(matching_run, dict) else ""
+    ok = (
+        sha_result.returncode == 0
+        and bool(current_main_sha)
+        and result.returncode == 0
+        and bool(matching_run)
+        and status == "completed"
+        and conclusion == "success"
+    )
+    if sha_result.returncode != 0 or not current_main_sha:
+        summary = "GitHub main SHA check failed"
+    elif result.returncode != 0:
         summary = "GitHub Actions check failed"
     elif not latest:
         summary = "no main CI runs found"
+    elif not matching_run:
+        summary = f"no main CI run found for current main {current_main_sha[:7]}"
     elif not ok:
-        summary = f"latest main CI is {conclusion or status}"
+        summary = f"current main CI is {conclusion or status}"
     else:
-        summary = "latest main CI passed"
+        summary = "current main CI passed"
     return {
         "name": "github_main_ci",
         "ok": ok,
         "returncode": result.returncode,
         "summary": summary,
+        "current_main_sha": current_main_sha,
         "latest": latest,
+        "matching_run": matching_run,
         "recent_runs": runs if isinstance(runs, list) else [],
         "command": command,
+        "sha_command": sha_command,
     }
 
 
@@ -515,6 +540,13 @@ def run_self_test() -> None:
             ): (0, "[]\n", ""),
             (
                 "gh",
+                "api",
+                f"repos/{REPO_SLUG}/branches/main",
+                "--jq",
+                ".commit.sha",
+            ): (0, "abc123\n", ""),
+            (
+                "gh",
                 "run",
                 "list",
                 "--repo",
@@ -522,12 +554,12 @@ def run_self_test() -> None:
                 "--branch",
                 "main",
                 "--limit",
-                "3",
+                "10",
                 "--json",
-                "conclusion,status,databaseId,displayTitle,createdAt,url",
+                "conclusion,status,databaseId,displayTitle,createdAt,url,headSha",
             ): (
                 0,
-                '[{"status":"completed","conclusion":"success","databaseId":1}]\n',
+                '[{"status":"completed","conclusion":"success","databaseId":1,"headSha":"abc123"}]\n',
                 "",
             ),
             (
