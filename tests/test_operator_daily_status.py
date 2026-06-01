@@ -103,6 +103,11 @@ class OperatorDailyStatusTests(unittest.TestCase):
                 "--limit",
                 "20",
             ): (0, "[]\n", ""),
+            ("gh", "api", "repos/namlogan/MIL/branches/main", "--jq", ".commit.sha"): (
+                0,
+                "abc123\n",
+                "",
+            ),
             (
                 "gh",
                 "run",
@@ -112,9 +117,9 @@ class OperatorDailyStatusTests(unittest.TestCase):
                 "--branch",
                 "main",
                 "--limit",
-                "3",
+                "10",
                 "--json",
-                "conclusion,status,databaseId,displayTitle,createdAt,url",
+                "conclusion,status,databaseId,displayTitle,createdAt,url,headSha",
             ): (
                 0,
                 json.dumps(
@@ -126,6 +131,7 @@ class OperatorDailyStatusTests(unittest.TestCase):
                             "displayTitle": "main",
                             "createdAt": "2026-06-01T00:00:00Z",
                             "url": "https://github.com/namlogan/MIL/actions/runs/1",
+                            "headSha": "abc123",
                         }
                     ]
                 ),
@@ -229,9 +235,9 @@ class OperatorDailyStatusTests(unittest.TestCase):
                 "--branch",
                 "main",
                 "--limit",
-                "3",
+                "10",
                 "--json",
-                "conclusion,status,databaseId,displayTitle,createdAt,url",
+                "conclusion,status,databaseId,displayTitle,createdAt,url,headSha",
             )
         ] = (
             0,
@@ -244,6 +250,7 @@ class OperatorDailyStatusTests(unittest.TestCase):
                         "displayTitle": "main",
                         "createdAt": "2026-06-01T00:00:00Z",
                         "url": "https://github.com/namlogan/MIL/actions/runs/2",
+                        "headSha": "abc123",
                     }
                 ]
             ),
@@ -255,7 +262,25 @@ class OperatorDailyStatusTests(unittest.TestCase):
 
         self.assertEqual(result["overall"], "attention")
         self.assertFalse(result["checks"]["github_main_ci"]["ok"])
-        self.assertIn("latest main CI is failure", result["checks"]["github_main_ci"]["summary"])
+        self.assertIn("current main CI is failure", result["checks"]["github_main_ci"]["summary"])
+
+    def test_build_daily_status_reports_attention_when_main_ci_is_stale(self) -> None:
+        responses = self._healthy_responses()
+        responses[("gh", "api", "repos/namlogan/MIL/branches/main", "--jq", ".commit.sha")] = (
+            0,
+            "newsha\n",
+            "",
+        )
+        runner = self._runner(responses)
+
+        result = self.daily_status.build_daily_status(REPO_ROOT, runner=runner)
+
+        self.assertEqual(result["overall"], "attention")
+        self.assertFalse(result["checks"]["github_main_ci"]["ok"])
+        self.assertIn(
+            "no main CI run found for current main newsha",
+            result["checks"]["github_main_ci"]["summary"],
+        )
 
     def test_dispatch_queue_check_reports_blocking_results(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
