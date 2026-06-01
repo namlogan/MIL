@@ -18,6 +18,20 @@ Continue only when the dashboard is `ready`. If it reports `attention`, fix the
 named check first. Do not start new `agent:auto-build` work while the control
 plane is dirty or core validators fail.
 
+The dashboard checks:
+
+- local git cleanliness
+- AI Factory and Windmill project validators
+- Codex, Auggie, and Windmill CLI availability
+- relay and public tunnel `tmux` sessions
+- open PRs and required gate status
+- latest `main` GitHub Actions run
+- recent failed Windmill jobs
+- Augment credential readiness
+- Mem0 provider mode
+- branch protection policy
+- recent local auto-dispatch queue results
+
 ## Project Intake
 
 Before agents build product features, fill these files:
