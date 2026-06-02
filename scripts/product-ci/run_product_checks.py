@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import subprocess
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -123,10 +124,30 @@ def run_self_test() -> None:
     assert validate_config(
         {"enabled": True, "checks": [{"name": "unit", "command": ["python3", "--version"]}]}
     )["ok"] is True
-    assert load_effective_config(
-        Path(__file__).resolve().parents[2] / ".ai-factory/product-ci.json",
-        Path(__file__).resolve().parents[2] / ".ai-factory/product-ci.profiles.json",
-    )["enabled"] is False
+    with tempfile.TemporaryDirectory() as tmpdir:
+        root = Path(tmpdir)
+        missing_config = root / "missing-product-ci.json"
+        profiles_path = root / "product-ci.profiles.json"
+        profile_config = root / "product-ci.json"
+        profiles_path.write_text(
+            json.dumps(
+                {
+                    "profiles": {
+                        "python-unittest": {
+                            "checks": [{"name": "unit", "command": ["python3", "--version"]}]
+                        }
+                    }
+                }
+            ),
+            encoding="utf-8",
+        )
+        profile_config.write_text(
+            json.dumps({"enabled": True, "profile": "python-unittest", "checks": []}),
+            encoding="utf-8",
+        )
+
+        assert load_effective_config(missing_config, profiles_path)["enabled"] is False
+        assert load_effective_config(profile_config, profiles_path)["checks"][0]["name"] == "unit"
 
 
 def main(argv: list[str] | None = None) -> int:
