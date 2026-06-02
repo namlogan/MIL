@@ -25,6 +25,9 @@ class HealthSnapshotTests(unittest.TestCase):
         )
         self.assertEqual(snapshot["subsystems"]["sop_decision_engine"], "not_implemented")
         self.assertEqual(snapshot["decision_authority"], "none")
+        self.assertEqual(snapshot["model_boundary"]["contract_version"], "model.artifact.v1")
+        self.assertEqual(snapshot["model_boundary"]["state"], "manifest_ready_shadow_only")
+        self.assertFalse(snapshot["model_boundary"]["production_authority"])
         self.assertIn("qc_product_spec_approval_missing", snapshot["blockers"])
 
 
