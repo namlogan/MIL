@@ -89,3 +89,16 @@ The current phase-2 decision engine can emit shadow `PASS`, `NG`, or `BLOCKED`
 evidence for diagonal deviation using the MVP threshold of 0.5 inch. Shadow
 `PASS`/`NG` does not grant production authority and carries authority blockers
 until QC/SOP tolerance approval and production release gates are complete.
+
+Bootstrap no-camera replay validation lives in:
+
+```text
+apps/flange_qc_v2/replay.py
+samples/replay/flange_qc_v2/phase2_synthetic_measurements.json
+```
+
+The current replay source uses synthetic frame metadata and measurement evidence
+only. It does not read live camera frames, raw media, model outputs, customer
+data, or production file paths. The replay runner connects product specs,
+calibration, geometry, and the phase-2 shadow decision engine, then fails closed
+while product spec and calibration authority remain missing.

@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "replay_id": "fqv2-phase2-synthetic-001",
+  "product_code": "611",
+  "size_group": "11",
+  "no_camera": true,
+  "source_ref": "https://github.com/namlogan/MIL/issues/75",
+  "frames": [
+    {
+      "frame_id": "frame-001",
+      "source_uri": "synthetic://flange-qc-v2/phase2/frame-001",
+      "captured_at": "2026-06-02T00:00:00Z",
+      "measurements": {
+        "length_points": [74.9, 75.0, 75.1],
+        "width_points": [37.4, 37.5, 37.6],
+        "diagonals": [83.0, 83.25],
+        "unit": "inch"
+      }
+    }
+  ]
+}
