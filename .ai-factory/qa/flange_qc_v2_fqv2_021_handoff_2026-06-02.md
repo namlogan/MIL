@@ -85,6 +85,12 @@
 - GREEN: `python3 -m unittest tests.flange_qc_v2.test_model_artifact -v`
 - GREEN: `python3 -m unittest tests.flange_qc_v2.test_detector_adapter -v`
 - GREEN: `python3 -m unittest tests.flange_qc_v2.test_health -v`
+- `python3 -m unittest discover -s tests/flange_qc_v2 -v` passed, 91 tests.
+- `python3 -m compileall -q apps/flange_qc_v2 tests/flange_qc_v2` passed.
+- `python3 scripts/product-ci/run_product_checks.py` passed with
+  `model_boundary.state=manifest_ready_shadow_only` in the health smoke.
+- `python3 -m unittest discover -s tests -v` passed, 196 tests.
+- `git diff --check` passed.
 
 ## Residual Risks
 
