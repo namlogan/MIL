@@ -1,0 +1,49 @@
+{
+  "task_id": "FQV2-008",
+  "github_issue": 73,
+  "source_ref": "https://github.com/namlogan/MIL/issues/73",
+  "owner_agent": "codex_developer",
+  "qa_agent": "codex_qa",
+  "preferred_lane": "codex",
+  "branch": "agent/73-shadow-phase-gate-decision-engine",
+  "allowed_paths": [
+    "apps/flange_qc_v2/**",
+    "tests/flange_qc_v2/**",
+    "docs/project/flange_qc_v2/SOP_RULE_REGISTRY.md",
+    "docs/project/flange_qc_v2/DATA_MODEL.md",
+    ".ai-factory/gates/flange_qc_v2_fqv2_008_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_008_handoff_2026-06-02.md"
+  ],
+  "restricted_paths": [
+    "production deploy",
+    "secrets",
+    "customer data policy",
+    "destructive migrations",
+    "live camera hardware validation",
+    "geometry correction or calibration transform engine",
+    "model weights",
+    "TensorRT engines",
+    "QC/SOP tolerance approval",
+    "product spec approval authority",
+    "production auto-reject or production PASS/NG authority"
+  ],
+  "acceptance_criteria": [
+    "Add a decision engine module for phase-2 geometry evaluation.",
+    "Unknown/unapproved product specs, missing/pending calibration, or incomplete geometry measurements return BLOCKED with explicit reason codes.",
+    "Complete geometry evidence can return shadow PASS when diagonal deviation is <= 0.5 inch.",
+    "Complete geometry evidence can return shadow NG when diagonal deviation is > 0.5 inch.",
+    "Shadow PASS/NG results keep production_authority=false and expose authority blockers, including missing QC/SOP tolerance approval.",
+    "Add an NG reason code for diagonal deviation greater than limit without mapping any reason code to PASS.",
+    "Existing Flange QC v2 unit/contract tests, product CI, and full repository tests pass."
+  ],
+  "test_commands": [
+    "python3 -m unittest tests.flange_qc_v2.test_decision_engine -v",
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 -m compileall -q apps/flange_qc_v2 tests/flange_qc_v2",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m unittest discover -s tests -v",
+    "git diff --check"
+  ],
+  "handoff_required": true,
+  "rollback_note": "Revert the FQV2-008 PR to remove the shadow decision engine, tests, rule metadata update, and evidence artifacts. This task does not alter production data, migrations, secrets, or deploy configuration."
+}

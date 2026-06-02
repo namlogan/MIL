@@ -91,6 +91,12 @@ REASON_CODES = (
         severity="blocker",
     ),
     ReasonCode(
+        code="DIAGONAL_DEVIATION_EXCEEDS_LIMIT",
+        decision="NG",
+        description="Shadow phase-2 diagonal deviation evidence is greater than the configured limit.",
+        severity="reject",
+    ),
+    ReasonCode(
         code="MODEL_MISSING",
         decision="NOT_EVALUATED",
         description="Model-dependent rule cannot be evaluated because no approved model is available.",
