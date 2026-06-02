@@ -32,6 +32,9 @@ class HmiScreenTests(unittest.TestCase):
         self.assertIn('id="decision"', body)
         self.assertIn('id="reason-list"', body)
         self.assertIn('id="measurements"', body)
+        self.assertIn('id="refresh-replay"', body)
+        self.assertIn('id="feedback-form"', body)
+        self.assertIn('id="feedback-status"', body)
 
     def test_hmi_html_binds_to_websocket_snapshot_fields(self) -> None:
         html = HMI_HTML.read_text(encoding="utf-8")
@@ -43,6 +46,19 @@ class HmiScreenTests(unittest.TestCase):
         self.assertIn("payload.measurements", html)
         self.assertIn("payload.observations", html)
         self.assertIn("PRODUCT_SPEC_APPROVAL_MISSING", html)
+
+    def test_hmi_html_binds_operator_feedback_form_to_shadow_endpoint(self) -> None:
+        html = HMI_HTML.read_text(encoding="utf-8")
+
+        self.assertIn('name="reviewer_id"', html)
+        self.assertIn('name="feedback_type"', html)
+        self.assertIn('name="note"', html)
+        self.assertIn("fetchReplaySnapshot", html)
+        self.assertIn('fetch("/inspection/replay"', html)
+        self.assertIn("submitFeedback", html)
+        self.assertIn('fetch("/feedback"', html)
+        self.assertIn("production_authority", html)
+        self.assertIn("authority_blockers", html)
 
 
 if __name__ == "__main__":

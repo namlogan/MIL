@@ -60,6 +60,27 @@ class HmiStreamSnapshotTests(unittest.TestCase):
         self.assertEqual(payload["product"]["code"], "611")
         self.assertEqual(messages[-1]["type"], "websocket.close")
 
+    def test_replay_http_endpoint_returns_current_snapshot_contract(self) -> None:
+        messages = []
+
+        async def receive():
+            return {"type": "http.request", "body": b"", "more_body": False}
+
+        async def send(message):
+            messages.append(message)
+
+        scope = {"type": "http", "method": "GET", "path": "/inspection/replay"}
+        asyncio.run(app(scope, receive, send))
+
+        start = messages[0]
+        payload = json.loads(messages[1]["body"].decode("utf-8"))
+
+        self.assertEqual(start["status"], 200)
+        parsed = InspectionSnapshot.from_payload(payload)
+        self.assertEqual(parsed.inspection_id, "fqv2-phase2-synthetic-001")
+        self.assertEqual(parsed.decision, "BLOCKED")
+        self.assertIn("PRODUCT_SPEC_APPROVAL_MISSING", parsed.reason_codes)
+
 
 if __name__ == "__main__":
     unittest.main()
