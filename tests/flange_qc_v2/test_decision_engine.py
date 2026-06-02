@@ -5,7 +5,9 @@ from apps.flange_qc_v2.calibration import CalibrationConfig, load_calibration_co
 from apps.flange_qc_v2.decision_engine import (
     evaluate_phase_one_measurements,
     evaluate_phase_two_geometry,
+    evaluate_sop_safe_fallbacks,
 )
+from apps.flange_qc_v2.domain import ValidationError
 from apps.flange_qc_v2.geometry import resolve_geometry_measurements
 from apps.flange_qc_v2.product_specs import ProductSpecResolution, load_product_specs
 
@@ -250,6 +252,49 @@ class PhaseTwoDecisionEngineTests(unittest.TestCase):
         self.assertEqual(result.reason_codes, ("MEASUREMENTS_INCOMPLETE",))
         self.assertFalse(result.shadow_mode)
         self.assertFalse(result.production_authority)
+
+
+class SopSafeFallbackDecisionEngineTests(unittest.TestCase):
+    def test_phase_three_model_dependent_rules_return_assist_without_authority(self) -> None:
+        result = evaluate_sop_safe_fallbacks(phase="PHASE_3")
+
+        self.assertEqual(result.phase, "PHASE_3")
+        self.assertEqual(result.decision, "ASSIST")
+        self.assertEqual(result.reason_codes, ("MODEL_REVIEW_REQUIRED",))
+        self.assertEqual(result.authority_blockers, ("MODEL_APPROVAL_REQUIRED",))
+        self.assertTrue(result.shadow_mode)
+        self.assertFalse(result.production_authority)
+        self.assertEqual(
+            tuple(rule.rule_id for rule in result.rule_results),
+            ("M1-SOP-6.4-PUNCH-MARK-001", "M1-SOP-6.2-PUNCH-OFFSET-001"),
+        )
+        self.assertTrue(all(rule.decision == "ASSIST" for rule in result.rule_results))
+        self.assertEqual(result.rule_results[0].reason_codes, ("MODEL_REVIEW_REQUIRED",))
+        self.assertEqual(result.rule_results[0].evidence["fallback_source"], "sop_registry")
+        self.assertEqual(result.rule_results[0].evidence["category"], "vision")
+        self.assertFalse(result.rule_results[0].evidence["production_enabled"])
+
+    def test_phase_four_rules_keep_assist_and_not_evaluated_safe_states(self) -> None:
+        result = evaluate_sop_safe_fallbacks(phase="PHASE_4")
+
+        self.assertEqual(result.phase, "PHASE_4")
+        self.assertEqual(result.decision, "ASSIST")
+        self.assertEqual(result.reason_codes, ("RULE_POST_MVP_DISABLED", "MODEL_REVIEW_REQUIRED"))
+        self.assertEqual(result.authority_blockers, ("MODEL_APPROVAL_REQUIRED",))
+        self.assertTrue(result.shadow_mode)
+        self.assertFalse(result.production_authority)
+        self.assertEqual(len(result.rule_results), 8)
+        self.assertIn("ASSIST", {rule.decision for rule in result.rule_results})
+        self.assertIn("NOT_EVALUATED", {rule.decision for rule in result.rule_results})
+        self.assertNotIn("PASS", {rule.decision for rule in result.rule_results})
+        self.assertEqual(
+            result.rule_results[0].to_payload()["evidence"]["fallback_source"],
+            "sop_registry",
+        )
+
+    def test_safe_fallback_rejects_unsupported_phase_explicitly(self) -> None:
+        with self.assertRaisesRegex(ValidationError, "supports PHASE_3 or PHASE_4"):
+            evaluate_sop_safe_fallbacks(phase="PHASE_1")
 
 
 if __name__ == "__main__":
