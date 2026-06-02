@@ -43,6 +43,20 @@ The config includes these kickoff ZIP groups:
 Implementation must not hardcode these values in service code. Unknown product
 or unknown size must return `BLOCKED`.
 
+## Implementation Registry
+
+Bootstrap-safe rule and reason-code metadata lives in:
+
+```text
+apps/flange_qc_v2/sop_registry.py
+```
+
+This module provides lookup metadata only. It does not resolve product
+tolerances, run a production PASS/NG decision engine, enable live camera/model
+behavior, or grant production SOP authority. Model-dependent and post-MVP rules
+return safe fallback states such as `ASSIST`, `NOT_EVALUATED`, or `BLOCKED`
+until later approval gates provide evidence.
+
 ## Core Rule IDs
 
 | Rule ID | Phase | Rule | Production authority |

@@ -1,0 +1,45 @@
+{
+  "task_id": "FQV2-003",
+  "github_issue": 63,
+  "source_ref": "https://github.com/namlogan/MIL/issues/63",
+  "owner_agent": "codex_developer",
+  "qa_agent": "codex_qa",
+  "preferred_lane": "codex",
+  "branch": "agent/63-sop-rule-registry-reason-codes",
+  "allowed_paths": [
+    "apps/flange_qc_v2/**",
+    "tests/flange_qc_v2/**",
+    "docs/project/flange_qc_v2/SOP_RULE_REGISTRY.md",
+    ".ai-factory/gates/flange_qc_v2_fqv2_003_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_003_handoff_2026-06-02.md"
+  ],
+  "restricted_paths": [
+    "production deploy",
+    "secrets",
+    "customer data",
+    "destructive migrations",
+    "factory datasets",
+    "camera hardware",
+    "model weights",
+    "TensorRT engines",
+    "product tolerance resolver",
+    "production SOP PASS/NG decision engine"
+  ],
+  "acceptance_criteria": [
+    "Add app-level SOP rule metadata for the core rule IDs documented in docs/project/flange_qc_v2/SOP_RULE_REGISTRY.md.",
+    "Add stable reason-code metadata for safe blocked/not-evaluated states.",
+    "Registry lookup rejects unknown rule IDs and unknown reason codes explicitly.",
+    "Model/vision-dependent or post-MVP rules expose safe fallback states instead of production PASS/NG authority.",
+    "No product tolerance resolver, production PASS/NG engine, live camera, or model adapter is implemented.",
+    "Existing product CI and full repository tests keep passing."
+  ],
+  "test_commands": [
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 -m compileall -q apps/flange_qc_v2 tests/flange_qc_v2",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m unittest discover -s tests -v",
+    "git diff --check"
+  ],
+  "handoff_required": true,
+  "rollback_note": "Revert the FQV2-003 PR to remove SOP registry/reason-code metadata and related tests while keeping FQV2-001 and FQV2-002 intact."
+}
