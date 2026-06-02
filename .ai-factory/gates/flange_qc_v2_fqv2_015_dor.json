@@ -1,0 +1,94 @@
+{
+  "task_id": "FQV2-015",
+  "github_issue": 87,
+  "source_ref": "https://github.com/namlogan/MIL/issues/87",
+  "owner_approval": "Owner approved disabled no-hardware boundary only on 2026-06-02. Live capture, SDK imports, credentials, raw media, production deploy, and production authority remain blocked.",
+  "owner_agent": "codex_developer",
+  "qa_agent": "codex_qa",
+  "preferred_lane": "codex",
+  "branch": "agent/87-hikrobot-camera-boundary",
+  "allowed_paths": [
+    "apps/flange_qc_v2/**",
+    "contracts/flange_qc_v2/**",
+    "tests/flange_qc_v2/**",
+    "docs/project/flange_qc_v2/HARDWARE_CAMERA_READINESS.md",
+    "docs/project/flange_qc_v2/DATA_MODEL.md",
+    ".ai-factory/gates/flange_qc_v2_fqv2_015_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_015_handoff_2026-06-02.md"
+  ],
+  "restricted_paths": [
+    "live camera hardware validation or capture",
+    "Hikrobot SDK import or runtime dependency",
+    "camera credentials",
+    "secrets",
+    "raw media storage",
+    "raw customer or factory data",
+    "production model weights",
+    "TensorRT engines",
+    "model training",
+    "model promotion",
+    "MLOps artifacts",
+    "production PASS/NG authority",
+    "production auto-reject",
+    "QC/SOP tolerance approval",
+    "product spec approval authority",
+    "production release or deploy",
+    "billing",
+    "customer data",
+    "destructive migrations"
+  ],
+  "acceptance_criteria": [
+    "Add a camera adapter boundary contract for Hikrobot hardware readiness metadata.",
+    "The default boundary is disabled and no-hardware: no live capture, no SDK import, no credentials, no raw media.",
+    "Boundary payload explicitly reports vendor, adapter ID, enabled state, live-capture state, SDK-load state, credential state, readiness decision, reason codes, authority blockers, and source ref.",
+    "Enabled/live-capture/SDK/credential attempts are rejected explicitly with ValidationError until hardware readiness approval exists.",
+    "Boundary decision cannot be PASS or NG and cannot grant production authority.",
+    "Add JSON schema/contract and unit/contract tests for disabled boundary behavior and rejection paths.",
+    "Add hardware readiness docs showing what remains required before live camera work.",
+    "No SDK dependency, camera credential, live capture, raw media, raw customer/factory data, production deploy, secrets, destructive migrations, product spec approval, QC/SOP tolerance approval, production PASS/NG authority, or production auto-reject changes are introduced.",
+    "Existing Flange QC v2 unit/contract tests, product CI, and full repository tests pass."
+  ],
+  "memory_preflight": {
+    "query": "Flange QC v2 Hikrobot camera boundary, hardware readiness, no-hardware bootstrap, live camera restrictions",
+    "retrieved_decisions": [
+      "App must boot without camera.",
+      "Live hardware remains gated.",
+      "Calibration approval is required before live mode.",
+      "No raw media/customer data in baseline CI.",
+      "Owner approved disabled no-hardware boundary only."
+    ],
+    "retrieved_lessons": [
+      "Keep hardware adapters disabled-by-default and contract-first.",
+      "Use TDD first.",
+      "Explicit blockers beat implicit hardware assumptions."
+    ],
+    "restricted_areas": [
+      "live camera capture",
+      "SDK dependency",
+      "camera credentials/secrets",
+      "raw media",
+      "customer data",
+      "production release/deploy",
+      "destructive migrations",
+      "QC/SOP tolerance approval"
+    ],
+    "conflicts_found": [],
+    "sources_to_verify": [
+      "https://github.com/namlogan/MIL/issues/87",
+      "AGENTS.md",
+      "docs/project/flange_qc_v2/WORK_PACKAGES.md",
+      "docs/project/flange_qc_v2/APP_BUILD_PLAN.md",
+      "docs/project/flange_qc_v2/RISK_REGISTER.md"
+    ]
+  },
+  "test_commands": [
+    "python3 -m unittest tests.flange_qc_v2.test_camera_boundary -v",
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 -m compileall -q apps/flange_qc_v2 tests/flange_qc_v2",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m unittest discover -s tests -v",
+    "git diff --check"
+  ],
+  "handoff_required": true,
+  "rollback_note": "Revert the FQV2-015 PR to remove the camera boundary, schema/tests, docs, and gate evidence. This task does not alter production data, migrations, secrets, raw media, live hardware, or deploy configuration."
+}
