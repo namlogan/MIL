@@ -12,7 +12,7 @@
 | Agent delivery loop | Ready for FQV2-001 only | DoR manifest is recorded at `.ai-factory/gates/flange_qc_v2_fqv2_001_dor.json` |
 | QA/review/merge gate | Ready for MVP-0 baseline | FQV2-001 through FQV2-016 merged through protected PR checks |
 | Release/rollback gate | Pending human release approval | Readiness pack records rollback path and release blockers; no deploy approved |
-| Memory maintenance | Not started | Memory candidates need source refs and review |
+| Memory maintenance | Validated for MVP-0 baseline | Memory provider, contract, and framework integration checks pass; no approved memory writeback performed by app package |
 
 ## ZIP Review Decision
 
@@ -40,5 +40,5 @@ destructive migrations.
 1. Keep product specs and tolerance source pending QC/domain owner approval.
 2. Keep live camera/hardware validation pending factory-site approval.
 3. Keep production release pending release/rollback evidence and human approval.
-4. Enable product CI once the app skeleton exists.
-5. Create separate DoR manifests for all work after FQV2-001.
+4. Keep Memory0 writeback candidate-only until reviewed with `source_ref`.
+5. Keep Windmill as orchestration/evidence only, not app-code author or merge/release authority.

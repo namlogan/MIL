@@ -11,6 +11,7 @@
 | Audit DB | Migration contract, rollback/forward-fix plan | Destructive change without approval |
 | HMI | Contract/e2e smoke, accessibility smoke when UI exists | Missing safety state or reason codes |
 | Release | CI, replay smoke, rollback pack, monitoring plan, human approval | Missing rollback or shadow/staging evidence |
+| SDLC hooks | Delivery OS, Windmill validator, Memory0 contract/provider checks | Windmill or Memory0 becomes source of truth, coding lane, merge authority, release authority, or secret store |
 
 ## PR Size Policy
 
