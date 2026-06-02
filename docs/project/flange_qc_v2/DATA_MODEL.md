@@ -115,10 +115,16 @@ the three length points and three width points to the resolved product spec
 nominal dimensions and plus/minus tolerances, records raw points in inches,
 min/max/average, bounds, and out-of-tolerance point indexes, and uses
 `all_points_must_pass_bootstrap` while the final SOP aggregate method remains
-open. Phase 2 uses the MVP diagonal threshold of 0.5 inch. Shadow `PASS`/`NG`
-does not grant production authority and carries authority blockers until
-product spec approval, QC/SOP tolerance approval, and production release gates
-are complete.
+open. Phase 2 uses the MVP diagonal threshold of 0.5 inch.
+
+Phase 3 and Phase 4 safe fallback evaluation is also registry-driven. Model or
+review-dependent rules emit `ASSIST` with `MODEL_REVIEW_REQUIRED`; disabled
+post-MVP rules emit `NOT_EVALUATED` with `RULE_POST_MVP_DISABLED`. Fallback
+evidence records the registry category, authority, fallback source, and
+production-enabled state. Shadow `PASS`/`NG`, `ASSIST`, and `NOT_EVALUATED`
+evidence does not grant production authority and carries authority blockers
+until product spec approval, QC/SOP tolerance approval, model approval, and
+production release gates are complete.
 
 Bootstrap no-camera replay validation lives in:
 

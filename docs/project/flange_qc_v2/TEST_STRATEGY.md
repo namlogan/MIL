@@ -30,6 +30,11 @@
   `LENGTH_OUT_OF_TOLERANCE` and/or `WIDTH_OUT_OF_TOLERANCE`; production
   authority remains false until QC/SOP tolerance approval.
 - Diagonal deviation greater than 0.5 inch returns NG in phase 2.
+- Phase 3 model/vision-dependent SOP rules return safe `ASSIST` fallback
+  evidence with `MODEL_REVIEW_REQUIRED` and never production authority.
+- Phase 4 post-MVP SOP rules return `NOT_EVALUATED`, Phase 4 review-dependent
+  rules return `ASSIST`, and fallback aggregation never maps disabled or review
+  states to `PASS`.
 - Detector returns observations only.
 - Missing model produces `NOT_EVALUATED`, `ASSIST`, or `BLOCKED` for model-dependent rules.
 - Model artifact manifests validate contract version, registry reference,

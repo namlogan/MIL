@@ -72,6 +72,13 @@ conservative bootstrap behavior for tests and QC comparison only; production
 authority remains gated by product spec approval, QC/SOP tolerance approval, and
 release approval.
 
+The engine also emits registry-driven safe fallback results for Phase 3 and
+Phase 4 rules. Model/vision-dependent rules return `ASSIST` with
+`MODEL_REVIEW_REQUIRED`, while disabled post-MVP rules return `NOT_EVALUATED`
+with `RULE_POST_MVP_DISABLED`. These fallback states never map to `PASS` and do
+not load models, run inference, enable camera hardware, or grant production
+authority.
+
 ## Core Rule IDs
 
 | Rule ID | Phase | Rule | Production authority |
@@ -104,6 +111,9 @@ release approval.
 - Diagonal deviation greater than 0.5 inch can return shadow `NG` evidence in
   phase 2, but production authority remains gated by QC/SOP tolerance approval.
 - Missing model returns `NOT_EVALUATED`, `ASSIST`, or `BLOCKED` for model-dependent rules.
+- Phase 3 model/vision rules currently return safe `ASSIST` fallback evidence.
+- Phase 4 post-MVP rules currently return `NOT_EVALUATED`, while Phase 4
+  review-dependent rules return `ASSIST`.
 - Detector observations never decide final PASS/NG directly.
 - `NOT_EVALUATED` must never be mapped to `PASS`.
 
