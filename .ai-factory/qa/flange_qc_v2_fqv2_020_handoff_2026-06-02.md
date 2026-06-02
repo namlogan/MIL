@@ -68,11 +68,22 @@
 
 ## Browser Evidence
 
-- To be exercised before PR review on a local no-camera server with
-  `FLANGE_QC_V2_AUDIT_DB_PATH` pointing to an ignored runtime SQLite path.
-- Required HMI checks: replay refresh succeeds, feedback submit displays audit
-  persistence count, production authority remains false, and console/page errors
-  are absent.
+- Local HMI was exercised at `http://127.0.0.1:8765/hmi` using a local no-camera
+  server with `FLANGE_QC_V2_AUDIT_DB_PATH` pointing to
+  `.ai-factory/tmp/flange_qc_v2/fqv2_020_browser_audit.sqlite`.
+- HMI element counts were exactly one each for refresh, feedback form,
+  feedback status, reviewer input, feedback type select, note textarea, and
+  submit button.
+- Replay refresh kept the decision at `BLOCKED` for
+  `fqv2-phase2-synthetic-001`.
+- Feedback submit returned `CONFIRM_BLOCKED saved for
+  fqv2-phase2-synthetic-001 / audit 1`.
+- Feedback status state was `ok`.
+- `production_authority` rendered as `false`.
+- `authority_blockers` rendered as `PRODUCTION_APPROVAL_REQUIRED`.
+- Browser console/page errors: none.
+- Runtime audit DB check found inspection `fqv2-phase2-synthetic-001`,
+  `feedback_count=1`, and `last_feedback_type=CONFIRM_BLOCKED`.
 
 ## Residual Risks
 
