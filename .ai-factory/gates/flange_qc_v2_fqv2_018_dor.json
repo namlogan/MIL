@@ -1,0 +1,113 @@
+{
+  "task_id": "FQV2-018",
+  "github_issue": 93,
+  "source_ref": "https://github.com/namlogan/MIL/issues/93",
+  "owner_agent": "codex_developer",
+  "qa_agent": "codex_qa",
+  "preferred_lane": "codex",
+  "branch": "agent/93-sdlc-hooks-validation",
+  "allowed_paths": [
+    ".ai-factory/gates/flange_qc_v2_fqv2_018_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_018_sdlc_hooks_2026-06-02.md",
+    "docs/project/flange_qc_v2/BOOTSTRAP_READINESS.md",
+    "docs/project/flange_qc_v2/QUALITY_GATE_MATRIX.md"
+  ],
+  "restricted_paths": [
+    ".windmill/runtime/**",
+    "runtime logs",
+    "local env files",
+    "tunnels",
+    "writing Memory0 records",
+    "approving Memory0 records",
+    "updating Memory0 records",
+    "superseding Memory0 records",
+    "retiring Memory0 records",
+    "app code",
+    "production deploy behavior",
+    "release approval",
+    "merge policy changes",
+    "GitHub Actions workflow changes",
+    "branch protection changes",
+    "secrets",
+    "tokens",
+    "passwords",
+    "private keys",
+    "provider credentials",
+    "camera credentials",
+    "raw media",
+    "customer or factory data",
+    "raw transcripts",
+    "source dumps",
+    "patches",
+    "model weights",
+    "TensorRT engines",
+    "MLOps promotion",
+    "live camera capture",
+    "Hikrobot SDK dependency",
+    "GPU or hardware validation",
+    "destructive migrations",
+    "billing",
+    "legal or compliance behavior",
+    "security boundary changes",
+    "QC/SOP tolerance approval",
+    "product spec approval",
+    "production PASS/NG authority",
+    "production auto-reject"
+  ],
+  "acceptance_criteria": [
+    "Add FQV2-018 validation evidence showing Delivery OS, Windmill project validation, Memory0 provider preflight, memory contract, mem0 framework integration, product CI, full tests, and daily status have been checked.",
+    "Update Flange QC v2 readiness and quality gate docs to show Memory0/Windmill SDLC hook validation status and block conditions.",
+    "Evidence explicitly states Windmill is orchestration/evidence only and cannot code, merge, approve release, bypass gates, or own app requirements.",
+    "Evidence explicitly states Memory0 is scoped memory context only and cannot store secrets, raw artifacts, customer data, raw transcripts, patches, source dumps, or project-specific memory without source_ref.",
+    "Do not alter Windmill runtime secrets, tunnel logs, .windmill/runtime/**, Memory0 approved records, production deploy behavior, release approval, app code, raw media, customer data, or live hardware behavior.",
+    "Required local checks pass."
+  ],
+  "memory_preflight": {
+    "query": "Flange QC v2 Memory0 Windmill SDLC hooks validation, source-of-truth boundary, memory hygiene, orchestration policy",
+    "retrieved_decisions": [
+      "GitHub/docs/tests/issues remain source of truth.",
+      "Windmill orchestrates but cannot code, merge, or release.",
+      "Memory0 is scoped context only and requires source_ref.",
+      "Mem0 provider currently uses local JSONL adapter."
+    ],
+    "retrieved_lessons": [
+      "Do not write Memory0 without source_ref.",
+      "Keep project-specific memory scoped.",
+      "Avoid runtime secrets/logs in evidence.",
+      "daily_status is the operator entry point."
+    ],
+    "restricted_areas": [
+      "Windmill runtime secrets/logs",
+      "Memory0 approved records",
+      "production release/deploy",
+      "secrets/credentials/tokens",
+      "customer data/raw media/raw transcripts/source dumps/patches",
+      "live camera/hardware validation",
+      "destructive migrations",
+      "QC/SOP tolerance approval",
+      "product spec approval"
+    ],
+    "conflicts_found": [],
+    "sources_to_verify": [
+      "https://github.com/namlogan/MIL/issues/93",
+      "AGENTS.md",
+      ".ai-factory/RULES.md",
+      ".ai-factory/DELIVERY_OPERATING_MODEL.md",
+      "docs/project/flange_qc_v2/WORK_PACKAGES.md",
+      "docs/project/flange_qc_v2/SOURCE_OF_TRUTH.md"
+    ]
+  },
+  "test_commands": [
+    "python3 scripts/delivery/validate_delivery_os.py --self-test",
+    "python3 scripts/windmill/validate_windmill_project.py --self-test",
+    "python3 scripts/agent-memory/check_mem0_provider.py --self-test",
+    "python3 scripts/agent-memory/memory_contract.py --self-test",
+    "python3 scripts/agent-memory/mem0_framework_integration.py --self-test",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 scripts/operator/daily_status.py",
+    "python3 -m unittest discover -s tests -v",
+    "git diff --check"
+  ],
+  "handoff_required": true,
+  "rollback_note": "Revert the FQV2-018 PR to remove validation evidence and readiness/quality-gate doc updates. This task does not alter app code, Windmill runtime config, Memory0 records, secrets, production infrastructure, hardware state, raw media, customer data, migrations, or release/deploy state."
+}
