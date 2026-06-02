@@ -26,6 +26,7 @@ Windmill is an orchestrator, not the source of truth. AI Factory is the SDLC pro
 |---|---|---|
 | Product Owner | Business goal, release approval, restricted decisions | No direct code by role |
 | Merge Controller | Final gate decision, scope and evidence review | Only for emergency/unblock tasks |
+| AI Delivery Coordinator | Route ready work, label routine auto-build/auto-merge candidates, watch gates, and escalate exceptions | No app-code authorship |
 | Codex Developer | Plan, implement, tests, small fixes | Yes, within issue scope |
 | Augment Context Provider | Expose codebase index, retrieval, symbol summaries, and context to Codex sessions | No |
 | Mem0 Memory Layer | Retrieve and store sanitized project/task memory | No |
@@ -211,7 +212,13 @@ Codex session -> Augment MCP/codebase index -> retrieved context -> Codex plan/i
 Codex session -> mem0 project/task memory -> sanitized facts -> Codex plan/implementation/QA
 ```
 
-Codex remains the only implementation worker. Augment may provide indexed codebase context, mem0 may provide sanitized long-term project/task memory, and Auggie may provide supervised advisory notes, but none of those context/review lanes may create branches, edit files, write commits, open PRs, or approve merges.
+Codex remains the only implementation worker. The AI Delivery Coordinator may
+route ready work, label routine issues with `agent:auto-build`, label routine PRs
+with `automerge:candidate`, watch checks, request Codex QA, and escalate
+exceptions. Augment may provide indexed codebase context, mem0 may provide
+sanitized long-term project/task memory, and Auggie may provide supervised
+advisory notes, but none of those context/review lanes may create branches, edit
+files, write commits, open PRs, or approve merges.
 
 ## Memory Preflight
 
@@ -279,6 +286,12 @@ rollback note, and no block labels. Routine low-risk PRs use
 overrides, or restricted labels require `owner:auto-approve`. Labels `hold`,
 `owner-review`, `do-not-merge`, `blocked`, and `security-review` stop
 automation. Production release still requires human approval.
+
+Routine agent PRs must not be handed back to the Product Owner for manual review
+when Definition of Ready, required checks, Codex QA, rollback evidence,
+merge-controller policy, and branch protection pass. The AI Delivery Coordinator
+handles routine progression and escalates only restricted, release, QC/SOP,
+policy-exception, explicit-hold, or repeated-fix-failure cases.
 
 ## Non-Negotiable Rules
 

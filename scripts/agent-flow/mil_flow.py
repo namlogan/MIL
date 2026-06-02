@@ -44,6 +44,15 @@ FLOW_STEPS: dict[str, list[tuple[str, str]]] = {
         ("codex", "fix"),
         ("mem0_memory", "wm_agent_handoff_collect"),
     ],
+    "delivery_coordinator": [
+        ("ai_delivery_coordinator", "check_definition_of_ready"),
+        ("ai_delivery_coordinator", "label_auto_dispatch"),
+        ("windmill", "dispatch_coding_agent"),
+        ("ai_delivery_coordinator", "watch_pr_checks"),
+        ("codex", "qa"),
+        ("ai_delivery_coordinator", "label_automerge_candidate"),
+        ("mem0_memory", "wm_pr_merge_memory_writeback"),
+    ],
 }
 
 
@@ -90,6 +99,7 @@ class DryRunAgentAdapter:
         "auggie": "supervised_advisory_context_reviewer",
         "mem0_memory": "sanitized_long_term_agent_memory_layer",
         "windmill": "cockpit_and_orchestrator",
+        "ai_delivery_coordinator": "routine_delivery_coordinator",
     }
 
     def __init__(self) -> None:
@@ -145,6 +155,8 @@ def _decision_for_flow(flow: str, task: dict[str, Any]) -> tuple[str, bool]:
         return "APPROVE_MERGE", False
     if flow == "fix_ci_or_review":
         return "FIX_PUSH_READY", False
+    if flow == "delivery_coordinator":
+        return "ROUTINE_AUTOMERGE_READY", False
     raise ValueError(f"unknown flow: {flow}")
 
 
@@ -195,6 +207,21 @@ def _artifacts_for_flow(
             "residual_risks": task.get("residual_risks", []),
         }
 
+    if flow == "delivery_coordinator":
+        artifacts["coordinator"] = {
+            "human_required": blocking,
+            "routine_labels": ["agent:auto-build", "automerge:candidate"],
+            "owner_exception_labels": [
+                "hold",
+                "owner-review",
+                "do-not-merge",
+                "blocked",
+                "security-review",
+                "restricted-change",
+            ],
+            "merge_authority": "github_branch_protection_and_merge-controller-policy",
+        }
+
     return artifacts
 
 
@@ -207,6 +234,8 @@ def _memory_records_for_flow(flow: str) -> list[str]:
         return ["test_lesson", "review_lesson"]
     if flow == "fix_ci_or_review":
         return ["implementation_lesson", "test_lesson"]
+    if flow == "delivery_coordinator":
+        return ["agent_handoff", "test_lesson", "review_lesson"]
     raise ValueError(f"unknown flow: {flow}")
 
 
@@ -278,6 +307,15 @@ def run_self_test() -> None:
             ("codex", "fix"),
             ("mem0_memory", "wm_agent_handoff_collect"),
         ],
+        "delivery_coordinator": [
+            ("ai_delivery_coordinator", "check_definition_of_ready"),
+            ("ai_delivery_coordinator", "label_auto_dispatch"),
+            ("windmill", "dispatch_coding_agent"),
+            ("ai_delivery_coordinator", "watch_pr_checks"),
+            ("codex", "qa"),
+            ("ai_delivery_coordinator", "label_automerge_candidate"),
+            ("mem0_memory", "wm_pr_merge_memory_writeback"),
+        ],
     }
 
     for flow, expected in expected_calls.items():
@@ -289,6 +327,9 @@ def run_self_test() -> None:
     gate_result = run_flow("pr_quality_gate", task)
     assert gate_result.decision == "APPROVE_MERGE"
     assert "aif_gate_result" in gate_result.artifacts
+    coordinator_result = run_flow("delivery_coordinator", task)
+    assert coordinator_result.decision == "ROUTINE_AUTOMERGE_READY"
+    assert coordinator_result.artifacts["coordinator"]["human_required"] is False
 
 
 def main(argv: list[str] | None = None) -> int:

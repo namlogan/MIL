@@ -68,11 +68,19 @@ class CodexWorkerRunnerTests(unittest.TestCase):
 
         command = runner._pr_create_command(
             {"base_branch": "main", "branch": "agent/mil-041"},
-            {"pr_labels": ["agent:auto-build", "bad label", "owner:auto-approve"]},
+            {
+                "pr_labels": [
+                    "agent:auto-build",
+                    "automerge:candidate",
+                    "bad label",
+                    "owner:auto-approve",
+                ]
+            },
         )
 
         self.assertIn("--label", command)
         self.assertIn("agent:auto-build", command)
+        self.assertIn("automerge:candidate", command)
         self.assertIn("owner:auto-approve", command)
         self.assertNotIn("bad label", command)
 

@@ -20,7 +20,12 @@ from f.mil.codex_worker_contract import (
     validate_allowed_changes,
 )
 
-SAFE_PR_LABELS = {"agent:auto-build", "automerge:allowed", "owner:auto-approve"}
+SAFE_PR_LABELS = {
+    "agent:auto-build",
+    "automerge:candidate",
+    "automerge:allowed",
+    "owner:auto-approve",
+}
 
 
 def _load_json(path: str | Path) -> dict[str, Any]:

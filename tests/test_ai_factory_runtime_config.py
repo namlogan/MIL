@@ -37,6 +37,7 @@ class AIFactoryRuntimeConfigTests(unittest.TestCase):
         for agent in [
             "codex_developer",
             "codex_qa",
+            "ai_delivery_coordinator",
             "augment_context_provider",
             "auggie_advisory",
             "mem0_memory",
@@ -78,11 +79,13 @@ class AIFactoryRuntimeConfigTests(unittest.TestCase):
         self.assertEqual(
             stage_names,
             [
+                "ai_delivery_coordinator_issue_gate",
                 "issue_to_plan",
                 "plan_to_pr",
                 "control_plane_ci",
                 "augment_context_review",
                 "codex_qa_gate",
+                "ai_delivery_coordinator_pr_gate",
                 "protected_merge",
             ],
         )

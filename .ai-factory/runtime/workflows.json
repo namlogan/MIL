@@ -13,7 +13,28 @@
         "wm_pr_merge_memory_writeback",
         "wm_memory_maintenance"
       ],
+      "routine_coordinator": "ai_delivery_coordinator",
+      "routine_auto_labels": [
+        "agent:auto-build",
+        "automerge:candidate"
+      ],
+      "human_escalation_only_for": [
+        "restricted_changes",
+        "production_release",
+        "qc_sop_or_tolerance_approval",
+        "policy_exception",
+        "failed_auto_fix_limit",
+        "explicit_hold"
+      ],
       "stages": [
+        {
+          "name": "ai_delivery_coordinator_issue_gate",
+          "owner": "ai_delivery_coordinator",
+          "script": "scripts/agent-flow/delivery_coordinator.py",
+          "routine_decision": "ROUTINE_AUTO_DISPATCH",
+          "routine_label": "agent:auto-build",
+          "human_exception_decision": "ESCALATE_HUMAN"
+        },
         {
           "name": "issue_to_plan",
           "owner": "codex_developer",
@@ -92,6 +113,14 @@
             "REJECT",
             "BLOCKED_NEEDS_HUMAN"
           ]
+        },
+        {
+          "name": "ai_delivery_coordinator_pr_gate",
+          "owner": "ai_delivery_coordinator",
+          "script": "scripts/agent-flow/delivery_coordinator.py",
+          "routine_decision": "ROUTINE_AUTOMERGE_CANDIDATE",
+          "routine_label": "automerge:candidate",
+          "human_exception_decision": "ESCALATE_HUMAN"
         },
         {
           "name": "protected_merge",
