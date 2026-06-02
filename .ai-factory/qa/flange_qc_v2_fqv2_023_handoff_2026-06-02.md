@@ -58,6 +58,12 @@
 - RED: `python3 -m unittest tests.flange_qc_v2.test_artifact_intake -v`
   failed because `apps.flange_qc_v2.artifact_intake` did not exist.
 - GREEN: `python3 -m unittest tests.flange_qc_v2.test_artifact_intake -v`
+- `python3 scripts/flange_qc_v2/validate_artifact_intake.py --intake-dir templates/flange_qc_v2/artifact_intake` passed with `ready.shadow_model_integration_issue=true` and `ready.live_camera_implementation_issue=false`.
+- `python3 -m unittest discover -s tests/flange_qc_v2 -v` passed, 108 tests.
+- `python3 -m compileall -q apps/flange_qc_v2 scripts/flange_qc_v2 tests/flange_qc_v2` passed.
+- `python3 scripts/product-ci/run_product_checks.py` passed.
+- `python3 -m unittest discover -s tests -v` passed, 196 tests.
+- `git diff --check` passed.
 
 ## Residual Risks
 
