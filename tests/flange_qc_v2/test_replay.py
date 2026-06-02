@@ -25,6 +25,8 @@ class ReplayFrameSourceTests(unittest.TestCase):
         self.assertEqual(manifest.frames[0].frame_id, "frame-001")
         self.assertEqual(manifest.frames[0].source_uri, "synthetic://flange-qc-v2/phase2/frame-001")
         self.assertEqual(manifest.frames[0].measurements["diagonals"], [83.0, 83.25])
+        self.assertEqual(manifest.frames[0].detector_observations[0]["label"], "punch_mark")
+        self.assertEqual(manifest.to_payload()["frames"][0]["detector_observations"][0]["confidence"], 0.87)
 
     def test_no_camera_replay_flow_runs_fail_closed_with_current_bootstrap_authority(self) -> None:
         result = run_no_camera_replay(
@@ -85,6 +87,45 @@ class ReplayFrameSourceTests(unittest.TestCase):
             )
 
             with self.assertRaisesRegex(ValidationError, "frames is required"):
+                load_replay_manifest(path)
+
+    def test_replay_manifest_rejects_invalid_detector_observation(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "replay.json"
+            path.write_text(
+                json.dumps(
+                    {
+                        "schema_version": 1,
+                        "replay_id": "bad-detector-observation",
+                        "product_code": "611",
+                        "size_group": "11",
+                        "no_camera": True,
+                        "frames": [
+                            {
+                                "frame_id": "frame-bad-observation",
+                                "source_uri": "synthetic://flange-qc-v2/phase2/frame-bad-observation",
+                                "captured_at": "2026-06-02T00:00:00Z",
+                                "measurements": {
+                                    "length_points": [74.9, 75.0, 75.1],
+                                    "width_points": [37.4, 37.5, 37.6],
+                                    "diagonals": [83.0, 83.25],
+                                    "unit": "inch",
+                                },
+                                "detector_observations": [
+                                    {
+                                        "label": "punch_mark",
+                                        "confidence": 0.91,
+                                        "bbox": [0.1, 0.2, 1.2, 0.1],
+                                    }
+                                ],
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(ValidationError, "bbox values must be between 0 and 1"):
                 load_replay_manifest(path)
 
 
