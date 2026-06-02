@@ -12,7 +12,7 @@ from apps.flange_qc_v2.decision_engine import (
     evaluate_phase_two_geometry,
     evaluate_sop_safe_fallbacks,
 )
-from apps.flange_qc_v2.domain import ValidationError
+from apps.flange_qc_v2.domain import DetectorObservation, ValidationError
 from apps.flange_qc_v2.geometry import resolve_geometry_measurements
 from apps.flange_qc_v2.product_specs import load_product_specs
 
@@ -23,6 +23,7 @@ class ReplayFrame:
     source_uri: str
     captured_at: str
     measurements: dict[str, Any]
+    detector_observations: tuple[dict[str, Any], ...] = ()
 
     def __post_init__(self) -> None:
         for field_name in ("frame_id", "source_uri", "captured_at"):
@@ -33,6 +34,11 @@ class ReplayFrame:
         if not isinstance(self.measurements, dict):
             raise ValidationError("frame measurements must be an object")
         resolve_geometry_measurements(self.measurements)
+        object.__setattr__(
+            self,
+            "detector_observations",
+            _coerce_detector_observations(self.detector_observations),
+        )
 
     @classmethod
     def from_payload(cls, payload: Any) -> "ReplayFrame":
@@ -46,15 +52,19 @@ class ReplayFrame:
             source_uri=str(payload["source_uri"]),
             captured_at=str(payload["captured_at"]),
             measurements=dict(payload["measurements"]),
+            detector_observations=payload.get("detector_observations", ()),
         )
 
     def to_payload(self) -> dict[str, Any]:
-        return {
+        payload = {
             "frame_id": self.frame_id,
             "source_uri": self.source_uri,
             "captured_at": self.captured_at,
             "measurements": dict(self.measurements),
         }
+        if self.detector_observations:
+            payload["detector_observations"] = [dict(observation) for observation in self.detector_observations]
+        return payload
 
 
 @dataclass(frozen=True)
@@ -215,3 +225,22 @@ def _unique_codes(codes: list[str]) -> tuple[str, ...]:
         if code and code not in unique:
             unique.append(code)
     return tuple(unique)
+
+
+def _coerce_detector_observations(values: Any) -> tuple[dict[str, Any], ...]:
+    if values in (None, ()):
+        return ()
+    if not isinstance(values, (list, tuple)):
+        raise ValidationError("detector_observations must be a list")
+
+    observations: list[dict[str, Any]] = []
+    for value in values:
+        observation = DetectorObservation.from_payload(value)
+        observations.append(
+            {
+                "label": observation.label,
+                "confidence": observation.confidence,
+                "bbox": observation.bbox.to_list(),
+            }
+        )
+    return tuple(observations)

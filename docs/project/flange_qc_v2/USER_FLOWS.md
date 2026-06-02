@@ -75,9 +75,10 @@
    `model_artifact_manifest.json` and returns the `manifest-detector` adapter id,
    model reference, artifact version, labels, evaluation report reference,
    approval status, shadow mode, and production-authority blockers.
-5. A Codex implementation issue may build review-only detector observations
-   against `ManifestDetectorAdapter`; the adapter still cannot emit `PASS` or
-   `NG`.
+5. Replay frames may provide sanitized synthetic `detector_observations`.
+   During HMI snapshot generation, those observations are attached only through
+   `ManifestDetectorAdapter` after artifact intake is ready. The adapter fills
+   the manifest model reference and evaluation evidence reference.
 6. Model weights, runtime inference, camera access, model promotion, product
    spec approval, QC/SOP tolerance approval, and production release remain
    outside this flow.
@@ -127,3 +128,6 @@
   shadow-only authority blockers.
 - Shadow detector status returns a safe unconfigured state without env setup and
   returns manifest metadata from the template bundle when intake is ready.
+- Replay/HMI snapshots keep observations empty without ready intake and attach
+  review-only manifest detector observations when ready intake and synthetic
+  replay observation metadata are present.

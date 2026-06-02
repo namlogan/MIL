@@ -294,6 +294,15 @@ intake configuration or repair. The payload is metadata only and does not carry
 raw frames, datasets, model binaries, inference output, camera configuration, or
 final QC PASS/NG authority.
 
+Replay frames may include optional synthetic `detector_observations` metadata:
+label, confidence, and normalized bbox only. Replay parsing validates these
+values through `DetectorObservation` and strips model/evidence references from
+the fixture so sanitized replay data cannot claim model provenance. During HMI
+snapshot generation, observations remain empty unless artifact intake is ready;
+when ready, the manifest detector adapter attaches the validated manifest
+`model_ref` and `eval_report_ref` as review-only evidence. This does not alter
+the final decision aggregation or product authority.
+
 Bootstrap Hikrobot camera boundary evidence lives in:
 
 ```text

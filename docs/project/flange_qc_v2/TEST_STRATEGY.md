@@ -62,6 +62,9 @@
   returns manifest metadata only after artifact intake is ready. Adapter tests
   prove `ManifestDetectorAdapter` remains review-only and cannot emit production
   PASS/NG authority.
+- Replay/HMI stream tests validate optional synthetic `detector_observations`,
+  invalid observation rejection, safe empty observations without artifact intake,
+  and manifest-filled review-only observations when artifact intake is ready.
 - Audit DB stores inspection, rule, calibration, and feedback evidence.
 
 ## Fixtures And Test Data
@@ -94,6 +97,11 @@ Shadow detector metadata bridge tests use the same sanitized artifact intake
 template and synthetic detector requests. They must not add model weights,
 TensorRT/ONNX/PyTorch runtimes, camera SDKs, live capture, raw media, raw
 datasets, or production model promotion evidence.
+
+Replay detector observation fixtures are metadata only. They may include label,
+confidence, and normalized bbox values, but must not include raw image paths,
+model binaries, runtime outputs, customer data, credentials, production model
+promotion evidence, or final inspection authority.
 
 ## Agent Verification Rules
 

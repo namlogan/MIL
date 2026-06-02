@@ -15,16 +15,22 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 PRODUCT_SPECS = REPO_ROOT / "configs/flange_qc_v2/product_specs.bootstrap.json"
 CALIBRATION_FIXTURE = REPO_ROOT / "configs/flange_qc_v2/camera_calibration.synthetic.example.json"
 SAMPLE_REPLAY = REPO_ROOT / "samples/replay/flange_qc_v2/phase2_synthetic_measurements.json"
+TEMPLATE_INTAKE = REPO_ROOT / "templates/flange_qc_v2/artifact_intake"
+ARTIFACT_INTAKE_ENV = "FLANGE_QC_V2_ARTIFACT_INTAKE_DIR"
 
 
 class HmiStreamSnapshotTests(unittest.TestCase):
     def setUp(self) -> None:
         self._previous_audit_path = os.environ.pop("FLANGE_QC_V2_AUDIT_DB_PATH", None)
+        self._previous_artifact_intake = os.environ.pop(ARTIFACT_INTAKE_ENV, None)
 
     def tearDown(self) -> None:
         os.environ.pop("FLANGE_QC_V2_AUDIT_DB_PATH", None)
+        os.environ.pop(ARTIFACT_INTAKE_ENV, None)
         if self._previous_audit_path is not None:
             os.environ["FLANGE_QC_V2_AUDIT_DB_PATH"] = self._previous_audit_path
+        if self._previous_artifact_intake is not None:
+            os.environ[ARTIFACT_INTAKE_ENV] = self._previous_artifact_intake
 
     def test_replay_snapshot_matches_inspection_websocket_contract(self) -> None:
         snapshot = build_replay_inspection_snapshot(
@@ -56,6 +62,27 @@ class HmiStreamSnapshotTests(unittest.TestCase):
         )
         self.assertEqual(payload["measurements"]["diagonals"], [83.0, 83.25])
         self.assertEqual(payload["observations"], [])
+
+    def test_replay_snapshot_attaches_manifest_detector_observations_when_intake_ready(self) -> None:
+        os.environ[ARTIFACT_INTAKE_ENV] = str(TEMPLATE_INTAKE)
+
+        snapshot = build_replay_inspection_snapshot(
+            manifest_path=SAMPLE_REPLAY,
+            product_specs_path=PRODUCT_SPECS,
+            calibration_path=CALIBRATION_FIXTURE,
+        )
+
+        payload = snapshot.to_payload()
+        parsed = InspectionSnapshot.from_payload(payload)
+
+        self.assertEqual(parsed.decision, "BLOCKED")
+        self.assertEqual(len(payload["observations"]), 1)
+        observation = payload["observations"][0]
+        self.assertEqual(observation["label"], "punch_mark")
+        self.assertEqual(observation["confidence"], 0.87)
+        self.assertEqual(observation["bbox"], [0.42, 0.25, 0.12, 0.08])
+        self.assertEqual(observation["model_ref"], "registry://flange-qc-v2/detector/punch-mark/2026-06-02")
+        self.assertEqual(observation["evidence_ref"], "templates/flange_qc_v2/artifact_intake/evaluation_report.json")
 
     def test_websocket_endpoint_accepts_and_sends_replay_snapshot(self) -> None:
         messages = []

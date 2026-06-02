@@ -10,6 +10,13 @@
       "frame_id": "frame-001",
       "source_uri": "synthetic://flange-qc-v2/phase2/frame-001",
       "captured_at": "2026-06-02T00:00:00Z",
+      "detector_observations": [
+        {
+          "bbox": [0.42, 0.25, 0.12, 0.08],
+          "confidence": 0.87,
+          "label": "punch_mark"
+        }
+      ],
       "measurements": {
         "length_points": [74.9, 75.0, 75.1],
         "width_points": [37.4, 37.5, 37.6],
