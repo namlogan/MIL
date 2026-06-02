@@ -1,0 +1,108 @@
+{
+  "task_id": "FQV2-028",
+  "github_issue": 113,
+  "source_ref": "https://github.com/namlogan/MIL/issues/113",
+  "owner_agent": "codex_developer",
+  "qa_agent": "codex_qa",
+  "preferred_lane": "codex",
+  "branch": "agent/113-artifact-intake-readiness-hmi",
+  "allowed_paths": [
+    ".ai-factory/gates/flange_qc_v2_fqv2_028_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_028_handoff_2026-06-02.md",
+    ".ai-factory/qa/flange_qc_v2_fqv2_028_hmi.png",
+    ".ai-factory/qa/flange_qc_v2_fqv2_028_hmi_snapshot.md",
+    "apps/flange_qc_v2/asgi.py",
+    "apps/flange_qc_v2/static/hmi.html",
+    "tests/flange_qc_v2/test_artifact_intake.py",
+    "tests/flange_qc_v2/test_hmi_screen.py",
+    "docs/project/flange_qc_v2/ARTIFACT_INTAKE.md",
+    "docs/project/flange_qc_v2/DATA_MODEL.md",
+    "docs/project/flange_qc_v2/USER_FLOWS.md",
+    "docs/project/flange_qc_v2/TEST_STRATEGY.md"
+  ],
+  "restricted_paths": [
+    "request-supplied arbitrary filesystem paths",
+    "production deploy behavior",
+    "release approval",
+    "merge policy changes",
+    "GitHub Actions workflow changes",
+    "branch protection changes",
+    "secrets",
+    "tokens",
+    "passwords",
+    "private keys",
+    "provider credentials",
+    "camera credentials",
+    "raw media",
+    "customer or factory data",
+    "raw datasets",
+    "notebooks",
+    "model weights",
+    "model deserialization",
+    "training code",
+    "TensorRT engines",
+    "ONNX/PyTorch runtime execution",
+    "GPU or hardware validation",
+    "MLOps promotion",
+    "live camera capture",
+    "destructive migrations",
+    "production DB migration behavior",
+    "QC/SOP tolerance approval",
+    "product spec approval",
+    "production PASS/NG authority",
+    "production auto-reject"
+  ],
+  "acceptance_criteria": [
+    "GET /artifact-intake/status reads only FLANGE_QC_V2_ARTIFACT_INTAKE_DIR and does not accept request-supplied paths.",
+    "Missing env var returns configured=false, ok=false, readiness flags false, no production authority, and configure_artifact_intake as next task.",
+    "Configured env var pointing to a valid metadata bundle returns the existing validator result with configured=true.",
+    "HMI renders configured state, shadow model readiness, live camera readiness, next task, warnings/errors, and artifact names/summaries.",
+    "Existing /hmi, /inspection/replay, /ws/inspection, feedback, phase results, and product CI behavior continue to work.",
+    "Tests prove endpoint and HMI binding behavior, and browser evidence records the panel on /hmi."
+  ],
+  "memory_preflight": {
+    "query": "flange_qc_v2 artifact intake readiness endpoint HMI dataset model camera handoff",
+    "retrieved_decisions": [
+      "Artifact intake validator already coordinates dataset, evaluation, model artifact, and camera boundary metadata.",
+      "ready.shadow_model_integration_issue allows the next shadow model integration issue.",
+      "Live camera implementation remains blocked until hardware readiness approval."
+    ],
+    "retrieved_lessons": [
+      "Expose metadata readiness without request-supplied paths or raw artifacts.",
+      "HMI should consume safe app endpoints and keep production authority false."
+    ],
+    "restricted_areas": [
+      "secrets",
+      "raw media/data",
+      "model binaries/deserialization/inference",
+      "live camera/hardware",
+      "destructive migrations",
+      "production deploy/release",
+      "product spec approval",
+      "QC/SOP tolerance approval",
+      "production PASS/NG authority"
+    ],
+    "conflicts_found": [],
+    "sources_to_verify": [
+      "https://github.com/namlogan/MIL/issues/113",
+      "apps/flange_qc_v2/artifact_intake.py",
+      "apps/flange_qc_v2/asgi.py",
+      "apps/flange_qc_v2/static/hmi.html",
+      "tests/flange_qc_v2/test_artifact_intake.py",
+      "docs/project/flange_qc_v2/ARTIFACT_INTAKE.md"
+    ]
+  },
+  "test_commands": [
+    "python3 -m unittest tests.flange_qc_v2.test_artifact_intake -v",
+    "python3 -m unittest tests.flange_qc_v2.test_hmi_screen -v",
+    "python3 -m unittest tests.flange_qc_v2.test_hmi_stream -v",
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 -m compileall -q apps/flange_qc_v2 tests/flange_qc_v2",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m unittest discover -s tests -v",
+    "git diff --check",
+    "Browser/Playwright verification on http://127.0.0.1:8765/hmi"
+  ],
+  "handoff_required": true,
+  "rollback_note": "Revert the FQV2-028 PR to remove /artifact-intake/status and the HMI readiness panel. Existing CLI artifact validator, docs, templates, and HMI replay/feedback behavior remain valid. No migration, model rollback, camera rollback, dataset rollback, or deploy rollback is required."
+}

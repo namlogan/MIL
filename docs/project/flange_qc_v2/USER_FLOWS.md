@@ -46,6 +46,23 @@
    live hardware approval, or production PASS/NG authority remains outside this
    flow.
 
+## Critical Path: Artifact Intake Readiness
+
+1. Operator prepares sanitized dataset/model/camera metadata in an ignored
+   intake directory.
+2. Operator sets `FLANGE_QC_V2_ARTIFACT_INTAKE_DIR` to that directory before
+   starting the app.
+3. HMI calls `/artifact-intake/status` and displays configured state, shadow
+   model readiness, live camera readiness, next task, warnings/errors, and
+   artifact names/summaries.
+4. If `ready.shadow_model_integration_issue=true`, the next allowed task is a
+   shadow model integration issue that still cannot approve model promotion or
+   production PASS/NG authority.
+5. If `ready.live_camera_implementation_issue=false`, hardware work remains
+   blocked until camera readiness and credential handling are approved.
+6. If the env var is missing or the bundle is invalid, the HMI stays in a safe
+   repair/configuration state and no production authority is granted.
+
 ## Critical Path: Production-Like Shadow Mode
 
 1. Owner approves shadow-mode runbook and rollback plan.

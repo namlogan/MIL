@@ -49,6 +49,26 @@ The validator checks:
 - model labels are declared by the dataset manifest;
 - no raw media, model binaries, or secrets-like files in the intake directory.
 
+## App Readiness Endpoint
+
+The ASGI app exposes the same readiness check at:
+
+```text
+GET /artifact-intake/status
+```
+
+The endpoint reads only `FLANGE_QC_V2_ARTIFACT_INTAKE_DIR`. It does not accept
+request-supplied filesystem paths. If the env var is missing, the endpoint
+returns `configured=false`, readiness flags false, no production authority, and
+`next_issue.recommended_task=configure_artifact_intake`. If the env var points
+to a valid metadata bundle, the endpoint returns the validator result with
+`configured=true`.
+
+The HMI renders this endpoint as an artifact readiness panel. It shows configured
+state, shadow model readiness, live camera readiness, next task, warnings/errors,
+and artifact names/summaries. It does not display raw data, model weights,
+camera credentials, or grant production authority.
+
 ## Next Issue Rules
 
 If `ready.shadow_model_integration_issue=true`, the next allowed issue is a

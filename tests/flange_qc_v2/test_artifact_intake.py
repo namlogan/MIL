@@ -1,4 +1,6 @@
+import asyncio
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -7,6 +9,7 @@ import unittest
 from pathlib import Path
 
 from apps.flange_qc_v2.artifact_intake import validate_artifact_intake
+from apps.flange_qc_v2.asgi import app
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -23,6 +26,20 @@ def copy_template() -> tempfile.TemporaryDirectory:
 
 def write_json(path: Path, payload: dict) -> None:
     path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+
+
+def asgi_get_json(path: str) -> dict:
+    messages = []
+
+    async def receive():
+        return {"type": "http.request", "body": b"", "more_body": False}
+
+    async def send(message):
+        messages.append(message)
+
+    asyncio.run(app({"type": "http", "method": "GET", "path": path}, receive, send))
+    body = messages[1]["body"].decode("utf-8")
+    return {"status": messages[0]["status"], "body": json.loads(body)}
 
 
 class ArtifactIntakeTemplateTests(unittest.TestCase):
@@ -49,6 +66,50 @@ class ArtifactIntakeTemplateTests(unittest.TestCase):
         body = json.loads(completed.stdout)
         self.assertTrue(body["ok"], body)
         self.assertEqual(body["intake_dir"], str(TEMPLATE_DIR.resolve()))
+
+
+class ArtifactIntakeStatusEndpointTests(unittest.TestCase):
+    def test_status_endpoint_reports_safe_unconfigured_state(self) -> None:
+        previous = os.environ.pop("FLANGE_QC_V2_ARTIFACT_INTAKE_DIR", None)
+        try:
+            response = asgi_get_json("/artifact-intake/status")
+        finally:
+            if previous is not None:
+                os.environ["FLANGE_QC_V2_ARTIFACT_INTAKE_DIR"] = previous
+
+        body = response["body"]
+        self.assertEqual(response["status"], 200)
+        self.assertFalse(body["configured"])
+        self.assertFalse(body["ok"])
+        self.assertIn("FLANGE_QC_V2_ARTIFACT_INTAKE_DIR is not configured", body["errors"])
+        self.assertFalse(body["ready"]["shadow_model_integration_issue"])
+        self.assertFalse(body["ready"]["live_camera_implementation_issue"])
+        self.assertEqual(body["next_issue"]["recommended_task"], "configure_artifact_intake")
+        self.assertFalse(body["production_authority"])
+
+    def test_status_endpoint_validates_configured_intake_dir_from_env(self) -> None:
+        previous = os.environ.get("FLANGE_QC_V2_ARTIFACT_INTAKE_DIR")
+        os.environ["FLANGE_QC_V2_ARTIFACT_INTAKE_DIR"] = str(TEMPLATE_DIR)
+        try:
+            response = asgi_get_json("/artifact-intake/status")
+        finally:
+            if previous is None:
+                os.environ.pop("FLANGE_QC_V2_ARTIFACT_INTAKE_DIR", None)
+            else:
+                os.environ["FLANGE_QC_V2_ARTIFACT_INTAKE_DIR"] = previous
+
+        body = response["body"]
+        self.assertEqual(response["status"], 200)
+        self.assertTrue(body["configured"])
+        self.assertTrue(body["ok"], body)
+        self.assertEqual(
+            sorted(body["artifacts"].keys()),
+            ["camera_boundary", "dataset_manifest", "evaluation_report", "model_artifact_manifest"],
+        )
+        self.assertTrue(body["ready"]["shadow_model_integration_issue"])
+        self.assertFalse(body["ready"]["live_camera_implementation_issue"])
+        self.assertEqual(body["next_issue"]["recommended_task"], "shadow_model_integration")
+        self.assertFalse(body["production_authority"])
 
 
 class ArtifactIntakeFailureTests(unittest.TestCase):
