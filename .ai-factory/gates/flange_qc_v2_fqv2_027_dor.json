@@ -1,0 +1,105 @@
+{
+  "task_id": "FQV2-027",
+  "github_issue": 111,
+  "source_ref": "https://github.com/namlogan/MIL/issues/111",
+  "owner_agent": "codex_developer",
+  "qa_agent": "codex_qa",
+  "preferred_lane": "codex",
+  "branch": "agent/111-hmi-phase-results-drilldown",
+  "allowed_paths": [
+    ".ai-factory/gates/flange_qc_v2_fqv2_027_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_027_handoff_2026-06-02.md",
+    ".ai-factory/qa/flange_qc_v2_fqv2_027_hmi.png",
+    ".ai-factory/qa/flange_qc_v2_fqv2_027_hmi_snapshot.md",
+    "apps/flange_qc_v2/static/hmi.html",
+    "tests/flange_qc_v2/test_hmi_screen.py",
+    "docs/project/flange_qc_v2/DATA_MODEL.md",
+    "docs/project/flange_qc_v2/USER_FLOWS.md",
+    "docs/project/flange_qc_v2/TEST_STRATEGY.md"
+  ],
+  "restricted_paths": [
+    "production deploy behavior",
+    "release approval",
+    "merge policy changes",
+    "GitHub Actions workflow changes",
+    "branch protection changes",
+    "secrets",
+    "tokens",
+    "passwords",
+    "private keys",
+    "provider credentials",
+    "camera credentials",
+    "raw media",
+    "customer or factory data",
+    "raw datasets",
+    "notebooks",
+    "model weights",
+    "model deserialization",
+    "training code",
+    "TensorRT engines",
+    "ONNX/PyTorch runtime execution",
+    "GPU or hardware validation",
+    "MLOps promotion",
+    "live camera capture",
+    "destructive migrations",
+    "production DB migration behavior",
+    "QC/SOP tolerance approval",
+    "product spec approval",
+    "production PASS/NG authority",
+    "production auto-reject"
+  ],
+  "acceptance_criteria": [
+    "HMI renders an ordered SOP phase-results section for PHASE_1 through PHASE_4 from payload.phase_results.",
+    "Each phase card shows phase, decision, reason codes, authority blockers, and production-authority state.",
+    "Each phase card exposes rule id, rule decision, rule reason codes, and compact evidence summary when rule_results are present.",
+    "Missing or empty phase_results renders a safe empty state.",
+    "Existing top-level decision, phase, reasons, measurements, replay refresh, websocket updates, and feedback form behavior continue to work.",
+    "Browser verification records HMI phase-results drilldown evidence on /hmi."
+  ],
+  "memory_preflight": {
+    "query": "flange_qc_v2 HMI phase_results operator drilldown SOP evidence rule results",
+    "retrieved_decisions": [
+      "HMI snapshot payload already carries ordered phase_results for Phase 1 through Phase 4.",
+      "HMI must remain no-camera shadow evidence and cannot approve production authority.",
+      "Product spec approval, QC/SOP tolerance approval, model promotion, live hardware validation, and release remain human-gated."
+    ],
+    "retrieved_lessons": [
+      "Keep operator UI tied to snapshot contract fields instead of raw JSON.",
+      "Add screen-level tests and browser evidence when changing static HMI behavior."
+    ],
+    "restricted_areas": [
+      "HMI redesign outside phase-results drilldown",
+      "live camera/hardware",
+      "model loading/inference",
+      "dataset ingestion",
+      "raw media/customer data",
+      "secrets",
+      "destructive migrations",
+      "production deploy/release",
+      "product spec approval",
+      "QC/SOP tolerance approval",
+      "production PASS/NG authority"
+    ],
+    "conflicts_found": [],
+    "sources_to_verify": [
+      "https://github.com/namlogan/MIL/issues/111",
+      "apps/flange_qc_v2/static/hmi.html",
+      "tests/flange_qc_v2/test_hmi_screen.py",
+      "docs/project/flange_qc_v2/DATA_MODEL.md",
+      "docs/project/flange_qc_v2/USER_FLOWS.md",
+      "docs/project/flange_qc_v2/TEST_STRATEGY.md"
+    ]
+  },
+  "test_commands": [
+    "python3 -m unittest tests.flange_qc_v2.test_hmi_screen -v",
+    "python3 -m unittest tests.flange_qc_v2.test_hmi_stream -v",
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 -m compileall -q apps/flange_qc_v2 tests/flange_qc_v2",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m unittest discover -s tests -v",
+    "git diff --check",
+    "Browser/Playwright verification on http://127.0.0.1:8765/hmi"
+  ],
+  "handoff_required": true,
+  "rollback_note": "Revert the FQV2-027 PR to remove the HMI phase-results drilldown and restore the prior static HMI screen. No migration, model rollback, camera rollback, dataset rollback, or deploy rollback is required."
+}

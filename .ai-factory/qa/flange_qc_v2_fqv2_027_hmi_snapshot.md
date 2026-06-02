@@ -1,0 +1,144 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - heading "Flange QC HMI" [level=1] [ref=e4]
+      - paragraph [ref=e5]: flange-qc-v2 / no-camera replay
+    - generic [ref=e6]:
+      - button "Refresh" [ref=e7] [cursor=pointer]
+      - generic [ref=e8]: closed
+  - main [ref=e9]:
+    - region "Inspection status" [ref=e10]:
+      - generic [ref=e11]:
+        - heading "Decision" [level=2] [ref=e12]
+        - strong [ref=e13]: BLOCKED
+      - generic [ref=e14]:
+        - heading "Phase" [level=2] [ref=e15]
+        - strong [ref=e16]: FINAL
+      - generic [ref=e17]:
+        - heading "Product" [level=2] [ref=e18]
+        - strong [ref=e19]: "611"
+      - generic [ref=e20]:
+        - heading "Spec" [level=2] [ref=e21]
+        - strong [ref=e22]: bootstrap_replay
+    - generic [ref=e23]:
+      - generic [ref=e24]:
+        - heading "Reason Codes" [level=2] [ref=e25]
+        - list [ref=e26]:
+          - listitem [ref=e27]: PRODUCT_SPEC_APPROVAL_MISSING
+          - listitem [ref=e28]: CALIBRATION_MISSING
+          - listitem [ref=e29]: MODEL_REVIEW_REQUIRED
+          - listitem [ref=e30]: RULE_POST_MVP_DISABLED
+      - generic [ref=e31]:
+        - heading "Measurements" [level=2] [ref=e32]
+        - generic [ref=e33]:
+          - generic [ref=e34]:
+            - generic [ref=e35]: Length
+            - generic [ref=e36]: "74.90"
+            - generic [ref=e37]: "75.00"
+            - generic [ref=e38]: "75.10"
+          - generic [ref=e39]:
+            - generic [ref=e40]: Width
+            - generic [ref=e41]: "37.40"
+            - generic [ref=e42]: "37.50"
+            - generic [ref=e43]: "37.60"
+          - generic [ref=e44]:
+            - generic [ref=e45]: Diagonals
+            - generic [ref=e46]: "83.00"
+            - generic [ref=e47]: "83.25"
+    - region "SOP phase results" [ref=e48]:
+      - heading "SOP Phase Results" [level=2] [ref=e49]
+      - generic [ref=e50]:
+        - article [ref=e51]:
+          - generic [ref=e52]:
+            - generic [ref=e53]: PHASE_1
+            - generic [ref=e54]: BLOCKED
+          - generic [ref=e55]:
+            - generic [ref=e56]: "Reasons: PRODUCT_SPEC_APPROVAL_MISSING, CALIBRATION_MISSING"
+            - generic [ref=e57]: "Authority: none"
+            - generic [ref=e58]: "Production: false"
+          - list [ref=e59]:
+            - listitem [ref=e60]
+        - article [ref=e62]:
+          - generic [ref=e63]:
+            - generic [ref=e64]: PHASE_2
+            - generic [ref=e65]: BLOCKED
+          - generic [ref=e66]:
+            - generic [ref=e67]: "Reasons: PRODUCT_SPEC_APPROVAL_MISSING, CALIBRATION_MISSING"
+            - generic [ref=e68]: "Authority: none"
+            - generic [ref=e69]: "Production: false"
+          - list [ref=e70]:
+            - listitem [ref=e71]
+        - article [ref=e73]:
+          - generic [ref=e74]:
+            - generic [ref=e75]: PHASE_3
+            - generic [ref=e76]: ASSIST
+          - generic [ref=e77]:
+            - generic [ref=e78]: "Reasons: MODEL_REVIEW_REQUIRED"
+            - generic [ref=e79]: "Authority: MODEL_APPROVAL_REQUIRED"
+            - generic [ref=e80]: "Production: false"
+          - list [ref=e81]:
+            - listitem [ref=e82]
+            - listitem [ref=e88]
+        - article [ref=e94]:
+          - generic [ref=e95]:
+            - generic [ref=e96]: PHASE_4
+            - generic [ref=e97]: ASSIST
+          - generic [ref=e98]:
+            - generic [ref=e99]: "Reasons: RULE_POST_MVP_DISABLED, MODEL_REVIEW_REQUIRED"
+            - generic [ref=e100]: "Authority: MODEL_APPROVAL_REQUIRED"
+            - generic [ref=e101]: "Production: false"
+          - list [ref=e102]:
+            - listitem [ref=e103]
+            - listitem [ref=e109]
+            - listitem [ref=e115]
+            - listitem [ref=e121]
+            - listitem [ref=e127]
+            - listitem [ref=e133]
+            - listitem [ref=e139]
+            - listitem [ref=e145]
+    - generic [ref=e151]:
+      - generic [ref=e152]:
+        - heading "Inspection" [level=2] [ref=e153]
+        - generic [ref=e154]:
+          - generic [ref=e155]: Inspection
+          - generic [ref=e156]: fqv2-phase2-synthetic-001
+        - generic [ref=e157]:
+          - generic [ref=e158]: Created
+          - generic [ref=e159]: 2026-06-02T00:00:00Z
+        - generic [ref=e160]:
+          - generic [ref=e161]: Observation
+          - generic [ref=e162]: none
+      - generic [ref=e163]:
+        - heading "Frame Source" [level=2] [ref=e164]
+        - generic [ref=e165]:
+          - generic [ref=e166]: Frame
+          - generic [ref=e167]: frame-001
+        - generic [ref=e168]:
+          - generic [ref=e169]: Source
+          - generic [ref=e170]: synthetic://flange-qc-v2/phase2/frame-001
+        - generic [ref=e171]:
+          - generic [ref=e172]: Unit
+          - generic [ref=e173]: inch
+    - generic [ref=e174]:
+      - generic [ref=e175]:
+        - heading "Feedback" [level=2] [ref=e176]
+        - generic [ref=e177]:
+          - generic [ref=e178]:
+            - text: Reviewer
+            - textbox "Reviewer" [ref=e179]: qc-operator-1
+          - generic [ref=e180]:
+            - text: Type
+            - combobox "Type" [ref=e181]
+          - generic [ref=e182]:
+            - text: Note
+            - textbox "Note" [ref=e183]: Synthetic replay reviewed while camera hardware is pending.
+          - button "Submit" [ref=e185] [cursor=pointer]
+      - generic [ref=e186]:
+        - heading "Feedback Status" [level=2] [ref=e187]
+        - generic [ref=e188]: pending
+        - generic [ref=e189]:
+          - generic [ref=e190]: Production Authority
+          - generic [ref=e191]: "false"
+        - generic [ref=e192]:
+          - generic [ref=e193]: Authority Blockers
+          - generic [ref=e194]: PRODUCTION_APPROVAL_REQUIRED

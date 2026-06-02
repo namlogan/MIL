@@ -50,6 +50,10 @@
 - Replay and HMI snapshot tests validate ordered SOP `phase_results`, top-level
   `FINAL` fail-closed aggregation, and audit persistence of the full snapshot
   payload.
+- HMI screen tests and browser evidence validate the operator-facing
+  phase-results drilldown renders ordered phase cards, rule ids, compact
+  evidence summaries, authority blockers, production-authority state, and a
+  safe empty state.
 - Audit DB stores inspection, rule, calibration, and feedback evidence.
 
 ## Fixtures And Test Data
