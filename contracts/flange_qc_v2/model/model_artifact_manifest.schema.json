@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "FLANGE QC V2 Model Artifact Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "model_ref",
+    "artifact_version",
+    "model_family",
+    "task",
+    "labels",
+    "output_schema",
+    "eval_report_ref",
+    "artifact_digest",
+    "approval_status",
+    "production_authority",
+    "shadow_mode",
+    "source_ref"
+  ],
+  "properties": {
+    "contract_version": {
+      "type": "string",
+      "const": "model.artifact.v1"
+    },
+    "model_ref": {
+      "type": "string",
+      "pattern": "^(registry|mlflow|model)://"
+    },
+    "artifact_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "model_family": {
+      "type": "string",
+      "enum": ["detector"]
+    },
+    "task": {
+      "type": "string",
+      "const": "flange_qc_v2.detector"
+    },
+    "labels": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "output_schema": {
+      "type": "string",
+      "pattern": "^(?!/)(?!~)(?!.*://)(?!.*(^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+$"
+    },
+    "eval_report_ref": {
+      "type": "string",
+      "pattern": "^(?!/)(?!~)(?!.*://)(?!.*(^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+$"
+    },
+    "artifact_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "approval_status": {
+      "type": "string",
+      "enum": ["candidate", "shadow_reviewed", "rejected"]
+    },
+    "production_authority": {
+      "type": "boolean",
+      "const": false
+    },
+    "shadow_mode": {
+      "type": "boolean",
+      "const": true
+    },
+    "source_ref": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

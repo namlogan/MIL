@@ -2,8 +2,9 @@ import json
 import unittest
 from pathlib import Path
 
-from apps.flange_qc_v2.detector import DetectorRequest, DetectorResult, StubDetectorAdapter
+from apps.flange_qc_v2.detector import DetectorRequest, DetectorResult, ManifestDetectorAdapter, StubDetectorAdapter
 from apps.flange_qc_v2.domain import ValidationError
+from apps.flange_qc_v2.model_artifact import ModelArtifactManifest
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -16,6 +17,26 @@ def detector_request_payload(**overrides):
         "source_uri": "synthetic://flange-qc-v2/phase3/frame-detector-001",
         "captured_at": "2026-06-02T00:00:00Z",
         "source_ref": "https://github.com/namlogan/MIL/issues/85",
+    }
+    payload.update(overrides)
+    return payload
+
+
+def model_manifest_payload(**overrides):
+    payload = {
+        "contract_version": "model.artifact.v1",
+        "model_ref": "registry://flange-qc-v2/detector/punch-mark/2026-06-02",
+        "artifact_version": "detector-shadow-2026-06-02",
+        "model_family": "detector",
+        "task": "flange_qc_v2.detector",
+        "labels": ["punch_mark", "corner_mark"],
+        "output_schema": "contracts/flange_qc_v2/detector/detector_result.schema.json",
+        "eval_report_ref": "docs/project/flange_qc_v2/eval/detector-shadow-2026-06-02.json",
+        "artifact_digest": "sha256:" + ("a" * 64),
+        "approval_status": "candidate",
+        "production_authority": False,
+        "shadow_mode": True,
+        "source_ref": "https://github.com/namlogan/MIL/issues/99",
     }
     payload.update(overrides)
     return payload
@@ -107,6 +128,48 @@ class StubDetectorAdapterTests(unittest.TestCase):
                 reason_codes=(),
                 observations=(),
             )
+
+
+class ManifestDetectorAdapterTests(unittest.TestCase):
+    def test_manifest_detector_returns_review_only_observations(self) -> None:
+        request = DetectorRequest.from_payload(detector_request_payload())
+        manifest = ModelArtifactManifest.from_payload(model_manifest_payload())
+        adapter = ManifestDetectorAdapter(
+            manifest=manifest,
+            observations=[
+                {
+                    "label": "punch_mark",
+                    "confidence": 0.73,
+                    "bbox": [0.1, 0.2, 0.3, 0.4],
+                    "evidence_ref": "replay://flange-qc-v2/evidence/frame-detector-001",
+                }
+            ],
+        )
+
+        result = adapter.detect(request)
+
+        self.assertEqual(result.decision, "ASSIST")
+        self.assertEqual(result.reason_codes, ("MODEL_REVIEW_REQUIRED",))
+        self.assertEqual(result.observations[0].model_ref, manifest.model_ref)
+        self.assertFalse(result.production_authority)
+        self.assertEqual(result.authority_blockers, ("MODEL_APPROVAL_REQUIRED", "PRODUCTION_APPROVAL_REQUIRED"))
+
+    def test_manifest_detector_rejects_labels_not_declared_by_manifest(self) -> None:
+        request = DetectorRequest.from_payload(detector_request_payload())
+        manifest = ModelArtifactManifest.from_payload(model_manifest_payload(labels=["punch_mark"]))
+        adapter = ManifestDetectorAdapter(
+            manifest=manifest,
+            observations=[
+                {
+                    "label": "unexpected_label",
+                    "confidence": 0.73,
+                    "bbox": [0.1, 0.2, 0.3, 0.4],
+                }
+            ],
+        )
+
+        with self.assertRaisesRegex(ValidationError, "observation label is not declared"):
+            adapter.detect(request)
 
 
 if __name__ == "__main__":

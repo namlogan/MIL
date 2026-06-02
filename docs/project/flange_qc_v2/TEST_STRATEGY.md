@@ -25,6 +25,9 @@
 - Diagonal deviation greater than 0.5 inch returns NG in phase 2.
 - Detector returns observations only.
 - Missing model produces `NOT_EVALUATED`, `ASSIST`, or `BLOCKED` for model-dependent rules.
+- Model artifact manifests validate contract version, registry reference,
+  declared labels, safe repository-relative evidence paths, digest, shadow mode,
+  and no production authority before detector integration.
 - WebSocket payload schema validates normalized bbox values in `[0, 1]`.
 - Audit DB stores inspection, rule, calibration, and feedback evidence.
 
@@ -34,6 +37,11 @@ Use synthetic fixtures and replay samples for baseline CI. Do not commit secrets
 production credentials, raw customer data, or unapproved production datasets.
 Factory images and production datasets belong to a separate approved data/MLOps
 source of truth.
+
+Model artifacts from MLOps must enter the app through
+`contracts/flange_qc_v2/model/model_artifact_manifest.schema.json` and
+`apps/flange_qc_v2/model_artifact.py`. Do not commit model weights, TensorRT
+engines, production datasets, raw factory media, or notebooks as app fixtures.
 
 ## Agent Verification Rules
 

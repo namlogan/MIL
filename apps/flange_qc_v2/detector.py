@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from apps.flange_qc_v2.domain import DECISION_STATES, DetectorObservation, ValidationError
+from apps.flange_qc_v2.model_artifact import ModelArtifactManifest
 from apps.flange_qc_v2.sop_registry import get_reason_code
 
 
@@ -121,3 +122,39 @@ class StubDetectorAdapter:
             reason_codes=("MODEL_MISSING",),
             observations=(),
         )
+
+
+@dataclass(frozen=True)
+class ManifestDetectorAdapter:
+    manifest: ModelArtifactManifest
+    adapter_id: str = "manifest-detector"
+    observations: tuple[dict[str, Any], ...] | list[dict[str, Any]] = field(default_factory=tuple)
+
+    def detect(self, request: DetectorRequest) -> DetectorResult:
+        observations = tuple(self._observation_from_payload(observation) for observation in self.observations)
+        if observations:
+            return DetectorResult(
+                adapter_id=self.adapter_id,
+                request=request,
+                decision="ASSIST",
+                reason_codes=("MODEL_REVIEW_REQUIRED",),
+                observations=observations,
+            )
+        return DetectorResult(
+            adapter_id=self.adapter_id,
+            request=request,
+            decision="NOT_EVALUATED",
+            reason_codes=("MODEL_MISSING",),
+            observations=(),
+        )
+
+    def _observation_from_payload(self, payload: dict[str, Any]) -> DetectorObservation:
+        normalized = dict(payload)
+        label = str(normalized.get("label", "")).strip()
+        if label not in self.manifest.labels:
+            raise ValidationError("observation label is not declared by model manifest")
+        if not str(normalized.get("model_ref", "")).strip():
+            normalized["model_ref"] = self.manifest.model_ref
+        if not str(normalized.get("evidence_ref", "")).strip():
+            normalized["evidence_ref"] = self.manifest.eval_report_ref
+        return DetectorObservation.from_payload(normalized)
