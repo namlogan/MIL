@@ -120,6 +120,42 @@ REASON_CODES = (
         description="SOP tolerance has not been approved for production PASS/NG decisions.",
         severity="blocker",
     ),
+    ReasonCode(
+        code="IMAGE_QUALITY_APPROVAL_REQUIRED",
+        decision="BLOCKED",
+        description="Image quality gate thresholds are bootstrap defaults and require QC/domain approval before production.",
+        severity="blocker",
+    ),
+    ReasonCode(
+        code="PRODUCTION_APPROVAL_REQUIRED",
+        decision="BLOCKED",
+        description="Production release approval is required before evidence can grant production authority.",
+        severity="blocker",
+    ),
+    ReasonCode(
+        code="IMAGE_TOO_DARK",
+        decision="BLOCKED",
+        description="Frame brightness evidence is below the bootstrap quality threshold.",
+        severity="blocker",
+    ),
+    ReasonCode(
+        code="IMAGE_TOO_BLURRY",
+        decision="BLOCKED",
+        description="Frame sharpness evidence is below the bootstrap quality threshold.",
+        severity="blocker",
+    ),
+    ReasonCode(
+        code="IMAGE_OCCLUSION_REVIEW_REQUIRED",
+        decision="ASSIST",
+        description="Frame occlusion evidence requires supervised QC review.",
+        severity="review",
+    ),
+    ReasonCode(
+        code="IMAGE_OCCLUSION_BLOCKED",
+        decision="BLOCKED",
+        description="Frame occlusion evidence is too severe for reliable bootstrap evaluation.",
+        severity="blocker",
+    ),
 )
 
 

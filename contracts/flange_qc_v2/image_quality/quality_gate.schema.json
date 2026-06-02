@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "FLANGE QC V2 Image Quality Gate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "decision",
+    "reason_codes",
+    "authority_blockers",
+    "production_authority",
+    "shadow_mode",
+    "evidence",
+    "quality_scores",
+    "thresholds"
+  ],
+  "properties": {
+    "contract_version": {
+      "type": "string",
+      "const": "image_quality.gate.v1"
+    },
+    "decision": {
+      "type": "string",
+      "enum": ["PASS", "ASSIST", "BLOCKED"]
+    },
+    "reason_codes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "IMAGE_TOO_DARK",
+          "IMAGE_TOO_BLURRY",
+          "IMAGE_OCCLUSION_REVIEW_REQUIRED",
+          "IMAGE_OCCLUSION_BLOCKED"
+        ]
+      }
+    },
+    "authority_blockers": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["IMAGE_QUALITY_APPROVAL_REQUIRED", "PRODUCTION_APPROVAL_REQUIRED"]
+      }
+    },
+    "production_authority": {
+      "type": "boolean",
+      "const": false
+    },
+    "shadow_mode": {
+      "type": "boolean",
+      "const": true
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["frame_id", "source_uri", "captured_at", "source_ref"],
+      "properties": {
+        "frame_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_uri": {
+          "type": "string",
+          "pattern": "^(synthetic|replay)://"
+        },
+        "captured_at": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_ref": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "quality_scores": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["brightness_score", "sharpness_score", "occlusion_score"],
+      "properties": {
+        "brightness_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "sharpness_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "occlusion_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "thresholds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "brightness_min",
+        "sharpness_min",
+        "occlusion_assist_min",
+        "occlusion_block_min"
+      ],
+      "properties": {
+        "brightness_min": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "sharpness_min": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "occlusion_assist_min": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "occlusion_block_min": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    }
+  }
+}

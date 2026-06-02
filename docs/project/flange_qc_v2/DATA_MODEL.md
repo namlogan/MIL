@@ -144,3 +144,19 @@ and carry `PRODUCTION_APPROVAL_REQUIRED` as an authority blocker. This contract
 does not approve product specs, QC/SOP tolerances, production PASS/NG authority,
 production auto-reject, release, deploy, secrets, customer data, or destructive
 migrations.
+
+Bootstrap image quality evidence lives in:
+
+```text
+apps/flange_qc_v2/image_quality.py
+contracts/flange_qc_v2/image_quality/quality_gate.schema.json
+```
+
+The current image quality gate evaluates synthetic/replay frame metadata only.
+It validates normalized brightness, sharpness, and occlusion scores, then emits
+shadow `PASS`, `ASSIST`, or `BLOCKED` evidence. Dark, blurry, or severely
+occluded frames fail closed as `BLOCKED`; moderate occlusion emits `ASSIST` for
+QC review. Passing evidence remains shadow-only and carries
+`IMAGE_QUALITY_APPROVAL_REQUIRED` and `PRODUCTION_APPROVAL_REQUIRED` blockers.
+This contract does not read live camera frames, raw media, customer/factory data,
+detector/model outputs, or production image quality thresholds.
