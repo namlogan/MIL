@@ -34,6 +34,7 @@ class HmiScreenTests(unittest.TestCase):
         self.assertIn('id="decision"', body)
         self.assertIn('id="reason-list"', body)
         self.assertIn('id="measurements"', body)
+        self.assertIn('id="phase-results"', body)
         self.assertIn('id="refresh-replay"', body)
         self.assertIn('id="feedback-form"', body)
         self.assertIn('id="feedback-status"', body)
@@ -46,8 +47,23 @@ class HmiScreenTests(unittest.TestCase):
         self.assertIn("renderSnapshot", html)
         self.assertIn("payload.reason_codes", html)
         self.assertIn("payload.measurements", html)
+        self.assertIn("payload.phase_results", html)
+        self.assertIn("renderPhaseResults", html)
+        self.assertIn("renderRuleResults", html)
         self.assertIn("payload.observations", html)
         self.assertIn("PRODUCT_SPEC_APPROVAL_MISSING", html)
+
+    def test_hmi_html_renders_sop_phase_results_drilldown(self) -> None:
+        html = HMI_HTML.read_text(encoding="utf-8")
+
+        self.assertIn('aria-label="SOP phase results"', html)
+        self.assertIn('id="phase-results"', html)
+        self.assertIn("phase-result-card", html)
+        self.assertIn("rule-result-list", html)
+        self.assertIn("No phase results", html)
+        self.assertIn("authority_blockers", html)
+        self.assertIn("production_authority", html)
+        self.assertIn("M1-SOP-6.4-PUNCH-MARK-001", html)
 
     def test_hmi_html_binds_operator_feedback_form_to_shadow_endpoint(self) -> None:
         html = HMI_HTML.read_text(encoding="utf-8")
