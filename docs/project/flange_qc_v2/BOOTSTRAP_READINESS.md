@@ -10,8 +10,8 @@
 | Contract/backlog gate | Partial | Minimum contracts and work packages drafted; no DoR-ready app-code issue selected |
 | Repo + CI bootstrap | Ready for FQV2-001 | Bootstrap repo and app root are confirmed; product CI may be enabled by the app skeleton task |
 | Agent delivery loop | Ready for FQV2-001 only | DoR manifest is recorded at `.ai-factory/gates/flange_qc_v2_fqv2_001_dor.json` |
-| QA/review/merge gate | Not started | Requires implementation PRs |
-| Release/rollback gate | Not started | Requires app artifact and smoke evidence |
+| QA/review/merge gate | Ready for MVP-0 baseline | FQV2-001 through FQV2-016 merged through protected PR checks |
+| Release/rollback gate | Pending human release approval | Readiness pack records rollback path and release blockers; no deploy approved |
 | Memory maintenance | Not started | Memory candidates need source refs and review |
 
 ## ZIP Review Decision

@@ -22,10 +22,28 @@ REQUIRED_FIELDS = [
 ]
 
 PASS_VALUES = {"passed", "pass", "success", "approved"}
+BLOCKED_HUMAN_APPROVAL_MARKERS = (
+    "pending",
+    "blocked",
+    "not approved",
+    "missing",
+    "none",
+    "tbd",
+    "not yet",
+)
 
 
 def _missing(evidence: dict[str, Any]) -> list[str]:
     return [field for field in REQUIRED_FIELDS if not str(evidence.get(field, "")).strip()]
+
+
+def _has_explicit_human_approval(value: Any) -> bool:
+    normalized = str(value or "").strip().lower()
+    if not normalized:
+        return False
+    if any(marker in normalized for marker in BLOCKED_HUMAN_APPROVAL_MARKERS):
+        return False
+    return normalized in PASS_VALUES or "approved" in normalized
 
 
 def evaluate_release_evidence(evidence: dict[str, Any]) -> dict[str, Any]:
@@ -35,6 +53,10 @@ def evaluate_release_evidence(evidence: dict[str, Any]) -> dict[str, Any]:
         value = str(evidence.get(status_field, "")).strip().lower()
         if value and value not in PASS_VALUES:
             errors.append(f"{status_field} must be passed before release")
+    if "human_approval" not in missing and not _has_explicit_human_approval(
+        evidence.get("human_approval")
+    ):
+        errors.append("human_approval must be an explicit approval")
     ok = not missing and not errors
     return {
         "ok": ok,
