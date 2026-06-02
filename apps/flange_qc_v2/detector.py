@@ -1,16 +1,19 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
+from apps.flange_qc_v2.artifact_intake import REQUIRED_ARTIFACTS, validate_artifact_intake
 from apps.flange_qc_v2.domain import DECISION_STATES, DetectorObservation, ValidationError
-from apps.flange_qc_v2.model_artifact import ModelArtifactManifest
+from apps.flange_qc_v2.model_artifact import ModelArtifactManifest, load_model_artifact_manifest
 from apps.flange_qc_v2.sop_registry import get_reason_code
 
 
 CONTRACT_VERSION = "detector.result.v1"
 AUTHORITY_BLOCKERS = ("MODEL_APPROVAL_REQUIRED", "PRODUCTION_APPROVAL_REQUIRED")
 ALLOWED_SOURCE_PREFIXES = ("synthetic://", "replay://")
+SHADOW_DETECTOR_NEXT_TASK = "shadow_detector_observations"
 
 
 def _require_field(payload: dict[str, Any], field_name: str) -> Any:
@@ -158,3 +161,94 @@ class ManifestDetectorAdapter:
         if not str(normalized.get("evidence_ref", "")).strip():
             normalized["evidence_ref"] = self.manifest.eval_report_ref
         return DetectorObservation.from_payload(normalized)
+
+
+def build_shadow_detector_unconfigured_status(reason: str) -> dict[str, Any]:
+    return {
+        "configured": False,
+        "ready": False,
+        "adapter_id": "manifest-detector",
+        "model_ref": "",
+        "artifact_version": "",
+        "labels": [],
+        "eval_report_ref": "",
+        "approval_status": "",
+        "shadow_mode": True,
+        "production_authority": False,
+        "authority_blockers": list(AUTHORITY_BLOCKERS),
+        "errors": [reason],
+        "warnings": [],
+        "artifact_intake_ready": {
+            "shadow_model_integration_issue": False,
+            "live_camera_implementation_issue": False,
+        },
+        "next_issue": {
+            "recommended_task": "configure_artifact_intake",
+            "reason": reason,
+        },
+    }
+
+
+def build_shadow_detector_status_from_intake(
+    intake_dir: str | Path,
+    *,
+    repo_root: str | Path | None = None,
+) -> dict[str, Any]:
+    intake_status = validate_artifact_intake(intake_dir, repo_root=repo_root)
+    artifact_ready = intake_status.get("ready", {})
+    shadow_ready = bool(artifact_ready.get("shadow_model_integration_issue"))
+    base_status: dict[str, Any] = {
+        "configured": True,
+        "ready": False,
+        "adapter_id": "manifest-detector",
+        "model_ref": "",
+        "artifact_version": "",
+        "labels": [],
+        "eval_report_ref": "",
+        "approval_status": "",
+        "shadow_mode": True,
+        "production_authority": False,
+        "authority_blockers": list(AUTHORITY_BLOCKERS),
+        "errors": list(intake_status.get("errors", [])),
+        "warnings": list(intake_status.get("warnings", [])),
+        "artifact_intake_ready": artifact_ready,
+        "next_issue": intake_status.get("next_issue", {}),
+    }
+    if not shadow_ready:
+        return base_status
+
+    manifest_path = Path(intake_dir).resolve() / REQUIRED_ARTIFACTS["model_artifact_manifest"]
+    manifest = load_model_artifact_manifest(manifest_path)
+    base_status.update(
+        {
+            "ready": True,
+            "model_ref": manifest.model_ref,
+            "artifact_version": manifest.artifact_version,
+            "labels": list(manifest.labels),
+            "eval_report_ref": manifest.eval_report_ref,
+            "approval_status": manifest.approval_status,
+            "shadow_mode": manifest.shadow_mode,
+            "next_issue": {
+                "recommended_task": SHADOW_DETECTOR_NEXT_TASK,
+                "source_ref": manifest.source_ref,
+                "reason": "shadow detector metadata bridge is ready for review-only observations",
+            },
+        }
+    )
+    return base_status
+
+
+def build_manifest_detector_from_intake(
+    intake_dir: str | Path,
+    *,
+    repo_root: str | Path | None = None,
+    observations: tuple[dict[str, Any], ...] | list[dict[str, Any]] = (),
+) -> ManifestDetectorAdapter:
+    status = build_shadow_detector_status_from_intake(intake_dir, repo_root=repo_root)
+    if not status["ready"]:
+        raise ValidationError("artifact intake is not ready for shadow detector integration")
+    manifest_path = Path(intake_dir).resolve() / REQUIRED_ARTIFACTS["model_artifact_manifest"]
+    return ManifestDetectorAdapter(
+        manifest=load_model_artifact_manifest(manifest_path),
+        observations=observations,
+    )

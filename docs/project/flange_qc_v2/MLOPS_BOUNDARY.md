@@ -101,3 +101,14 @@ The artifact intake validator combines dataset, evaluation, model artifact, and
 camera boundary checks into a single JSON readiness result. It rejects raw media,
 model binaries, and secrets-like files in the intake directory, then reports
 whether the next allowed issue is shadow model integration or intake repair.
+
+The app exposes a metadata-only shadow detector bridge through
+`GET /detector/shadow/status`. The endpoint reads only
+`FLANGE_QC_V2_ARTIFACT_INTAKE_DIR`, requires the artifact intake validator to
+report `ready.shadow_model_integration_issue=true`, then loads only
+`model_artifact_manifest.json` to return adapter id, model reference, artifact
+version, labels, evaluation report reference, approval status, shadow mode, and
+approval blockers. Missing or invalid intake returns a non-ready state with
+`production_authority=false`. The bridge does not load weights, deserialize model
+binaries, run inference, import camera SDKs, capture frames, approve model
+promotion, or grant production PASS/NG authority.

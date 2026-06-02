@@ -57,6 +57,11 @@
 - Artifact intake endpoint tests validate safe unconfigured state and configured
   template readiness from `FLANGE_QC_V2_ARTIFACT_INTAKE_DIR`; HMI screen tests
   and browser evidence validate the metadata-only readiness panel.
+- Shadow detector bridge tests validate that `/detector/shadow/status` reads
+  only `FLANGE_QC_V2_ARTIFACT_INTAKE_DIR`, reports safe unconfigured state, and
+  returns manifest metadata only after artifact intake is ready. Adapter tests
+  prove `ManifestDetectorAdapter` remains review-only and cannot emit production
+  PASS/NG authority.
 - Audit DB stores inspection, rule, calibration, and feedback evidence.
 
 ## Fixtures And Test Data
@@ -84,6 +89,11 @@ Combined dataset/model/camera intake must enter through
 template bundle validates, raw media/model/secrets-like files are rejected, and
 dataset/evaluation/model references stay consistent before a shadow model
 integration issue is opened.
+
+Shadow detector metadata bridge tests use the same sanitized artifact intake
+template and synthetic detector requests. They must not add model weights,
+TensorRT/ONNX/PyTorch runtimes, camera SDKs, live capture, raw media, raw
+datasets, or production model promotion evidence.
 
 ## Agent Verification Rules
 
