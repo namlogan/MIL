@@ -116,6 +116,11 @@ class AuditStore:
         except sqlite3.IntegrityError as exc:
             raise ValidationError(f"inspection already exists: {snapshot.inspection_id}") from exc
 
+    def ensure_inspection(self, snapshot: InspectionSnapshot) -> None:
+        if self.fetch_inspection(snapshot.inspection_id) is not None:
+            return
+        self.append_inspection(snapshot)
+
     def fetch_inspection(self, inspection_id: str) -> dict[str, Any] | None:
         with self._connection() as connection:
             row = connection.execute(

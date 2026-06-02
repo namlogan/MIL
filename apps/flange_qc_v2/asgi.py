@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import json
+import os
 from collections.abc import Awaitable, Callable
 from pathlib import Path
 from typing import Any
 
+from apps.flange_qc_v2.audit import AuditStore
 from apps.flange_qc_v2.domain import ValidationError
 from apps.flange_qc_v2.feedback import QcFeedback
 from apps.flange_qc_v2.health import build_health_snapshot
@@ -38,16 +40,33 @@ async def _handle_http(scope: Scope, receive: Receive, send: Send) -> None:
         await _send_html(send, 200, HMI_SCREEN.read_text(encoding="utf-8"))
         return
     if method == "GET" and path == "/inspection/replay":
-        await _send_json(send, 200, build_replay_inspection_snapshot().to_payload())
+        snapshot = build_replay_inspection_snapshot()
+        audit_store = _audit_store_from_env()
+        if audit_store is not None:
+            audit_store.initialize()
+            audit_store.ensure_inspection(snapshot)
+        await _send_json(send, 200, snapshot.to_payload())
         return
     if method == "POST" and path == "/feedback":
         try:
             payload = await _read_json_body(receive)
             feedback = QcFeedback.from_payload(payload)
+            response_payload = feedback.to_payload()
+            audit_store = _audit_store_from_env()
+            if audit_store is not None:
+                audit_store.initialize()
+                snapshot = build_replay_inspection_snapshot()
+                if feedback.inspection_id == snapshot.inspection_id:
+                    audit_store.ensure_inspection(snapshot)
+                audit_store.append_feedback(feedback)
+                response_payload["audit"] = {
+                    "persisted": True,
+                    "feedback_count": len(audit_store.fetch_feedback(feedback.inspection_id)),
+                }
         except (ValidationError, json.JSONDecodeError) as exc:
             await _send_json(send, 400, {"detail": str(exc)})
             return
-        await _send_json(send, 200, feedback.to_payload())
+        await _send_json(send, 200, response_payload)
         return
 
     await _send_json(send, 404, {"detail": "not found"})
@@ -118,3 +137,10 @@ async def _read_json_body(receive: Receive) -> dict[str, Any]:
     if not isinstance(data, dict):
         raise ValidationError("feedback payload must be an object")
     return data
+
+
+def _audit_store_from_env() -> AuditStore | None:
+    raw_path = os.environ.get("FLANGE_QC_V2_AUDIT_DB_PATH", "").strip()
+    if not raw_path:
+        return None
+    return AuditStore(raw_path)
