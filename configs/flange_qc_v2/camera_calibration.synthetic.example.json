@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "status": "synthetic",
+  "approved_for_production": false,
+  "source_ref": "synthetic bootstrap fixture",
+  "camera": {
+    "mount": "top_down_90_degrees",
+    "working_distance_meters": 3.0,
+    "lens": "FA 12mm ultra-low distortion",
+    "focus_locked": false,
+    "iris_locked": false
+  },
+  "lighting": {
+    "layout": "four_led_bars",
+    "angle_degrees_min": 45,
+    "angle_degrees_max": 60,
+    "diffuser_required": true
+  }
+}

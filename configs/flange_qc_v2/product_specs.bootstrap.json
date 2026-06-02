@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "status": "draft_requires_qc_owner_approval",
+  "source_ref": "/Users/mac/.codex/attachments/29025915-a42c-4868-98b5-9de4595af87b/pasted-text.txt",
+  "notes": [
+    "Bootstrap only. Do not use for production until original SOP/product sources and QC/domain owner approval are recorded.",
+    "Product-specific tolerance groups are known to exist, but exact product table values must be verified from source docs."
+  ],
+  "global_rules": {
+    "diagonal_deviation_max_inch": 0.5,
+    "mark_deviation_max_inch": 0.25,
+    "seam_curvature_max_inch": 0.5,
+    "corner_bend_default_max_inch": 0.25,
+    "corner_bend_special_group_max_inch": 0.75
+  },
+  "product_groups": []
+}
