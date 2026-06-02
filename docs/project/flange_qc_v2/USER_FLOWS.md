@@ -25,6 +25,8 @@
 1. Operator opens `/hmi` while camera hardware is pending.
 2. HMI loads the current synthetic replay snapshot through
    `/inspection/replay` and continues to accept `/ws/inspection` updates.
+   The snapshot exposes a top-level `FINAL` aggregate decision and ordered
+   `phase_results` for Phase 1 through Phase 4 SOP evidence.
 3. When `FLANGE_QC_V2_AUDIT_DB_PATH` is configured, replay refresh initializes
    the local audit store and records the current inspection idempotently.
 4. Operator refreshes the replay snapshot from the HMI header when a manual

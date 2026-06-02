@@ -47,6 +47,9 @@
   precision/recall/F1, slice metrics, p95 latency budget, no promotion approval,
   and no production authority.
 - WebSocket payload schema validates normalized bbox values in `[0, 1]`.
+- Replay and HMI snapshot tests validate ordered SOP `phase_results`, top-level
+  `FINAL` fail-closed aggregation, and audit persistence of the full snapshot
+  payload.
 - Audit DB stores inspection, rule, calibration, and feedback evidence.
 
 ## Fixtures And Test Data

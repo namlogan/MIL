@@ -1,0 +1,111 @@
+{
+  "task_id": "FQV2-026",
+  "github_issue": 109,
+  "source_ref": "https://github.com/namlogan/MIL/issues/109",
+  "owner_agent": "codex_developer",
+  "qa_agent": "codex_qa",
+  "preferred_lane": "codex",
+  "branch": "agent/109-sop-phase-results-hmi-replay",
+  "allowed_paths": [
+    ".ai-factory/gates/flange_qc_v2_fqv2_026_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_026_handoff_2026-06-02.md",
+    "apps/flange_qc_v2/replay.py",
+    "apps/flange_qc_v2/hmi_stream.py",
+    "apps/flange_qc_v2/domain.py",
+    "contracts/flange_qc_v2/websocket/inspection_snapshot.schema.json",
+    "tests/flange_qc_v2/test_replay.py",
+    "tests/flange_qc_v2/test_hmi_stream.py",
+    "tests/flange_qc_v2/test_domain_contracts.py",
+    "docs/project/flange_qc_v2/DATA_MODEL.md",
+    "docs/project/flange_qc_v2/USER_FLOWS.md",
+    "docs/project/flange_qc_v2/TEST_STRATEGY.md"
+  ],
+  "restricted_paths": [
+    "production deploy behavior",
+    "release approval",
+    "merge policy changes",
+    "GitHub Actions workflow changes",
+    "branch protection changes",
+    "secrets",
+    "tokens",
+    "passwords",
+    "private keys",
+    "provider credentials",
+    "camera credentials",
+    "raw media",
+    "customer or factory data",
+    "raw datasets",
+    "notebooks",
+    "model weights",
+    "model deserialization",
+    "training code",
+    "TensorRT engines",
+    "ONNX/PyTorch runtime execution",
+    "GPU or hardware validation",
+    "MLOps promotion",
+    "live camera capture",
+    "destructive migrations",
+    "production DB migration behavior",
+    "QC/SOP tolerance approval",
+    "product spec approval",
+    "production PASS/NG authority",
+    "production auto-reject"
+  ],
+  "acceptance_criteria": [
+    "run_no_camera_replay evaluates Phase 1 length/width, Phase 2 diagonal, Phase 3 safe fallbacks, and Phase 4 safe fallbacks for the replay frame.",
+    "Replay payload includes ordered phase_results with each phase DecisionResult.to_payload().",
+    "Replay top-level decision becomes a FINAL aggregate that remains fail-closed.",
+    "HMI inspection.snapshot payload includes phase_results and keeps top-level decision, phase, and reason_codes.",
+    "WebSocket snapshot contract schema documents phase_results and rejects payloads that omit required phase-result fields.",
+    "Audit persistence keeps the full snapshot payload, including phase_results, without schema migration or destructive change.",
+    "Tests prove replay/HMI/audit expose Phase 1-4 evidence, final decision remains non-authoritative, and no production authority/model/camera behavior is introduced."
+  ],
+  "memory_preflight": {
+    "query": "flange_qc_v2 replay HMI inspection snapshot full SOP phase_results final aggregate decision",
+    "retrieved_decisions": [
+      "Snapshot contract is HMI payload source of truth.",
+      "Current replay only surfaced Phase 2 before this task.",
+      "Phase 1 and Phase 3/4 evaluators are shadow/fallback only and cannot grant production authority."
+    ],
+    "retrieved_lessons": [
+      "Add contract evidence before UI/worker integration.",
+      "Keep top-level decision fail-closed for operator scanability while preserving detailed rule evidence in payload."
+    ],
+    "restricted_areas": [
+      "HMI redesign",
+      "live camera/hardware",
+      "model loading/inference",
+      "dataset ingestion",
+      "raw media/customer data",
+      "secrets",
+      "destructive migrations",
+      "production deploy/release",
+      "product spec approval",
+      "QC/SOP tolerance approval",
+      "production PASS/NG authority"
+    ],
+    "conflicts_found": [],
+    "sources_to_verify": [
+      "https://github.com/namlogan/MIL/issues/109",
+      "apps/flange_qc_v2/replay.py",
+      "apps/flange_qc_v2/hmi_stream.py",
+      "apps/flange_qc_v2/domain.py",
+      "contracts/flange_qc_v2/websocket/inspection_snapshot.schema.json",
+      "tests/flange_qc_v2/test_replay.py",
+      "tests/flange_qc_v2/test_hmi_stream.py",
+      "docs/project/flange_qc_v2/DATA_MODEL.md"
+    ]
+  },
+  "test_commands": [
+    "python3 -m unittest tests.flange_qc_v2.test_replay -v",
+    "python3 -m unittest tests.flange_qc_v2.test_hmi_stream -v",
+    "python3 -m unittest tests.flange_qc_v2.test_domain_contracts -v",
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 -m compileall -q apps/flange_qc_v2 tests/flange_qc_v2",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m unittest discover -s tests -v",
+    "git diff --check"
+  ],
+  "handoff_required": true,
+  "rollback_note": "Revert the FQV2-026 PR to remove phase_results contract and replay/HMI wiring. Existing audit records remain valid JSON snapshots; no destructive migration, model rollback, hardware rollback, or deploy rollback is required."
+}
