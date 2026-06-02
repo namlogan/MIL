@@ -1,0 +1,27 @@
+{
+  "adapter_id": "hikrobot-boundary",
+  "authority_blockers": [
+    "CAMERA_HARDWARE_APPROVAL_REQUIRED",
+    "CALIBRATION_APPROVAL_REQUIRED",
+    "PRODUCTION_APPROVAL_REQUIRED"
+  ],
+  "contract_version": "camera.boundary.v1",
+  "credentials_configured": false,
+  "decision": "BLOCKED",
+  "enabled": false,
+  "hardware_profile": {
+    "camera_model": "pending_hikrobot_model_from_purchase_order",
+    "lens": "pending_lens_model_from_purchase_order",
+    "lighting": "pending_lighting_fixture_from_cell_setup",
+    "mount": "pending_mount_geometry_from_cell_setup"
+  },
+  "live_capture_enabled": false,
+  "production_authority": false,
+  "reason_codes": [
+    "CAMERA_HARDWARE_READINESS_MISSING",
+    "LIVE_CAMERA_DISABLED"
+  ],
+  "sdk_loaded": false,
+  "source_ref": "https://github.com/namlogan/MIL/issues/103",
+  "vendor": "Hikrobot"
+}

@@ -10,6 +10,7 @@
 | MLOps dataset manifest | Sanitized dataset snapshot metadata, labels, splits, privacy flags | MLOps boundary | JSON contract |
 | MLOps evaluation report | Offline metrics, slice metrics, latency evidence, promotion state | MLOps boundary | JSON contract |
 | Model artifact manifest | Versioned metadata for detector artifact integration | App/MLOps boundary | JSON contract |
+| Artifact intake bundle | Coordinated dataset, evaluation, model, and camera metadata readiness | App/MLOps/hardware boundary | Template plus validator output |
 | Measurement set | 3 length points, 3 width points, 2 diagonals | Geometry module | Audit DB |
 | Detector observation | Model or stub observations, bbox, confidence, label | Detector adapter | Audit DB |
 | Rule result | Rule ID, phase, input evidence, result, reason code | SOP rule engine | Audit DB |
@@ -21,8 +22,9 @@
 
 One inspection references one product spec version, one calibration state, one or
 more frames, zero or one MLOps dataset/evaluation handoff reference, zero or one
-model artifact manifest reference, one measurement set, zero or more detector
-observations, many rule results, one decision, and optional QC feedback entries.
+model artifact manifest reference, zero or one artifact intake readiness result,
+one measurement set, zero or more detector observations, many rule results, one
+decision, and optional QC feedback entries.
 
 ## Invariants
 
@@ -38,6 +40,8 @@ observations, many rule results, one decision, and optional QC feedback entries.
   production release gates pass.
 - Dataset and evaluation handoff manifests must be sanitized metadata only and
   must not include raw media, PII, customer data, or production authority.
+- Artifact intake bundles must not include raw media, raw datasets, model
+  binaries, notebooks, credentials, or secrets-like files.
 - Bboxes are normalized floats in `[0, 1]`.
 - Audit evidence is append-only for release review.
 
@@ -238,6 +242,20 @@ precision/recall/F1, slice metrics, p95 latency evidence, approval status,
 reference. These contracts do not store raw media, raw datasets, customer data,
 model weights, notebooks, registry credentials, model execution, or model
 promotion approval.
+
+Bootstrap artifact intake evidence lives in:
+
+```text
+templates/flange_qc_v2/artifact_intake/
+apps/flange_qc_v2/artifact_intake.py
+scripts/flange_qc_v2/validate_artifact_intake.py
+docs/project/flange_qc_v2/ARTIFACT_INTAKE.md
+```
+
+The intake validator coordinates the dataset manifest, evaluation report, model
+artifact manifest, and camera boundary into one JSON readiness result. It can
+recommend a shadow model integration issue when metadata is consistent, while
+keeping live camera implementation blocked until hardware readiness approval.
 
 Bootstrap Hikrobot camera boundary evidence lives in:
 

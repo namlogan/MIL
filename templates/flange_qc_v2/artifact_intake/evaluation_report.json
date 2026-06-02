@@ -1,0 +1,30 @@
+{
+  "approval_status": "candidate",
+  "contract_version": "mlops.evaluation_report.v1",
+  "dataset_snapshot_ref": "dataset://flange-qc-v2/shadow/snapshot-2026-06-02",
+  "latency_budget_ms_p95": 150.0,
+  "latency_ms_p95": 75.0,
+  "metrics": {
+    "f1": 0.86,
+    "precision": 0.92,
+    "recall": 0.81
+  },
+  "model_ref": "registry://flange-qc-v2/detector/punch-mark/2026-06-02",
+  "production_authority": false,
+  "promotion_decision": "not_approved",
+  "slice_metrics": [
+    {
+      "precision": 0.91,
+      "recall": 0.8,
+      "slice": "punch_mark",
+      "support": 100
+    },
+    {
+      "precision": 0.95,
+      "recall": 0.84,
+      "slice": "corner_mark",
+      "support": 50
+    }
+  ],
+  "source_ref": "https://github.com/namlogan/MIL/issues/103"
+}

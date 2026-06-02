@@ -1,0 +1,18 @@
+{
+  "approval_status": "candidate",
+  "artifact_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "artifact_version": "detector-shadow-2026-06-02",
+  "contract_version": "model.artifact.v1",
+  "eval_report_ref": "templates/flange_qc_v2/artifact_intake/evaluation_report.json",
+  "labels": [
+    "punch_mark",
+    "corner_mark"
+  ],
+  "model_family": "detector",
+  "model_ref": "registry://flange-qc-v2/detector/punch-mark/2026-06-02",
+  "output_schema": "contracts/flange_qc_v2/detector/detector_result.schema.json",
+  "production_authority": false,
+  "shadow_mode": true,
+  "source_ref": "https://github.com/namlogan/MIL/issues/103",
+  "task": "flange_qc_v2.detector"
+}

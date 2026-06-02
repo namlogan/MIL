@@ -59,6 +59,15 @@ contracts/flange_qc_v2/mlops/evaluation_report.schema.json
 docs/project/flange_qc_v2/DATASET_MLOPS_HANDOFF.md
 ```
 
+The combined dataset/model/camera intake bundle lives in:
+
+```text
+templates/flange_qc_v2/artifact_intake/
+apps/flange_qc_v2/artifact_intake.py
+scripts/flange_qc_v2/validate_artifact_intake.py
+docs/project/flange_qc_v2/ARTIFACT_INTAKE.md
+```
+
 The default stub adapter returns `NOT_EVALUATED` with `MODEL_MISSING` when no
 model evidence is configured, or `ASSIST` with `MODEL_REVIEW_REQUIRED` when stub
 observations are supplied for review. The adapter rejects raw media paths and
@@ -87,3 +96,8 @@ flags, production authority, and model promotion. Passing these contracts means
 the MLOps artifacts are structurally ready for shadow integration review; it
 does not approve the dataset, model, live camera behavior, production
 retention, or production PASS/NG authority.
+
+The artifact intake validator combines dataset, evaluation, model artifact, and
+camera boundary checks into a single JSON readiness result. It rejects raw media,
+model binaries, and secrets-like files in the intake directory, then reports
+whether the next allowed issue is shadow model integration or intake repair.

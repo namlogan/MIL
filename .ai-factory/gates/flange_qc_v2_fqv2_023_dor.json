@@ -1,0 +1,105 @@
+{
+  "task_id": "FQV2-023",
+  "github_issue": 103,
+  "source_ref": "https://github.com/namlogan/MIL/issues/103",
+  "owner_agent": "codex_developer",
+  "qa_agent": "codex_qa",
+  "preferred_lane": "codex",
+  "branch": "agent/103-artifact-intake-package",
+  "allowed_paths": [
+    ".ai-factory/gates/flange_qc_v2_fqv2_023_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_023_handoff_2026-06-02.md",
+    "apps/flange_qc_v2/**",
+    "scripts/flange_qc_v2/**",
+    "tests/flange_qc_v2/**",
+    "templates/flange_qc_v2/**",
+    "docs/project/flange_qc_v2/**"
+  ],
+  "restricted_paths": [
+    "production deploy behavior",
+    "release approval",
+    "merge policy changes",
+    "GitHub Actions workflow changes",
+    "branch protection changes",
+    "secrets",
+    "tokens",
+    "passwords",
+    "private keys",
+    "provider credentials",
+    "camera credentials",
+    "raw media",
+    "customer or factory data",
+    "raw datasets",
+    "notebooks",
+    "model weights",
+    "model deserialization",
+    "training code",
+    "TensorRT engines",
+    "ONNX/PyTorch runtime execution",
+    "GPU or hardware validation",
+    "MLOps promotion",
+    "live camera capture",
+    "destructive migrations",
+    "production DB migration behavior",
+    "QC/SOP tolerance approval",
+    "product spec approval",
+    "production PASS/NG authority",
+    "production auto-reject"
+  ],
+  "acceptance_criteria": [
+    "Add a Flange QC v2 artifact intake template bundle with dataset manifest, evaluation report, model artifact manifest, and camera boundary readiness artifact.",
+    "Add a validator CLI that checks an intake directory and validates all four artifacts using existing contract-first validators.",
+    "Validator rejects raw media/model files, secrets-like files, missing required artifacts, mismatched dataset/model/eval references, labels outside the dataset label set, production authority, model promotion, and live camera enablement.",
+    "Validator emits JSON with ok/errors/warnings/next-step readiness so a future issue can be opened from the result.",
+    "Docs explain how to copy/fill the artifact bundle and which next issues are allowed after validation.",
+    "Required local checks pass and no restricted behavior is introduced."
+  ],
+  "memory_preflight": {
+    "query": "flange_qc_v2 artifact intake dataset model camera handoff validator",
+    "retrieved_decisions": [
+      "Dataset/eval/model/camera must enter through metadata contracts.",
+      "Raw data, weights, secrets, and hardware enablement remain restricted.",
+      "Codex is the only coding worker."
+    ],
+    "retrieved_lessons": [
+      "Prepare integration boundaries before real artifacts arrive.",
+      "Make validator output explicit enough to open the next DoR-ready issue."
+    ],
+    "restricted_areas": [
+      "secrets",
+      "customer data",
+      "raw media",
+      "raw datasets",
+      "model weights",
+      "training/runtime execution",
+      "live camera capture",
+      "hardware approval",
+      "MLOps promotion",
+      "production release",
+      "product spec approval",
+      "QC/SOP tolerance approval",
+      "production PASS/NG authority"
+    ],
+    "conflicts_found": [],
+    "sources_to_verify": [
+      "https://github.com/namlogan/MIL/issues/103",
+      "docs/project/flange_qc_v2/DATASET_MLOPS_HANDOFF.md",
+      "docs/project/flange_qc_v2/MLOPS_BOUNDARY.md",
+      "apps/flange_qc_v2/mlops_handoff.py",
+      "apps/flange_qc_v2/model_artifact.py",
+      "apps/flange_qc_v2/camera.py",
+      "contracts/flange_qc_v2/camera/camera_boundary.schema.json"
+    ]
+  },
+  "test_commands": [
+    "python3 -m unittest tests.flange_qc_v2.test_artifact_intake -v",
+    "python3 scripts/flange_qc_v2/validate_artifact_intake.py --intake-dir templates/flange_qc_v2/artifact_intake",
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 -m compileall -q apps/flange_qc_v2 scripts/flange_qc_v2 tests/flange_qc_v2",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m unittest discover -s tests -v",
+    "git diff --check"
+  ],
+  "handoff_required": true,
+  "rollback_note": "Revert the FQV2-023 PR to remove the intake templates, validator, tests, docs, and gate evidence. No production data migration, model rollback, hardware rollback, or deploy rollback is required."
+}

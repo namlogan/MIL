@@ -11,6 +11,15 @@ MLOps source of truth.
 
 ## Required Artifacts
 
+Use the artifact intake template and validator before opening the next
+implementation issue:
+
+```text
+templates/flange_qc_v2/artifact_intake/
+scripts/flange_qc_v2/validate_artifact_intake.py
+docs/project/flange_qc_v2/ARTIFACT_INTAKE.md
+```
+
 ### Dataset Manifest
 
 Contract:
