@@ -29,6 +29,8 @@ class HmiScreenTests(unittest.TestCase):
         self.assertEqual(start["status"], 200)
         self.assertEqual(headers[b"content-type"], b"text/html; charset=utf-8")
         self.assertIn("<title>Flange QC HMI</title>", body)
+        self.assertIn('rel="icon"', body)
+        self.assertIn('href="data:,"', body)
         self.assertIn('id="decision"', body)
         self.assertIn('id="reason-list"', body)
         self.assertIn('id="measurements"', body)
