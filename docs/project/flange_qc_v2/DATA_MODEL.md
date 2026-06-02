@@ -122,10 +122,13 @@ Bootstrap minimum HMI screen lives in:
 apps/flange_qc_v2/static/hmi.html
 ```
 
-The current screen is served at `/hmi`, connects to `/ws/inspection`, and renders
-the latest replay-backed `inspection.snapshot` payload. It displays operator
-status, reason codes, product/spec, measurements, frame source, timestamp, and
-observations state. QC feedback capture remains a later package.
+The current screen is served at `/hmi`, connects to `/ws/inspection`, can refresh
+the current replay snapshot through `/inspection/replay`, and renders the latest
+replay-backed `inspection.snapshot` payload. It displays operator status, reason
+codes, product/spec, measurements, frame source, timestamp, and observations
+state. It also lets the operator submit reviewer ID, feedback type, and note for
+the current inspection through `/feedback`. This UI remains no-camera
+shadow-mode evidence only and cannot approve production authority.
 
 Bootstrap QC feedback evidence lives in:
 
@@ -138,10 +141,11 @@ contracts/flange_qc_v2/feedback/qc_feedback.schema.json
 The current feedback contract accepts operator/domain notes as shadow evidence
 for an existing inspection. Supported feedback types are `CONFIRM_BLOCKED`,
 `MARK_FALSE_POSITIVE`, `MARK_FALSE_NEGATIVE`, and `REQUEST_REVIEW`. Feedback is
-stored append-only in the `qc_feedback` audit table and can be fetched by
-inspection ID. Feedback payloads always set `production_authority` to `false`
-and carry `PRODUCTION_APPROVAL_REQUIRED` as an authority blocker. This contract
-does not approve product specs, QC/SOP tolerances, production PASS/NG authority,
+validated by the HTTP `/feedback` endpoint and can be stored append-only in the
+`qc_feedback` audit table by audit workflows that have an existing inspection
+record. Feedback payloads always set `production_authority` to `false` and carry
+`PRODUCTION_APPROVAL_REQUIRED` as an authority blocker. This contract does not
+approve product specs, QC/SOP tolerances, production PASS/NG authority,
 production auto-reject, release, deploy, secrets, customer data, or destructive
 migrations.
 
