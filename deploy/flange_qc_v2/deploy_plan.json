@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "app_id": "flange_qc_v2",
+  "status": "scaffold_only",
+  "deployment_authority": "none",
+  "deploy_provider": "manual",
+  "deploy_provider_enabled": false,
+  "production_deploy_enabled": false,
+  "live_camera_enabled": false,
+  "raw_media_enabled": false,
+  "required_secret_names": [],
+  "human_gates": [
+    "TARGET_DEPLOYMENT_APPROVAL_REQUIRED",
+    "HARDWARE_READINESS_APPROVAL_REQUIRED",
+    "PRODUCTION_RELEASE_APPROVAL_REQUIRED",
+    "QC_SOP_TOLERANCE_APPROVAL_REQUIRED"
+  ],
+  "environments": [
+    {
+      "name": "local_replay",
+      "target": "developer_workstation",
+      "purpose": "Local replay smoke with synthetic fixtures only",
+      "deploy_enabled": false,
+      "production_deploy_enabled": false,
+      "live_camera_enabled": false,
+      "raw_media_enabled": false,
+      "hardware_required": false,
+      "gpu_required": false,
+      "commands": {
+        "validate": [
+          "python3",
+          "scripts/deploy/validate_flange_qc_v2_deploy_plan.py",
+          "--plan",
+          "deploy/flange_qc_v2/deploy_plan.json"
+        ],
+        "smoke": [
+          "python3",
+          "-m",
+          "apps.flange_qc_v2"
+        ]
+      }
+    },
+    {
+      "name": "jetson_shadow",
+      "target": "jetson",
+      "purpose": "Future shadow-mode Jetson preview after target approval",
+      "deploy_enabled": false,
+      "production_deploy_enabled": false,
+      "live_camera_enabled": false,
+      "raw_media_enabled": false,
+      "hardware_required": false,
+      "gpu_required": false,
+      "commands": {
+        "validate": [
+          "python3",
+          "scripts/deploy/validate_flange_qc_v2_deploy_plan.py",
+          "--plan",
+          "deploy/flange_qc_v2/deploy_plan.json"
+        ],
+        "smoke": [
+          "python3",
+          "-m",
+          "apps.flange_qc_v2"
+        ]
+      }
+    },
+    {
+      "name": "rtx_shadow",
+      "target": "rtx_workstation",
+      "purpose": "Future shadow-mode RTX workstation preview after target approval",
+      "deploy_enabled": false,
+      "production_deploy_enabled": false,
+      "live_camera_enabled": false,
+      "raw_media_enabled": false,
+      "hardware_required": false,
+      "gpu_required": false,
+      "commands": {
+        "validate": [
+          "python3",
+          "scripts/deploy/validate_flange_qc_v2_deploy_plan.py",
+          "--plan",
+          "deploy/flange_qc_v2/deploy_plan.json"
+        ],
+        "smoke": [
+          "python3",
+          "-m",
+          "apps.flange_qc_v2"
+        ]
+      }
+    }
+  ],
+  "rollback": {
+    "strategy": "Revert the scaffold PR. No infrastructure, hardware, media, migrations, or release state are modified.",
+    "requires_live_action": false
+  }
+}
