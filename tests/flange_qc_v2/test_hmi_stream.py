@@ -39,11 +39,20 @@ class HmiStreamSnapshotTests(unittest.TestCase):
         self.assertEqual(payload["event_type"], "inspection.snapshot")
         self.assertEqual(parsed.inspection_id, "fqv2-phase2-synthetic-001")
         self.assertEqual(parsed.product_code, "611")
-        self.assertEqual(parsed.phase, "PHASE_2")
+        self.assertEqual(parsed.phase, "FINAL")
         self.assertEqual(parsed.decision, "BLOCKED")
         self.assertEqual(
             parsed.reason_codes,
-            ["PRODUCT_SPEC_APPROVAL_MISSING", "CALIBRATION_MISSING"],
+            [
+                "PRODUCT_SPEC_APPROVAL_MISSING",
+                "CALIBRATION_MISSING",
+                "MODEL_REVIEW_REQUIRED",
+                "RULE_POST_MVP_DISABLED",
+            ],
+        )
+        self.assertEqual(
+            [phase_result["phase"] for phase_result in parsed.phase_results],
+            ["PHASE_1", "PHASE_2", "PHASE_3", "PHASE_4"],
         )
         self.assertEqual(payload["measurements"]["diagonals"], [83.0, 83.25])
         self.assertEqual(payload["observations"], [])
@@ -68,6 +77,8 @@ class HmiStreamSnapshotTests(unittest.TestCase):
 
         self.assertEqual(payload["event_type"], "inspection.snapshot")
         self.assertEqual(payload["decision"], "BLOCKED")
+        self.assertEqual(payload["phase"], "FINAL")
+        self.assertEqual(len(payload["phase_results"]), 4)
         self.assertEqual(payload["product"]["code"], "611")
         self.assertEqual(messages[-1]["type"], "websocket.close")
 
@@ -90,7 +101,9 @@ class HmiStreamSnapshotTests(unittest.TestCase):
         parsed = InspectionSnapshot.from_payload(payload)
         self.assertEqual(parsed.inspection_id, "fqv2-phase2-synthetic-001")
         self.assertEqual(parsed.decision, "BLOCKED")
+        self.assertEqual(parsed.phase, "FINAL")
         self.assertIn("PRODUCT_SPEC_APPROVAL_MISSING", parsed.reason_codes)
+        self.assertEqual(parsed.phase_results[2]["phase"], "PHASE_3")
 
     def test_replay_http_endpoint_persists_snapshot_idempotently_when_audit_db_is_configured(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -109,6 +122,7 @@ class HmiStreamSnapshotTests(unittest.TestCase):
         self.assertEqual(record["inspection_id"], "fqv2-phase2-synthetic-001")
         self.assertEqual(record["decision"], "BLOCKED")
         self.assertEqual(record["payload"]["event_type"], "inspection.snapshot")
+        self.assertEqual(len(record["payload"]["phase_results"]), 4)
 
     def _call_replay_endpoint(self) -> dict[str, object]:
         messages = []
