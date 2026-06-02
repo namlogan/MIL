@@ -109,10 +109,16 @@ Bootstrap shadow decision evaluation lives in:
 apps/flange_qc_v2/decision_engine.py
 ```
 
-The current phase-2 decision engine can emit shadow `PASS`, `NG`, or `BLOCKED`
-evidence for diagonal deviation using the MVP threshold of 0.5 inch. Shadow
-`PASS`/`NG` does not grant production authority and carries authority blockers
-until QC/SOP tolerance approval and production release gates are complete.
+The current decision engine can emit shadow `PASS`, `NG`, or `BLOCKED` evidence
+for Phase 1 length/width checks and Phase 2 diagonal deviation. Phase 1 compares
+the three length points and three width points to the resolved product spec
+nominal dimensions and plus/minus tolerances, records raw points in inches,
+min/max/average, bounds, and out-of-tolerance point indexes, and uses
+`all_points_must_pass_bootstrap` while the final SOP aggregate method remains
+open. Phase 2 uses the MVP diagonal threshold of 0.5 inch. Shadow `PASS`/`NG`
+does not grant production authority and carries authority blockers until
+product spec approval, QC/SOP tolerance approval, and production release gates
+are complete.
 
 Bootstrap no-camera replay validation lives in:
 

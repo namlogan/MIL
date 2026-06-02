@@ -22,6 +22,13 @@
 - Missing or pending calibration returns `BLOCKED`.
 - Product-specific tolerance is validated by config/schema/tests.
 - 3 length points, 3 width points, and 2 diagonals are required by domain contract.
+- Phase 1 length/width shadow evaluation blocks before product spec,
+  calibration, and geometry evidence are complete; otherwise it emits rule-level
+  evidence with `all_points_must_pass_bootstrap`, bounds, min/max/average, and
+  out-of-tolerance point indexes.
+- Length or width points outside product tolerance return shadow `NG` with
+  `LENGTH_OUT_OF_TOLERANCE` and/or `WIDTH_OUT_OF_TOLERANCE`; production
+  authority remains false until QC/SOP tolerance approval.
 - Diagonal deviation greater than 0.5 inch returns NG in phase 2.
 - Detector returns observations only.
 - Missing model produces `NOT_EVALUATED`, `ASSIST`, or `BLOCKED` for model-dependent rules.
