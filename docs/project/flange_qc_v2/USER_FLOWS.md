@@ -25,15 +25,19 @@
 1. Operator opens `/hmi` while camera hardware is pending.
 2. HMI loads the current synthetic replay snapshot through
    `/inspection/replay` and continues to accept `/ws/inspection` updates.
-3. Operator refreshes the replay snapshot from the HMI header when a manual
+3. When `FLANGE_QC_V2_AUDIT_DB_PATH` is configured, replay refresh initializes
+   the local audit store and records the current inspection idempotently.
+4. Operator refreshes the replay snapshot from the HMI header when a manual
    no-camera check is needed.
-4. Operator records reviewer ID, feedback type, and note for the current
+5. Operator records reviewer ID, feedback type, and note for the current
    inspection.
-5. HMI submits the feedback payload to `/feedback` with the current inspection
+6. HMI submits the feedback payload to `/feedback` with the current inspection
    ID and shadow decision.
-6. The feedback contract returns shadow evidence with
+7. The feedback contract returns shadow evidence with
    `production_authority=false` and `PRODUCTION_APPROVAL_REQUIRED`.
-7. Any production release, product spec approval, QC/SOP tolerance approval,
+8. When audit persistence is configured, `/feedback` stores the feedback in
+   `qc_feedback` and returns audit persistence evidence for the HMI status.
+9. Any production release, product spec approval, QC/SOP tolerance approval,
    live hardware approval, or production PASS/NG authority remains outside this
    flow.
 
