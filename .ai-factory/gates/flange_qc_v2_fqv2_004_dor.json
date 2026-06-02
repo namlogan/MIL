@@ -1,0 +1,47 @@
+{
+  "task_id": "FQV2-004",
+  "github_issue": 65,
+  "source_ref": "https://github.com/namlogan/MIL/issues/65",
+  "owner_agent": "codex_developer",
+  "qa_agent": "codex_qa",
+  "preferred_lane": "codex",
+  "branch": "agent/65-product-specs-validator",
+  "allowed_paths": [
+    "apps/flange_qc_v2/**",
+    "tests/flange_qc_v2/**",
+    "configs/flange_qc_v2/**",
+    "docs/project/flange_qc_v2/APPROVAL_REQUEST_PRODUCT_SPECS.md",
+    ".ai-factory/gates/flange_qc_v2_fqv2_004_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_004_handoff_2026-06-02.md"
+  ],
+  "restricted_paths": [
+    "production deploy",
+    "secrets",
+    "customer data",
+    "destructive migrations",
+    "factory datasets",
+    "camera hardware",
+    "model weights",
+    "TensorRT engines",
+    "final SOP PASS/NG production decision engine",
+    "QC/domain approval of production tolerances"
+  ],
+  "acceptance_criteria": [
+    "Add app-level product spec loading/validation from configs/flange_qc_v2/product_specs.bootstrap.json without hardcoding product dimensions/tolerances in service code.",
+    "Resolve known product + size to nominal length/width and plus/minus tolerances.",
+    "Unknown product or unknown size resolves to BLOCKED with stable reason codes, not PASS.",
+    "Draft approval status is carried in the resolved result and explicitly disallows production authority.",
+    "Invalid config shape is rejected explicitly.",
+    "No final SOP PASS/NG production decision engine is implemented.",
+    "Existing product CI and full repository tests keep passing."
+  ],
+  "test_commands": [
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 -m compileall -q apps/flange_qc_v2 tests/flange_qc_v2",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m unittest discover -s tests -v",
+    "git diff --check"
+  ],
+  "handoff_required": true,
+  "rollback_note": "Revert the FQV2-004 PR to remove the product spec loader/resolver and related tests/evidence while preserving earlier Flange QC v2 bootstrap work."
+}

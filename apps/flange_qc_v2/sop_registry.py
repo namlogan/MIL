@@ -73,6 +73,12 @@ REASON_CODES = (
         severity="blocker",
     ),
     ReasonCode(
+        code="UNKNOWN_SIZE",
+        decision="BLOCKED",
+        description="Size group is not present for the resolved product spec.",
+        severity="blocker",
+    ),
+    ReasonCode(
         code="CALIBRATION_MISSING",
         decision="BLOCKED",
         description="Camera or measurement calibration is missing, pending, or failed.",
