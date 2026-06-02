@@ -1,0 +1,101 @@
+{
+  "task_id": "FQV2-025",
+  "github_issue": 107,
+  "source_ref": "https://github.com/namlogan/MIL/issues/107",
+  "owner_agent": "codex_developer",
+  "qa_agent": "codex_qa",
+  "preferred_lane": "codex",
+  "branch": "agent/107-sop-safe-fallback-evaluator",
+  "allowed_paths": [
+    ".ai-factory/gates/flange_qc_v2_fqv2_025_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_025_handoff_2026-06-02.md",
+    "apps/flange_qc_v2/decision_engine.py",
+    "tests/flange_qc_v2/test_decision_engine.py",
+    "docs/project/flange_qc_v2/SOP_RULE_REGISTRY.md",
+    "docs/project/flange_qc_v2/DATA_MODEL.md",
+    "docs/project/flange_qc_v2/TEST_STRATEGY.md"
+  ],
+  "restricted_paths": [
+    "production deploy behavior",
+    "release approval",
+    "merge policy changes",
+    "GitHub Actions workflow changes",
+    "branch protection changes",
+    "secrets",
+    "tokens",
+    "passwords",
+    "private keys",
+    "provider credentials",
+    "camera credentials",
+    "raw media",
+    "customer or factory data",
+    "raw datasets",
+    "notebooks",
+    "model weights",
+    "model deserialization",
+    "training code",
+    "TensorRT engines",
+    "ONNX/PyTorch runtime execution",
+    "GPU or hardware validation",
+    "MLOps promotion",
+    "live camera capture",
+    "destructive migrations",
+    "production DB migration behavior",
+    "QC/SOP tolerance approval",
+    "product spec approval",
+    "production PASS/NG authority",
+    "production auto-reject"
+  ],
+  "acceptance_criteria": [
+    "Add a decision engine entry point that emits rule-level fallback results for Phase 3 and Phase 4 rules from sop_registry.py.",
+    "Phase 3 model/vision rules return ASSIST with MODEL_REVIEW_REQUIRED and no production authority until an approved model and supervised QC process exist.",
+    "Phase 4 post-MVP rules return NOT_EVALUATED with RULE_POST_MVP_DISABLED; Phase 4 assist/model-dependent rules return ASSIST with MODEL_REVIEW_REQUIRED.",
+    "Aggregate Phase 3/4 decision never maps fallback states to PASS; it returns ASSIST when any rule needs review, otherwise NOT_EVALUATED for purely disabled rules.",
+    "Rule evidence includes rule id, category, registry authority, fallback source, and production-enabled state.",
+    "Invalid phase input is rejected explicitly.",
+    "Add tests and docs proving fallback behavior is registry-driven, fail-safe, and non-authoritative."
+  ],
+  "memory_preflight": {
+    "query": "flange_qc_v2 phase 3 phase 4 SOP safe fallback evaluator model dependent post MVP registry",
+    "retrieved_decisions": [
+      "Detector observations never decide final PASS/NG.",
+      "Model-dependent rules can remain NOT_EVALUATED, ASSIST, or BLOCKED.",
+      "Post-MVP rules must not map to PASS."
+    ],
+    "retrieved_lessons": [
+      "Use registry metadata as the source for safe fallback decisions.",
+      "Keep model, camera, and MLOps lanes separate from deterministic app-code scaffolds."
+    ],
+    "restricted_areas": [
+      "model loading/inference",
+      "MLOps promotion",
+      "dataset ingestion",
+      "raw media/customer data",
+      "live camera/hardware",
+      "secrets",
+      "production deploy/release",
+      "product spec approval",
+      "QC/SOP tolerance approval",
+      "production PASS/NG authority"
+    ],
+    "conflicts_found": [],
+    "sources_to_verify": [
+      "https://github.com/namlogan/MIL/issues/107",
+      "docs/adr/flange-qc-v2/ADR-0002-sop-first-deterministic-rule-engine.md",
+      "docs/project/flange_qc_v2/SOP_RULE_REGISTRY.md",
+      "apps/flange_qc_v2/sop_registry.py",
+      "apps/flange_qc_v2/decision_engine.py",
+      "docs/project/flange_qc_v2/TEST_STRATEGY.md"
+    ]
+  },
+  "test_commands": [
+    "python3 -m unittest tests.flange_qc_v2.test_decision_engine -v",
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 -m compileall -q apps/flange_qc_v2 tests/flange_qc_v2",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m unittest discover -s tests -v",
+    "git diff --check"
+  ],
+  "handoff_required": true,
+  "rollback_note": "Revert the FQV2-025 PR to remove Phase 3/4 fallback evaluator changes, tests, docs, and gate evidence. No production data migration, model rollback, hardware rollback, or deploy rollback is required."
+}
