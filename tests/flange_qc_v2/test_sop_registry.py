@@ -45,8 +45,10 @@ class ReasonCodeRegistryTests(unittest.TestCase):
         self.assertIn("UNKNOWN_PRODUCT", codes)
         self.assertIn("CALIBRATION_MISSING", codes)
         self.assertIn("MEASUREMENTS_INCOMPLETE", codes)
+        self.assertIn("DIAGONAL_DEVIATION_EXCEEDS_LIMIT", codes)
         self.assertIn("MODEL_MISSING", codes)
         self.assertEqual(get_reason_code("UNKNOWN_PRODUCT").decision, "BLOCKED")
+        self.assertEqual(get_reason_code("DIAGONAL_DEVIATION_EXCEEDS_LIMIT").decision, "NG")
 
     def test_not_evaluated_reason_codes_never_map_to_pass(self) -> None:
         not_evaluated = [

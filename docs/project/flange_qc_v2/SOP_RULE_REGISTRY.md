@@ -83,6 +83,8 @@ until later approval gates provide evidence.
 - Missing product spec returns `BLOCKED`.
 - Missing or pending calibration returns `BLOCKED`.
 - Missing required length, width, or diagonal points returns `BLOCKED`.
+- Diagonal deviation greater than 0.5 inch can return shadow `NG` evidence in
+  phase 2, but production authority remains gated by QC/SOP tolerance approval.
 - Missing model returns `NOT_EVALUATED`, `ASSIST`, or `BLOCKED` for model-dependent rules.
 - Detector observations never decide final PASS/NG directly.
 - `NOT_EVALUATED` must never be mapped to `PASS`.

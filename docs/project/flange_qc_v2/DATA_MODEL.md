@@ -78,3 +78,14 @@ and 2 diagonals. Complete measurement evidence can compute diagonal deviation,
 but it remains `BLOCKED` with no production authority until QC/SOP tolerance
 approval and the later decision engine gate are complete. Incomplete measurement
 evidence fails closed with `MEASUREMENTS_INCOMPLETE`.
+
+Bootstrap shadow decision evaluation lives in:
+
+```text
+apps/flange_qc_v2/decision_engine.py
+```
+
+The current phase-2 decision engine can emit shadow `PASS`, `NG`, or `BLOCKED`
+evidence for diagonal deviation using the MVP threshold of 0.5 inch. Shadow
+`PASS`/`NG` does not grant production authority and carries authority blockers
+until QC/SOP tolerance approval and production release gates are complete.
