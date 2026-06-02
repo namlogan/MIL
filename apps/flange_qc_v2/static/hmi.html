@@ -424,6 +424,24 @@
         color: var(--red);
       }
 
+      .artifact-list li {
+        display: grid;
+        gap: 4px;
+        border-left-color: var(--amber);
+        background: #fff8ed;
+      }
+
+      .artifact-list li[data-status="valid"] {
+        border-left-color: var(--green);
+        background: #effaf4;
+      }
+
+      .artifact-summary {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 650;
+      }
+
       @media (max-width: 760px) {
         header,
         main {
@@ -575,6 +593,27 @@
         </div>
       </section>
 
+      <section class="grid" aria-label="Artifact intake readiness">
+        <div class="panel">
+          <h2>Artifact Intake</h2>
+          <div id="artifact-intake-status" class="feedback-status" data-state="idle">FLANGE_QC_V2_ARTIFACT_INTAKE_DIR not configured</div>
+          <div class="detail-row"><span class="label">Configured</span><span id="artifact-configured" class="value">false</span></div>
+          <div class="detail-row"><span class="label">Shadow Model</span><span id="artifact-shadow-ready" class="value">false</span></div>
+          <div class="detail-row"><span class="label">Live Camera</span><span id="artifact-camera-ready" class="value">false</span></div>
+          <div class="detail-row"><span class="label">Next Task</span><span id="artifact-next-task" class="value">configure_artifact_intake</span></div>
+        </div>
+
+        <div class="panel">
+          <h2>Artifact Bundle</h2>
+          <ul id="artifact-intake-artifacts" class="list artifact-list">
+            <li data-artifact="dataset_manifest"><b>dataset_manifest</b><span class="artifact-summary">pending</span></li>
+            <li data-artifact="evaluation_report"><b>evaluation_report</b><span class="artifact-summary">pending</span></li>
+            <li data-artifact="model_artifact_manifest"><b>model_artifact_manifest</b><span class="artifact-summary">pending</span></li>
+            <li data-artifact="camera_boundary"><b>camera_boundary</b><span class="artifact-summary">pending</span></li>
+          </ul>
+        </div>
+      </section>
+
       <section class="grid">
         <div class="panel">
           <h2>Inspection</h2>
@@ -645,6 +684,12 @@
         unit: document.getElementById("unit"),
         reasonList: document.getElementById("reason-list"),
         phaseResults: document.getElementById("phase-results"),
+        artifactIntakeStatus: document.getElementById("artifact-intake-status"),
+        artifactConfigured: document.getElementById("artifact-configured"),
+        artifactShadowReady: document.getElementById("artifact-shadow-ready"),
+        artifactCameraReady: document.getElementById("artifact-camera-ready"),
+        artifactNextTask: document.getElementById("artifact-next-task"),
+        artifactIntakeArtifacts: document.getElementById("artifact-intake-artifacts"),
         feedbackStatus: document.getElementById("feedback-status"),
         productionAuthority: document.getElementById("production-authority"),
         authorityBlockers: document.getElementById("authority-blockers")
@@ -796,9 +841,104 @@
         return `Evidence: ${parts.length ? parts.join("; ") : "none"}`;
       }
 
+      function renderArtifactIntakeStatus(payload) {
+        const ready = payload.ready || {};
+        const configured = Boolean(payload.configured);
+        const ok = Boolean(payload.ok);
+        fields.artifactIntakeStatus.textContent = artifactStatusLabel(payload);
+        fields.artifactIntakeStatus.dataset.state = ok ? "ok" : "error";
+        fields.artifactConfigured.textContent = String(configured);
+        fields.artifactShadowReady.textContent = String(Boolean(ready.shadow_model_integration_issue));
+        fields.artifactCameraReady.textContent = String(Boolean(ready.live_camera_implementation_issue));
+        fields.artifactNextTask.textContent = payload.next_issue && payload.next_issue.recommended_task
+          ? payload.next_issue.recommended_task
+          : "none";
+        renderArtifactIntakeArtifacts(payload.artifacts);
+      }
+
+      function artifactStatusLabel(payload) {
+        const errors = Array.isArray(payload.errors) ? payload.errors : [];
+        const warnings = Array.isArray(payload.warnings) ? payload.warnings : [];
+        if (!payload.configured) {
+          return "FLANGE_QC_V2_ARTIFACT_INTAKE_DIR not configured";
+        }
+        if (payload.ok && warnings.length) {
+          return `valid with warning: ${warnings[0]}`;
+        }
+        if (payload.ok) {
+          return "valid artifact intake metadata";
+        }
+        return errors.length ? `needs repair: ${errors[0]}` : "artifact intake needs repair";
+      }
+
+      function renderArtifactIntakeArtifacts(artifacts) {
+        const required = ["dataset_manifest", "evaluation_report", "model_artifact_manifest", "camera_boundary"];
+        const statusByName = artifacts && typeof artifacts === "object" ? artifacts : {};
+        fields.artifactIntakeArtifacts.innerHTML = "";
+        required.forEach((name) => {
+          const artifact = statusByName[name] || null;
+          const item = document.createElement("li");
+          item.dataset.artifact = name;
+          if (artifact && artifact.status === "valid") {
+            item.dataset.status = "valid";
+          }
+
+          const label = document.createElement("b");
+          label.textContent = name;
+          item.appendChild(label);
+
+          const summary = document.createElement("span");
+          summary.className = "artifact-summary";
+          summary.textContent = artifact ? summarizeArtifact(artifact) : "pending";
+          item.appendChild(summary);
+          fields.artifactIntakeArtifacts.appendChild(item);
+        });
+      }
+
+      function summarizeArtifact(artifact) {
+        const parts = [`status=${artifact.status || "unknown"}`];
+        if (artifact.contract_version) {
+          parts.push(`contract=${artifact.contract_version}`);
+        }
+        if (artifact.summary && typeof artifact.summary === "object") {
+          Object.entries(artifact.summary).slice(0, 3).forEach(([key, value]) => {
+            parts.push(`${key}=${Array.isArray(value) ? value.join("|") : String(value)}`);
+          });
+        }
+        return parts.join("; ");
+      }
+
       function setFeedbackStatus(message, state) {
         fields.feedbackStatus.textContent = message;
         fields.feedbackStatus.dataset.state = state;
+      }
+
+      async function fetchArtifactIntakeStatus() {
+        try {
+          const response = await fetch("/artifact-intake/status", {
+            headers: { "Accept": "application/json" }
+          });
+          const payload = await response.json();
+          if (!response.ok) {
+            throw new Error(payload.detail || `artifact intake ${response.status}`);
+          }
+          renderArtifactIntakeStatus(payload);
+        } catch (error) {
+          renderArtifactIntakeStatus({
+            configured: false,
+            ok: false,
+            errors: [`artifact intake error: ${error.message}`],
+            warnings: [],
+            artifacts: {},
+            ready: {
+              shadow_model_integration_issue: false,
+              live_camera_implementation_issue: false
+            },
+            next_issue: {
+              recommended_task: "configure_artifact_intake"
+            }
+          });
+        }
       }
 
       async function fetchReplaySnapshot() {
@@ -892,6 +1032,7 @@
 
       connect();
       fetchReplaySnapshot();
+      fetchArtifactIntakeStatus();
     </script>
   </body>
 </html>

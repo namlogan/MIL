@@ -6,6 +6,7 @@ from collections.abc import Awaitable, Callable
 from pathlib import Path
 from typing import Any
 
+from apps.flange_qc_v2.artifact_intake import validate_artifact_intake
 from apps.flange_qc_v2.audit import AuditStore
 from apps.flange_qc_v2.domain import ValidationError
 from apps.flange_qc_v2.feedback import QcFeedback
@@ -15,8 +16,10 @@ from apps.flange_qc_v2.hmi_stream import build_replay_inspection_snapshot
 Scope = dict[str, Any]
 Receive = Callable[[], Awaitable[dict[str, Any]]]
 Send = Callable[[dict[str, Any]], Awaitable[None]]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 HMI_SCREEN = STATIC_DIR / "hmi.html"
+ARTIFACT_INTAKE_ENV = "FLANGE_QC_V2_ARTIFACT_INTAKE_DIR"
 
 
 async def app(scope: Scope, receive: Receive, send: Send) -> None:
@@ -46,6 +49,9 @@ async def _handle_http(scope: Scope, receive: Receive, send: Send) -> None:
             audit_store.initialize()
             audit_store.ensure_inspection(snapshot)
         await _send_json(send, 200, snapshot.to_payload())
+        return
+    if method == "GET" and path == "/artifact-intake/status":
+        await _send_json(send, 200, _artifact_intake_status_from_env())
         return
     if method == "POST" and path == "/feedback":
         try:
@@ -144,3 +150,41 @@ def _audit_store_from_env() -> AuditStore | None:
     if not raw_path:
         return None
     return AuditStore(raw_path)
+
+
+def _artifact_intake_status_from_env() -> dict[str, Any]:
+    intake_dir = os.environ.get(ARTIFACT_INTAKE_ENV, "").strip()
+    if not intake_dir:
+        return {
+            "configured": False,
+            "ok": False,
+            "intake_dir": "",
+            "repo_root": str(REPO_ROOT),
+            "errors": [f"{ARTIFACT_INTAKE_ENV} is not configured"],
+            "warnings": [],
+            "artifacts": {},
+            "ready": {
+                "shadow_model_integration_issue": False,
+                "live_camera_implementation_issue": False,
+            },
+            "next_issue": {
+                "recommended_task": "configure_artifact_intake",
+                "reason": "artifact intake directory env var is missing",
+            },
+            "production_authority": False,
+            "authority_blockers": [
+                "MODEL_APPROVAL_REQUIRED",
+                "HARDWARE_APPROVAL_REQUIRED",
+                "PRODUCTION_APPROVAL_REQUIRED",
+            ],
+        }
+
+    result = validate_artifact_intake(intake_dir, repo_root=REPO_ROOT)
+    result["configured"] = True
+    result["production_authority"] = False
+    result["authority_blockers"] = [
+        "MODEL_APPROVAL_REQUIRED",
+        "HARDWARE_APPROVAL_REQUIRED",
+        "PRODUCTION_APPROVAL_REQUIRED",
+    ]
+    return result
