@@ -160,3 +160,19 @@ QC review. Passing evidence remains shadow-only and carries
 `IMAGE_QUALITY_APPROVAL_REQUIRED` and `PRODUCTION_APPROVAL_REQUIRED` blockers.
 This contract does not read live camera frames, raw media, customer/factory data,
 detector/model outputs, or production image quality thresholds.
+
+Bootstrap detector adapter evidence lives in:
+
+```text
+apps/flange_qc_v2/detector.py
+contracts/flange_qc_v2/detector/detector_result.schema.json
+```
+
+The current detector boundary accepts synthetic/replay frame metadata and returns
+validated `DetectorObservation` entries only. The default stub adapter runs
+without camera hardware, GPU, model weights, raw media, or MLOps dependencies.
+When no model evidence exists, the stub emits `NOT_EVALUATED` with
+`MODEL_MISSING`; when stub observations are present, it emits `ASSIST` with
+`MODEL_REVIEW_REQUIRED`. Detector results cannot emit `PASS` or `NG`, cannot
+approve production authority, and carry `MODEL_APPROVAL_REQUIRED` plus
+`PRODUCTION_APPROVAL_REQUIRED` blockers.

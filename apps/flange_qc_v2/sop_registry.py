@@ -103,6 +103,12 @@ REASON_CODES = (
         severity="warning",
     ),
     ReasonCode(
+        code="MODEL_APPROVAL_REQUIRED",
+        decision="BLOCKED",
+        description="Model output cannot grant production authority before model approval.",
+        severity="blocker",
+    ),
+    ReasonCode(
         code="MODEL_REVIEW_REQUIRED",
         decision="ASSIST",
         description="Model/vision output requires supervised QC review before production authority.",
