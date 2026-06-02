@@ -28,6 +28,12 @@
 - Model artifact manifests validate contract version, registry reference,
   declared labels, safe repository-relative evidence paths, digest, shadow mode,
   and no production authority before detector integration.
+- MLOps dataset manifests validate dataset snapshot reference, label set,
+  point-in-time split policy, train/validation/test counts, privacy flags, no
+  raw media, and no production authority.
+- MLOps evaluation reports validate model reference, matching dataset snapshot,
+  precision/recall/F1, slice metrics, p95 latency budget, no promotion approval,
+  and no production authority.
 - WebSocket payload schema validates normalized bbox values in `[0, 1]`.
 - Audit DB stores inspection, rule, calibration, and feedback evidence.
 
@@ -42,6 +48,13 @@ Model artifacts from MLOps must enter the app through
 `contracts/flange_qc_v2/model/model_artifact_manifest.schema.json` and
 `apps/flange_qc_v2/model_artifact.py`. Do not commit model weights, TensorRT
 engines, production datasets, raw factory media, or notebooks as app fixtures.
+
+Dataset and evaluation handoff artifacts must enter through
+`contracts/flange_qc_v2/mlops/dataset_manifest.schema.json`,
+`contracts/flange_qc_v2/mlops/evaluation_report.schema.json`, and
+`apps/flange_qc_v2/mlops_handoff.py`. Contract tests must reject raw media
+paths, PII/customer-data flags, missing split or metric evidence, production
+authority, and promotion approval.
 
 ## Agent Verification Rules
 

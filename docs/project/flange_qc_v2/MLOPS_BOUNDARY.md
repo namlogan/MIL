@@ -16,6 +16,7 @@ through explicit contracts.
 - QC feedback contract.
 - Detector adapter interface and stub adapter.
 - Model artifact manifest contract and safe manifest loader.
+- Dataset manifest and evaluation report handoff contracts.
 - Safe states for missing model or unapproved model evidence.
 
 ## MLOps Owns Later
@@ -49,6 +50,15 @@ apps/flange_qc_v2/model_artifact.py
 contracts/flange_qc_v2/model/model_artifact_manifest.schema.json
 ```
 
+Bootstrap dataset and evaluation handoff contracts live in:
+
+```text
+apps/flange_qc_v2/mlops_handoff.py
+contracts/flange_qc_v2/mlops/dataset_manifest.schema.json
+contracts/flange_qc_v2/mlops/evaluation_report.schema.json
+docs/project/flange_qc_v2/DATASET_MLOPS_HANDOFF.md
+```
+
 The default stub adapter returns `NOT_EVALUATED` with `MODEL_MISSING` when no
 model evidence is configured, or `ASSIST` with `MODEL_REVIEW_REQUIRED` when stub
 observations are supplied for review. The adapter rejects raw media paths and
@@ -70,3 +80,10 @@ observations with the manifest `model_ref`. Labels not declared by the manifest
 are rejected. This is traceability and integration readiness only; it does not
 deserialize model binaries, execute inference, approve model promotion, approve
 production release, or grant production PASS/NG authority.
+
+The dataset and evaluation handoff validators accept sanitized metadata only.
+They reject raw media paths, missing split or metric evidence, PII/customer-data
+flags, production authority, and model promotion. Passing these contracts means
+the MLOps artifacts are structurally ready for shadow integration review; it
+does not approve the dataset, model, live camera behavior, production
+retention, or production PASS/NG authority.

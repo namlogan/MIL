@@ -1,0 +1,101 @@
+{
+  "task_id": "FQV2-022",
+  "github_issue": 101,
+  "source_ref": "https://github.com/namlogan/MIL/issues/101",
+  "owner_agent": "codex_developer",
+  "qa_agent": "codex_qa",
+  "preferred_lane": "codex",
+  "branch": "agent/101-mlops-dataset-eval-contracts",
+  "allowed_paths": [
+    ".ai-factory/gates/flange_qc_v2_fqv2_022_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_022_handoff_2026-06-02.md",
+    "apps/flange_qc_v2/**",
+    "contracts/flange_qc_v2/**",
+    "docs/project/flange_qc_v2/**",
+    "tests/flange_qc_v2/**"
+  ],
+  "restricted_paths": [
+    "production deploy behavior",
+    "release approval",
+    "merge policy changes",
+    "GitHub Actions workflow changes",
+    "branch protection changes",
+    "secrets",
+    "tokens",
+    "passwords",
+    "private keys",
+    "provider credentials",
+    "camera credentials",
+    "raw media",
+    "customer or factory data",
+    "raw datasets",
+    "notebooks",
+    "model weights",
+    "model deserialization",
+    "training code",
+    "TensorRT engines",
+    "ONNX/PyTorch runtime execution",
+    "GPU or hardware validation",
+    "MLOps promotion",
+    "live camera capture",
+    "destructive migrations",
+    "production DB migration behavior",
+    "QC/SOP tolerance approval",
+    "product spec approval",
+    "production PASS/NG authority",
+    "production auto-reject"
+  ],
+  "acceptance_criteria": [
+    "Define versioned dataset manifest and evaluation report contracts for Flange QC v2 MLOps handoff.",
+    "Add Python validators that accept sanitized metadata-only manifests and reject raw media paths, unsafe path references, unknown schema versions, missing label/split/metric metadata, PII/customer-data flags, production authority, and unapproved promotion.",
+    "Dataset contract captures snapshot ID, label set, entity grain, split policy, split counts, source reference, privacy class, and storage reference without storing raw files.",
+    "Evaluation contract captures model reference, dataset snapshot reference, key metrics, slice metrics, latency budget evidence, approval status, source reference, and no production authority.",
+    "Docs explain how the owner/MLOps provider should hand off dataset and eval artifacts to the app without committing raw datasets, secrets, model weights, or notebooks.",
+    "Required local checks pass and no restricted behavior is introduced."
+  ],
+  "memory_preflight": {
+    "query": "flange_qc_v2 dataset MLOps handoff contract evaluation report manifest",
+    "retrieved_decisions": [
+      "Git/docs/tests/contracts are source of truth.",
+      "MLOps owns dataset management, model training/eval, promotion criteria, raw dataset retention, and privacy controls.",
+      "The app accepts model integration through safe contracts only and cannot grant detector PASS/NG authority."
+    ],
+    "retrieved_lessons": [
+      "Prepare integration boundaries before model/dataset artifacts arrive.",
+      "Do not allow raw datasets, weights, secrets, or production authority in app-code PRs."
+    ],
+    "restricted_areas": [
+      "production release/deploy",
+      "secrets/credentials/tokens",
+      "customer data/raw media/raw datasets/notebooks",
+      "model weights/model deserialization/training code/TensorRT engines/ONNX/PyTorch execution",
+      "live camera/hardware validation",
+      "MLOps promotion",
+      "destructive migrations",
+      "QC/SOP tolerance approval",
+      "product spec approval",
+      "production PASS/NG authority"
+    ],
+    "conflicts_found": [],
+    "sources_to_verify": [
+      "https://github.com/namlogan/MIL/issues/101",
+      "AGENTS.md",
+      ".ai-factory/RULES.md",
+      "docs/project/flange_qc_v2/MLOPS_BOUNDARY.md",
+      "docs/project/flange_qc_v2/DATA_MODEL.md",
+      "docs/project/flange_qc_v2/TEST_STRATEGY.md",
+      "apps/flange_qc_v2/model_artifact.py",
+      "contracts/flange_qc_v2/model/model_artifact_manifest.schema.json"
+    ]
+  },
+  "test_commands": [
+    "python3 -m unittest tests.flange_qc_v2.test_mlops_handoff -v",
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 -m compileall -q apps/flange_qc_v2 tests/flange_qc_v2",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m unittest discover -s tests -v",
+    "git diff --check"
+  ],
+  "handoff_required": true,
+  "rollback_note": "Revert the FQV2-022 PR to remove dataset/eval handoff schemas, validators, tests, docs, and gate evidence. No production data migration, release rollback, model rollback, or hardware rollback is required."
+}
