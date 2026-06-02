@@ -283,6 +283,17 @@ warnings/errors, and artifact summaries. This does not accept request-supplied
 paths, load model binaries, connect to camera hardware, or grant production
 authority.
 
+The shadow detector metadata bridge uses the same env-var-bound artifact intake
+source. `GET /detector/shadow/status` returns a detector-focused readiness
+payload only after `ready.shadow_model_integration_issue=true`: configured
+state, detector readiness, `manifest-detector` adapter id, model reference,
+artifact version, labels, evaluation report reference, approval status,
+`shadow_mode=true`, `production_authority=false`, and model/production approval
+blockers. Unconfigured or invalid intake stays non-ready and points back to
+intake configuration or repair. The payload is metadata only and does not carry
+raw frames, datasets, model binaries, inference output, camera configuration, or
+final QC PASS/NG authority.
+
 Bootstrap Hikrobot camera boundary evidence lives in:
 
 ```text

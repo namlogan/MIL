@@ -63,6 +63,25 @@
 6. If the env var is missing or the bundle is invalid, the HMI stays in a safe
    repair/configuration state and no production authority is granted.
 
+## Critical Path: Shadow Detector Metadata Bridge
+
+1. Operator keeps `FLANGE_QC_V2_ARTIFACT_INTAKE_DIR` pointed at a validated
+   metadata-only intake bundle.
+2. App calls `/detector/shadow/status` to check detector integration readiness.
+3. If artifact intake is missing or invalid, the endpoint returns
+   `ready=false`, approval blockers, and an actionable next task without loading
+   model metadata.
+4. If `ready.shadow_model_integration_issue=true`, the endpoint loads only
+   `model_artifact_manifest.json` and returns the `manifest-detector` adapter id,
+   model reference, artifact version, labels, evaluation report reference,
+   approval status, shadow mode, and production-authority blockers.
+5. A Codex implementation issue may build review-only detector observations
+   against `ManifestDetectorAdapter`; the adapter still cannot emit `PASS` or
+   `NG`.
+6. Model weights, runtime inference, camera access, model promotion, product
+   spec approval, QC/SOP tolerance approval, and production release remain
+   outside this flow.
+
 ## Critical Path: Production-Like Shadow Mode
 
 1. Owner approves shadow-mode runbook and rollback plan.
@@ -87,6 +106,8 @@
 - HTTP health endpoint.
 - HTTP replay inspection API at `/inspection/replay`.
 - HTTP QC feedback validation endpoint at `/feedback`.
+- HTTP artifact intake readiness endpoint at `/artifact-intake/status`.
+- HTTP shadow detector metadata endpoint at `/detector/shadow/status`.
 - WebSocket HMI stream.
 - SQLite audit DB.
 - Product spec JSON config.
@@ -104,3 +125,5 @@
 - HMI refresh returns the current no-camera replay snapshot.
 - HMI feedback submits the current inspection ID to `/feedback` and receives
   shadow-only authority blockers.
+- Shadow detector status returns a safe unconfigured state without env setup and
+  returns manifest metadata from the template bundle when intake is ready.

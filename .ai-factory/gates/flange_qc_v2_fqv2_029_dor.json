@@ -1,0 +1,112 @@
+{
+  "task_id": "FQV2-029",
+  "github_issue": 115,
+  "source_ref": "https://github.com/namlogan/MIL/issues/115",
+  "owner_agent": "codex_developer",
+  "qa_agent": "codex_qa",
+  "preferred_lane": "codex",
+  "branch": "agent/115-shadow-detector-metadata-bridge",
+  "allowed_paths": [
+    ".ai-factory/gates/flange_qc_v2_fqv2_029_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_029_handoff_2026-06-02.md",
+    "apps/flange_qc_v2/detector.py",
+    "apps/flange_qc_v2/asgi.py",
+    "tests/flange_qc_v2/test_detector_adapter.py",
+    "tests/flange_qc_v2/test_artifact_intake.py",
+    "docs/project/flange_qc_v2/MLOPS_BOUNDARY.md",
+    "docs/project/flange_qc_v2/DATA_MODEL.md",
+    "docs/project/flange_qc_v2/USER_FLOWS.md",
+    "docs/project/flange_qc_v2/TEST_STRATEGY.md"
+  ],
+  "restricted_paths": [
+    "request-supplied arbitrary filesystem paths",
+    "production deploy behavior",
+    "release approval",
+    "merge policy changes",
+    "GitHub Actions workflow changes",
+    "branch protection changes",
+    "secrets",
+    "tokens",
+    "passwords",
+    "private keys",
+    "provider credentials",
+    "camera credentials",
+    "raw media",
+    "customer or factory data",
+    "raw datasets",
+    "notebooks",
+    "model weights",
+    "model binaries",
+    "model deserialization",
+    "training code",
+    "TensorRT engines",
+    "ONNX/PyTorch runtime execution",
+    "inference runtime execution",
+    "GPU or hardware validation",
+    "MLOps promotion",
+    "live camera capture",
+    "destructive migrations",
+    "production DB migration behavior",
+    "QC/SOP tolerance approval",
+    "product spec approval",
+    "production PASS/NG authority",
+    "production auto-reject"
+  ],
+  "acceptance_criteria": [
+    "Add a metadata-only shadow detector bridge that reads the existing artifact intake bundle and loads model_artifact_manifest.json only after ready.shadow_model_integration_issue=true.",
+    "GET /detector/shadow/status reads only FLANGE_QC_V2_ARTIFACT_INTAKE_DIR and does not accept request-supplied filesystem paths.",
+    "Missing or unready artifact intake returns configured/ready false, production_authority=false, approval blockers, and actionable next task.",
+    "Ready artifact intake returns adapter id, model reference, artifact version, labels, evaluation report reference, approval status, shadow mode, production_authority=false, and approval blockers.",
+    "ManifestDetectorAdapter remains review-only with no PASS/NG, no model deserialization, no inference, no camera access, and no production authority.",
+    "Existing artifact intake, HMI, replay, detector adapter, and product CI behavior continue to work."
+  ],
+  "memory_preflight": {
+    "query": "flange_qc_v2 shadow detector metadata bridge artifact intake model_artifact_manifest ManifestDetectorAdapter",
+    "retrieved_decisions": [
+      "Artifact intake readiness exposes ready.shadow_model_integration_issue=true for the next metadata-only model bridge.",
+      "Detector adapters may return review-only observations but cannot emit PASS/NG or approve production authority.",
+      "Model artifact manifests reject raw weights, require shadow mode, and cannot approve production authority."
+    ],
+    "retrieved_lessons": [
+      "Connect model metadata to app boundaries before real model weights arrive.",
+      "Keep filesystem access env-var-bound and do not accept request-supplied artifact paths.",
+      "Production gates remain human-only for model promotion, QC/SOP tolerance approval, product specs, live camera, and release."
+    ],
+    "restricted_areas": [
+      "secrets",
+      "raw media/data",
+      "model binaries/deserialization/inference",
+      "live camera/hardware",
+      "destructive migrations",
+      "production deploy/release",
+      "product spec approval",
+      "QC/SOP tolerance approval",
+      "model promotion",
+      "production PASS/NG authority"
+    ],
+    "conflicts_found": [],
+    "sources_to_verify": [
+      "https://github.com/namlogan/MIL/issues/115",
+      "apps/flange_qc_v2/detector.py",
+      "apps/flange_qc_v2/model_artifact.py",
+      "apps/flange_qc_v2/artifact_intake.py",
+      "apps/flange_qc_v2/asgi.py",
+      "tests/flange_qc_v2/test_detector_adapter.py",
+      "docs/project/flange_qc_v2/MLOPS_BOUNDARY.md"
+    ]
+  },
+  "test_commands": [
+    "python3 -m unittest tests.flange_qc_v2.test_detector_adapter -v",
+    "python3 -m unittest tests.flange_qc_v2.test_artifact_intake -v",
+    "python3 -m unittest tests.flange_qc_v2.test_hmi_screen -v",
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 -m compileall -q apps/flange_qc_v2 tests/flange_qc_v2",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m unittest discover -s tests -v",
+    "git diff --check",
+    "python3 -m json.tool .ai-factory/gates/flange_qc_v2_fqv2_029_dor.json"
+  ],
+  "handoff_required": true,
+  "browser_verification_required": false,
+  "rollback_note": "Revert the FQV2-029 PR to remove /detector/shadow/status and the metadata bridge. Existing artifact intake endpoint, CLI validator, HMI replay, and detector adapter behavior remain valid. No migration, model rollback, camera rollback, dataset rollback, or deploy rollback is required."
+}
