@@ -1,0 +1,45 @@
+{
+  "task_id": "FQV2-005",
+  "github_issue": 67,
+  "source_ref": "https://github.com/namlogan/MIL/issues/67",
+  "owner_agent": "codex_developer",
+  "qa_agent": "codex_qa",
+  "preferred_lane": "codex",
+  "branch": "agent/67-sqlite-audit-store",
+  "allowed_paths": [
+    "apps/flange_qc_v2/**",
+    "tests/flange_qc_v2/**",
+    "docs/project/flange_qc_v2/DATA_MODEL.md",
+    ".ai-factory/gates/flange_qc_v2_fqv2_005_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_005_handoff_2026-06-02.md"
+  ],
+  "restricted_paths": [
+    "production deploy",
+    "secrets",
+    "customer data retention/deletion policy",
+    "destructive migrations",
+    "factory datasets",
+    "camera hardware",
+    "model weights",
+    "TensorRT engines",
+    "production release storage/backup policy"
+  ],
+  "acceptance_criteria": [
+    "Add app-level SQLite audit migration definitions that create audit tables without destructive SQL.",
+    "Add an audit store initializer that records applied migration versions.",
+    "Persist an inspection snapshot payload with product, phase, decision, reason codes, and raw JSON evidence.",
+    "Fetch a persisted inspection by ID for verification/replay use.",
+    "Duplicate inspection IDs are rejected explicitly.",
+    "No production retention policy, destructive migration, customer data behavior, or release storage policy is implemented.",
+    "Existing product CI and full repository tests keep passing."
+  ],
+  "test_commands": [
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 -m compileall -q apps/flange_qc_v2 tests/flange_qc_v2",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m unittest discover -s tests -v",
+    "git diff --check"
+  ],
+  "handoff_required": true,
+  "rollback_note": "Revert the FQV2-005 PR to remove the bootstrap audit store, migration definitions, tests, and evidence. No production DB is managed by this task."
+}
