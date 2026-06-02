@@ -442,6 +442,52 @@
         font-weight: 650;
       }
 
+      .observation-list {
+        display: grid;
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .observation-card {
+        display: grid;
+        gap: 8px;
+        min-width: 0;
+        padding: 12px;
+        border: 1px solid var(--surface-strong);
+        border-radius: var(--radius);
+        background: #f8fafc;
+      }
+
+      .observation-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .observation-label {
+        color: var(--blue);
+        font-weight: 800;
+        overflow-wrap: anywhere;
+      }
+
+      .observation-meta {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px 12px;
+      }
+
+      .observation-meta span {
+        overflow-wrap: anywhere;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .panel-wide {
+        grid-column: 1 / -1;
+      }
+
       @media (max-width: 760px) {
         header,
         main {
@@ -630,6 +676,15 @@
         </div>
       </section>
 
+      <section class="grid" aria-label="Detector observations">
+        <div class="panel panel-wide">
+          <h2>Detector Observations</h2>
+          <div id="detector-observations" class="observation-list">
+            <div class="empty-state">No detector observations</div>
+          </div>
+        </div>
+      </section>
+
       <section class="grid">
         <div class="panel">
           <h2>Feedback</h2>
@@ -690,6 +745,7 @@
         artifactCameraReady: document.getElementById("artifact-camera-ready"),
         artifactNextTask: document.getElementById("artifact-next-task"),
         artifactIntakeArtifacts: document.getElementById("artifact-intake-artifacts"),
+        detectorObservations: document.getElementById("detector-observations"),
         feedbackStatus: document.getElementById("feedback-status"),
         productionAuthority: document.getElementById("production-authority"),
         authorityBlockers: document.getElementById("authority-blockers")
@@ -709,7 +765,8 @@
         fields.spec.textContent = payload.product.spec_version;
         fields.inspectionId.textContent = payload.inspection_id;
         fields.createdAt.textContent = payload.created_at;
-        fields.observationState.textContent = payload.observations.length ? "present" : "none";
+        const observations = Array.isArray(payload.observations) ? payload.observations : [];
+        fields.observationState.textContent = observations.length ? "present" : "none";
         fields.reasonList.innerHTML = "";
         payload.reason_codes.forEach((reason) => {
           const item = document.createElement("li");
@@ -718,6 +775,7 @@
         });
         renderMeasurements(payload.measurements);
         renderPhaseResults(payload.phase_results);
+        renderDetectorObservations(observations);
       }
 
       function renderMeasurements(measurements) {
@@ -906,6 +964,59 @@
           });
         }
         return parts.join("; ");
+      }
+
+      function renderDetectorObservations(observations) {
+        const items = Array.isArray(observations) ? observations : [];
+        fields.detectorObservations.innerHTML = "";
+        if (!items.length) {
+          const empty = document.createElement("div");
+          empty.className = "empty-state";
+          empty.textContent = "No detector observations";
+          fields.detectorObservations.appendChild(empty);
+          return;
+        }
+        items.forEach((observation, index) => {
+          const item = document.createElement("article");
+          item.className = "observation-card";
+
+          const header = document.createElement("div");
+          header.className = "observation-header";
+          const label = document.createElement("span");
+          label.className = "observation-label";
+          label.textContent = observation.label || `observation-${index + 1}`;
+          header.appendChild(label);
+          header.appendChild(makeDecisionPill("ASSIST"));
+          item.appendChild(header);
+
+          const meta = document.createElement("div");
+          meta.className = "observation-meta";
+          appendObservationMeta(meta, "confidence", formatConfidence(observation.confidence));
+          appendObservationMeta(meta, "bbox", formatBbox(observation.bbox));
+          appendObservationMeta(meta, "model_ref", observation.model_ref || "none");
+          appendObservationMeta(meta, "evidence_ref", observation.evidence_ref || "none");
+          item.appendChild(meta);
+
+          fields.detectorObservations.appendChild(item);
+        });
+      }
+
+      function appendObservationMeta(container, label, value) {
+        const item = document.createElement("span");
+        item.textContent = `${label}: ${value}`;
+        container.appendChild(item);
+      }
+
+      function formatConfidence(value) {
+        const number = Number(value);
+        return Number.isFinite(number) ? number.toFixed(2) : "n/a";
+      }
+
+      function formatBbox(value) {
+        if (!Array.isArray(value) || value.length !== 4) {
+          return "n/a";
+        }
+        return value.map((part) => Number(part).toFixed(2)).join(", ");
       }
 
       function setFeedbackStatus(message, state) {

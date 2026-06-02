@@ -30,19 +30,22 @@
 3. Operator inspects the HMI SOP phase-results drilldown to see each phase
    decision, blockers, production-authority state, rule ids, and compact rule
    evidence without opening raw JSON.
-4. When `FLANGE_QC_V2_AUDIT_DB_PATH` is configured, replay refresh initializes
+4. If review-only detector observations are present, the HMI detector
+   observations panel shows label, confidence, bbox, model reference, and
+   evidence reference without granting inspection authority.
+5. When `FLANGE_QC_V2_AUDIT_DB_PATH` is configured, replay refresh initializes
    the local audit store and records the current inspection idempotently.
-5. Operator refreshes the replay snapshot from the HMI header when a manual
+6. Operator refreshes the replay snapshot from the HMI header when a manual
    no-camera check is needed.
-6. Operator records reviewer ID, feedback type, and note for the current
+7. Operator records reviewer ID, feedback type, and note for the current
    inspection.
-7. HMI submits the feedback payload to `/feedback` with the current inspection
+8. HMI submits the feedback payload to `/feedback` with the current inspection
    ID and shadow decision.
-8. The feedback contract returns shadow evidence with
+9. The feedback contract returns shadow evidence with
    `production_authority=false` and `PRODUCTION_APPROVAL_REQUIRED`.
-9. When audit persistence is configured, `/feedback` stores the feedback in
+10. When audit persistence is configured, `/feedback` stores the feedback in
    `qc_feedback` and returns audit persistence evidence for the HMI status.
-10. Any production release, product spec approval, QC/SOP tolerance approval,
+11. Any production release, product spec approval, QC/SOP tolerance approval,
    live hardware approval, or production PASS/NG authority remains outside this
    flow.
 
