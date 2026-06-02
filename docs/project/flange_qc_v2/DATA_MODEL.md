@@ -166,10 +166,13 @@ apps/flange_qc_v2/static/hmi.html
 The current screen is served at `/hmi`, connects to `/ws/inspection`, can refresh
 the current replay snapshot through `/inspection/replay`, and renders the latest
 replay-backed `inspection.snapshot` payload. It displays operator status, reason
-codes, product/spec, measurements, frame source, timestamp, and observations
-state. It also lets the operator submit reviewer ID, feedback type, and note for
-the current inspection through `/feedback`. This UI remains no-camera
-shadow-mode evidence only and cannot approve production authority.
+codes, product/spec, measurements, ordered SOP `phase_results` drilldown, frame
+source, timestamp, and observations state. The phase drilldown shows each phase
+decision, reason codes, authority blockers, production-authority state, rule
+ids, rule decisions, rule reason codes, and compact evidence summaries. It also
+lets the operator submit reviewer ID, feedback type, and note for the current
+inspection through `/feedback`. This UI remains no-camera shadow-mode evidence
+only and cannot approve production authority.
 
 Bootstrap QC feedback evidence lives in:
 
