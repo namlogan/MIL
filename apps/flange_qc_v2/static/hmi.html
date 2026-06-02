@@ -660,6 +660,23 @@
         </div>
       </section>
 
+      <section class="grid" aria-label="Detector shadow status">
+        <div class="panel">
+          <h2>Detector Bridge</h2>
+          <div id="detector-shadow-status" class="feedback-status" data-state="idle">FLANGE_QC_V2_ARTIFACT_INTAKE_DIR not configured</div>
+          <div class="detail-row"><span class="label">Ready</span><span id="detector-shadow-ready" class="value">false</span></div>
+          <div class="detail-row"><span class="label">Adapter</span><span id="detector-shadow-adapter" class="value">manifest-detector pending</span></div>
+          <div class="detail-row"><span class="label">Approval</span><span id="detector-shadow-approval-status" class="value">none</span></div>
+        </div>
+
+        <div class="panel">
+          <h2>Detector Metadata</h2>
+          <div class="detail-row"><span class="label">Model</span><span id="detector-shadow-model-ref" class="value">none</span></div>
+          <div class="detail-row"><span class="label">Labels</span><span id="detector-shadow-labels" class="value">none</span></div>
+          <div class="detail-row"><span class="label">Authority Blockers</span><span id="detector-shadow-authority-blockers" class="value">MODEL_APPROVAL_REQUIRED, PRODUCTION_APPROVAL_REQUIRED</span></div>
+        </div>
+      </section>
+
       <section class="grid">
         <div class="panel">
           <h2>Inspection</h2>
@@ -745,6 +762,13 @@
         artifactCameraReady: document.getElementById("artifact-camera-ready"),
         artifactNextTask: document.getElementById("artifact-next-task"),
         artifactIntakeArtifacts: document.getElementById("artifact-intake-artifacts"),
+        detectorShadowStatus: document.getElementById("detector-shadow-status"),
+        detectorShadowReady: document.getElementById("detector-shadow-ready"),
+        detectorShadowAdapter: document.getElementById("detector-shadow-adapter"),
+        detectorShadowModelRef: document.getElementById("detector-shadow-model-ref"),
+        detectorShadowLabels: document.getElementById("detector-shadow-labels"),
+        detectorShadowApprovalStatus: document.getElementById("detector-shadow-approval-status"),
+        detectorShadowAuthorityBlockers: document.getElementById("detector-shadow-authority-blockers"),
         detectorObservations: document.getElementById("detector-observations"),
         feedbackStatus: document.getElementById("feedback-status"),
         productionAuthority: document.getElementById("production-authority"),
@@ -966,6 +990,29 @@
         return parts.join("; ");
       }
 
+      function renderDetectorShadowStatus(payload) {
+        const ready = Boolean(payload.ready);
+        fields.detectorShadowStatus.textContent = detectorShadowStatusLabel(payload);
+        fields.detectorShadowStatus.dataset.state = ready ? "ok" : "error";
+        fields.detectorShadowReady.textContent = String(ready);
+        fields.detectorShadowAdapter.textContent = payload.adapter_id || "manifest-detector pending";
+        fields.detectorShadowModelRef.textContent = payload.model_ref || "none";
+        fields.detectorShadowLabels.textContent = joinValues(payload.labels);
+        fields.detectorShadowApprovalStatus.textContent = payload.approval_status || "none";
+        fields.detectorShadowAuthorityBlockers.textContent = joinValues(payload.authority_blockers);
+      }
+
+      function detectorShadowStatusLabel(payload) {
+        const errors = Array.isArray(payload.errors) ? payload.errors : [];
+        if (!payload.configured) {
+          return "FLANGE_QC_V2_ARTIFACT_INTAKE_DIR not configured";
+        }
+        if (payload.ready) {
+          return `ready: ${payload.adapter_id || "manifest-detector"}`;
+        }
+        return errors.length ? `needs repair: ${errors[0]}` : "detector bridge not ready";
+      }
+
       function renderDetectorObservations(observations) {
         const items = Array.isArray(observations) ? observations : [];
         fields.detectorObservations.innerHTML = "";
@@ -1048,6 +1095,27 @@
             next_issue: {
               recommended_task: "configure_artifact_intake"
             }
+          });
+        }
+      }
+
+      async function fetchDetectorShadowStatus() {
+        try {
+          const response = await fetch("/detector/shadow/status", {
+            headers: { "Accept": "application/json" }
+          });
+          const payload = await response.json();
+          if (!response.ok) {
+            throw new Error(payload.detail || `detector shadow ${response.status}`);
+          }
+          renderDetectorShadowStatus(payload);
+        } catch (error) {
+          renderDetectorShadowStatus({
+            configured: false,
+            ready: false,
+            errors: [`detector shadow error: ${error.message}`],
+            labels: [],
+            authority_blockers: ["MODEL_APPROVAL_REQUIRED", "PRODUCTION_APPROVAL_REQUIRED"]
           });
         }
       }
@@ -1144,6 +1212,7 @@
       connect();
       fetchReplaySnapshot();
       fetchArtifactIntakeStatus();
+      fetchDetectorShadowStatus();
     </script>
   </body>
 </html>

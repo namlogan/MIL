@@ -93,6 +93,23 @@ class HmiScreenTests(unittest.TestCase):
         self.assertIn("confidence", html)
         self.assertIn("bbox", html)
 
+    def test_hmi_html_renders_detector_shadow_status_panel(self) -> None:
+        html = HMI_HTML.read_text(encoding="utf-8")
+
+        self.assertIn('aria-label="Detector shadow status"', html)
+        self.assertIn('id="detector-shadow-status"', html)
+        self.assertIn('id="detector-shadow-ready"', html)
+        self.assertIn('id="detector-shadow-adapter"', html)
+        self.assertIn('id="detector-shadow-model-ref"', html)
+        self.assertIn('id="detector-shadow-labels"', html)
+        self.assertIn('id="detector-shadow-approval-status"', html)
+        self.assertIn('id="detector-shadow-authority-blockers"', html)
+        self.assertIn("fetchDetectorShadowStatus", html)
+        self.assertIn("renderDetectorShadowStatus", html)
+        self.assertIn('fetch("/detector/shadow/status"', html)
+        self.assertIn("manifest-detector", html)
+        self.assertIn("MODEL_APPROVAL_REQUIRED", html)
+
     def test_hmi_html_binds_operator_feedback_form_to_shadow_endpoint(self) -> None:
         html = HMI_HTML.read_text(encoding="utf-8")
 

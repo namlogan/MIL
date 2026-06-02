@@ -167,15 +167,17 @@ The current screen is served at `/hmi`, connects to `/ws/inspection`, can refres
 the current replay snapshot through `/inspection/replay`, and renders the latest
 replay-backed `inspection.snapshot` payload. It displays operator status, reason
 codes, product/spec, measurements, ordered SOP `phase_results` drilldown, frame
-source, timestamp, observations state, and detector observation details. The
-phase drilldown shows each phase decision, reason codes, authority blockers,
-production-authority state, rule ids, rule decisions, rule reason codes, and
-compact evidence summaries. The detector observations panel shows label,
-confidence, bbox, model reference, and evidence reference when review-only
-observations are present, and a safe empty state otherwise. It also lets the
-operator submit reviewer ID, feedback type, and note for the current inspection
-through `/feedback`. This UI remains no-camera shadow-mode evidence only and
-cannot approve production authority.
+source, timestamp, observations state, detector bridge status, and detector
+observation details. The phase drilldown shows each phase decision, reason
+codes, authority blockers, production-authority state, rule ids, rule decisions,
+rule reason codes, and compact evidence summaries. The detector bridge status
+panel reads `/detector/shadow/status` and shows ready state, adapter id, model
+reference, labels, approval status, and authority blockers. The detector
+observations panel shows label, confidence, bbox, model reference, and evidence
+reference when review-only observations are present, and a safe empty state
+otherwise. It also lets the operator submit reviewer ID, feedback type, and note
+for the current inspection through `/feedback`. This UI remains no-camera
+shadow-mode evidence only and cannot approve production authority.
 
 Bootstrap QC feedback evidence lives in:
 
@@ -295,7 +297,9 @@ artifact version, labels, evaluation report reference, approval status,
 blockers. Unconfigured or invalid intake stays non-ready and points back to
 intake configuration or repair. The payload is metadata only and does not carry
 raw frames, datasets, model binaries, inference output, camera configuration, or
-final QC PASS/NG authority.
+final QC PASS/NG authority. The HMI renders this payload as detector bridge
+status so operators can see metadata readiness without opening raw JSON or
+changing backend decision authority.
 
 Replay frames may include optional synthetic `detector_observations` metadata:
 label, confidence, and normalized bbox only. Replay parsing validates these

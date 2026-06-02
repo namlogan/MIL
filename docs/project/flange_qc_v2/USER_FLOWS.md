@@ -30,22 +30,25 @@
 3. Operator inspects the HMI SOP phase-results drilldown to see each phase
    decision, blockers, production-authority state, rule ids, and compact rule
    evidence without opening raw JSON.
-4. If review-only detector observations are present, the HMI detector
+4. HMI shows detector bridge status from `/detector/shadow/status`, including
+   ready state, adapter, model reference, labels, approval status, and remaining
+   authority blockers when metadata is available.
+5. If review-only detector observations are present, the HMI detector
    observations panel shows label, confidence, bbox, model reference, and
    evidence reference without granting inspection authority.
-5. When `FLANGE_QC_V2_AUDIT_DB_PATH` is configured, replay refresh initializes
+6. When `FLANGE_QC_V2_AUDIT_DB_PATH` is configured, replay refresh initializes
    the local audit store and records the current inspection idempotently.
-6. Operator refreshes the replay snapshot from the HMI header when a manual
+7. Operator refreshes the replay snapshot from the HMI header when a manual
    no-camera check is needed.
-7. Operator records reviewer ID, feedback type, and note for the current
+8. Operator records reviewer ID, feedback type, and note for the current
    inspection.
-8. HMI submits the feedback payload to `/feedback` with the current inspection
+9. HMI submits the feedback payload to `/feedback` with the current inspection
    ID and shadow decision.
-9. The feedback contract returns shadow evidence with
+10. The feedback contract returns shadow evidence with
    `production_authority=false` and `PRODUCTION_APPROVAL_REQUIRED`.
-10. When audit persistence is configured, `/feedback` stores the feedback in
+11. When audit persistence is configured, `/feedback` stores the feedback in
    `qc_feedback` and returns audit persistence evidence for the HMI status.
-11. Any production release, product spec approval, QC/SOP tolerance approval,
+12. Any production release, product spec approval, QC/SOP tolerance approval,
    live hardware approval, or production PASS/NG authority remains outside this
    flow.
 
@@ -78,11 +81,13 @@
    `model_artifact_manifest.json` and returns the `manifest-detector` adapter id,
    model reference, artifact version, labels, evaluation report reference,
    approval status, shadow mode, and production-authority blockers.
-5. Replay frames may provide sanitized synthetic `detector_observations`.
+5. HMI calls this endpoint and renders the detector bridge status without
+   opening raw JSON or changing decision authority.
+6. Replay frames may provide sanitized synthetic `detector_observations`.
    During HMI snapshot generation, those observations are attached only through
    `ManifestDetectorAdapter` after artifact intake is ready. The adapter fills
    the manifest model reference and evaluation evidence reference.
-6. Model weights, runtime inference, camera access, model promotion, product
+7. Model weights, runtime inference, camera access, model promotion, product
    spec approval, QC/SOP tolerance approval, and production release remain
    outside this flow.
 
