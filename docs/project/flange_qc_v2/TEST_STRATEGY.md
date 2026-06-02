@@ -56,6 +56,13 @@ Dataset and evaluation handoff artifacts must enter through
 paths, PII/customer-data flags, missing split or metric evidence, production
 authority, and promotion approval.
 
+Combined dataset/model/camera intake must enter through
+`templates/flange_qc_v2/artifact_intake/` and
+`scripts/flange_qc_v2/validate_artifact_intake.py`. Tests must prove the
+template bundle validates, raw media/model/secrets-like files are rejected, and
+dataset/evaluation/model references stay consistent before a shadow model
+integration issue is opened.
+
 ## Agent Verification Rules
 
 Every implementation issue must list exact checks. If a check cannot run because
