@@ -65,3 +65,16 @@ apps/flange_qc_v2/calibration.py
 The current synthetic calibration fixture exposes camera and lighting metadata
 for bootstrap/replay diagnostics only. It does not approve live camera hardware,
 geometry correction, or production calibration authority.
+
+Bootstrap geometry measurement validation lives in:
+
+```text
+apps/flange_qc_v2/geometry.py
+contracts/flange_qc_v2/geometry/measurement_set.schema.json
+```
+
+The current geometry contract requires exactly 3 length points, 3 width points,
+and 2 diagonals. Complete measurement evidence can compute diagonal deviation,
+but it remains `BLOCKED` with no production authority until QC/SOP tolerance
+approval and the later decision engine gate are complete. Incomplete measurement
+evidence fails closed with `MEASUREMENTS_INCOMPLETE`.
