@@ -174,6 +174,118 @@
         font-variant-numeric: tabular-nums;
       }
 
+      .phase-section {
+        display: grid;
+        gap: 10px;
+      }
+
+      .phase-results {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .phase-result-card {
+        display: grid;
+        gap: 10px;
+        min-width: 0;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface);
+      }
+
+      .phase-result-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .phase-name {
+        font-weight: 800;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+        max-width: 100%;
+        padding: 0 8px;
+        border-radius: 999px;
+        background: var(--surface-strong);
+        color: var(--ink);
+        font-size: 12px;
+        font-weight: 800;
+        overflow-wrap: anywhere;
+      }
+
+      .pill[data-decision="PASS"] {
+        color: var(--green);
+        background: #effaf4;
+      }
+
+      .pill[data-decision="NG"],
+      .pill[data-decision="BLOCKED"] {
+        color: var(--red);
+        background: #fff7f5;
+      }
+
+      .pill[data-decision="ASSIST"],
+      .pill[data-decision="NOT_EVALUATED"] {
+        color: var(--amber);
+        background: #fff8ed;
+      }
+
+      .phase-meta {
+        display: grid;
+        gap: 6px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .rule-result-list {
+        display: grid;
+        gap: 8px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .rule-result {
+        display: grid;
+        gap: 6px;
+        padding-top: 8px;
+        border-top: 1px solid var(--surface-strong);
+      }
+
+      .rule-title {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 8px;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .evidence-summary {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 650;
+        overflow-wrap: anywhere;
+      }
+
+      .empty-state {
+        min-height: 52px;
+        padding: 12px;
+        border: 1px dashed var(--line);
+        border-radius: var(--radius);
+        background: #f8fafc;
+        color: var(--muted);
+        font-weight: 700;
+      }
+
       .detail-row {
         display: grid;
         grid-template-columns: 140px minmax(0, 1fr);
@@ -322,6 +434,7 @@
         header,
         .grid,
         .status-strip,
+        .phase-results,
         .measurement-grid {
           grid-template-columns: 1fr;
         }
@@ -385,6 +498,80 @@
             <div class="measurement-group" data-group="width_points"><b>Width</b><span>37.40</span><span>37.50</span><span>37.60</span></div>
             <div class="measurement-group" data-group="diagonals"><b>Diagonals</b><span>83.00</span><span>83.25</span></div>
           </div>
+        </div>
+      </section>
+
+      <section class="phase-section" aria-label="SOP phase results">
+        <h2>SOP Phase Results</h2>
+        <div id="phase-results" class="phase-results">
+          <article class="phase-result-card">
+            <div class="phase-result-header">
+              <span class="phase-name">PHASE_1</span>
+              <span class="pill" data-decision="BLOCKED">BLOCKED</span>
+            </div>
+            <div class="phase-meta">
+              <span>Reasons: PRODUCT_SPEC_APPROVAL_MISSING, CALIBRATION_MISSING</span>
+              <span>Authority: none</span>
+              <span>Production: false</span>
+            </div>
+            <ul class="rule-result-list">
+              <li class="rule-result">
+                <div class="evidence-summary">No rule results until blockers clear.</div>
+              </li>
+            </ul>
+          </article>
+          <article class="phase-result-card">
+            <div class="phase-result-header">
+              <span class="phase-name">PHASE_2</span>
+              <span class="pill" data-decision="BLOCKED">BLOCKED</span>
+            </div>
+            <div class="phase-meta">
+              <span>Reasons: PRODUCT_SPEC_APPROVAL_MISSING, CALIBRATION_MISSING</span>
+              <span>Authority: none</span>
+              <span>Production: false</span>
+            </div>
+            <ul class="rule-result-list">
+              <li class="rule-result">
+                <div class="evidence-summary">No rule results until blockers clear.</div>
+              </li>
+            </ul>
+          </article>
+          <article class="phase-result-card">
+            <div class="phase-result-header">
+              <span class="phase-name">PHASE_3</span>
+              <span class="pill" data-decision="ASSIST">ASSIST</span>
+            </div>
+            <div class="phase-meta">
+              <span>Reasons: MODEL_REVIEW_REQUIRED</span>
+              <span>Authority: MODEL_APPROVAL_REQUIRED</span>
+              <span>Production: false</span>
+            </div>
+            <ul class="rule-result-list">
+              <li class="rule-result">
+                <div class="rule-title">
+                  <span>M1-SOP-6.4-PUNCH-MARK-001</span>
+                  <span class="pill" data-decision="ASSIST">ASSIST</span>
+                </div>
+                <div class="evidence-summary">fallback_source=sop_registry</div>
+              </li>
+            </ul>
+          </article>
+          <article class="phase-result-card">
+            <div class="phase-result-header">
+              <span class="phase-name">PHASE_4</span>
+              <span class="pill" data-decision="ASSIST">ASSIST</span>
+            </div>
+            <div class="phase-meta">
+              <span>Reasons: RULE_POST_MVP_DISABLED, MODEL_REVIEW_REQUIRED</span>
+              <span>Authority: MODEL_APPROVAL_REQUIRED</span>
+              <span>Production: false</span>
+            </div>
+            <ul class="rule-result-list">
+              <li class="rule-result">
+                <div class="evidence-summary">Post-MVP and review-dependent rules are not production authority.</div>
+              </li>
+            </ul>
+          </article>
         </div>
       </section>
 
@@ -457,6 +644,7 @@
         sourceUri: document.getElementById("source-uri"),
         unit: document.getElementById("unit"),
         reasonList: document.getElementById("reason-list"),
+        phaseResults: document.getElementById("phase-results"),
         feedbackStatus: document.getElementById("feedback-status"),
         productionAuthority: document.getElementById("production-authority"),
         authorityBlockers: document.getElementById("authority-blockers")
@@ -484,6 +672,7 @@
           fields.reasonList.appendChild(item);
         });
         renderMeasurements(payload.measurements);
+        renderPhaseResults(payload.phase_results);
       }
 
       function renderMeasurements(measurements) {
@@ -498,6 +687,113 @@
             group.appendChild(item);
           });
         });
+      }
+
+      function renderPhaseResults(phaseResults) {
+        const results = Array.isArray(phaseResults) ? phaseResults : [];
+        fields.phaseResults.innerHTML = "";
+        if (!results.length) {
+          const empty = document.createElement("div");
+          empty.className = "empty-state";
+          empty.textContent = "No phase results";
+          fields.phaseResults.appendChild(empty);
+          return;
+        }
+        results.forEach((phaseResult) => {
+          const card = document.createElement("article");
+          card.className = "phase-result-card";
+
+          const header = document.createElement("div");
+          header.className = "phase-result-header";
+          const phase = document.createElement("span");
+          phase.className = "phase-name";
+          phase.textContent = phaseResult.phase || "UNKNOWN_PHASE";
+          header.appendChild(phase);
+          header.appendChild(makeDecisionPill(phaseResult.decision || "NOT_EVALUATED"));
+          card.appendChild(header);
+
+          const meta = document.createElement("div");
+          meta.className = "phase-meta";
+          appendMetaLine(meta, "Reasons", phaseResult.reason_codes);
+          appendMetaLine(meta, "Authority", phaseResult.authority_blockers);
+          appendMetaLine(meta, "Production", [String(Boolean(phaseResult.production_authority))]);
+          card.appendChild(meta);
+
+          card.appendChild(renderRuleResults(phaseResult.rule_results));
+          fields.phaseResults.appendChild(card);
+        });
+      }
+
+      function renderRuleResults(ruleResults) {
+        const list = document.createElement("ul");
+        list.className = "rule-result-list";
+        const results = Array.isArray(ruleResults) ? ruleResults : [];
+        if (!results.length) {
+          const item = document.createElement("li");
+          item.className = "rule-result";
+          const summary = document.createElement("div");
+          summary.className = "evidence-summary";
+          summary.textContent = "No rule results until blockers clear.";
+          item.appendChild(summary);
+          list.appendChild(item);
+          return list;
+        }
+        results.forEach((ruleResult) => {
+          const item = document.createElement("li");
+          item.className = "rule-result";
+
+          const title = document.createElement("div");
+          title.className = "rule-title";
+          const ruleId = document.createElement("span");
+          ruleId.textContent = ruleResult.rule_id || "unknown-rule";
+          title.appendChild(ruleId);
+          title.appendChild(makeDecisionPill(ruleResult.decision || "NOT_EVALUATED"));
+          item.appendChild(title);
+
+          const reasons = document.createElement("div");
+          reasons.className = "evidence-summary";
+          reasons.textContent = `Reasons: ${joinValues(ruleResult.reason_codes)}`;
+          item.appendChild(reasons);
+
+          const evidence = document.createElement("div");
+          evidence.className = "evidence-summary";
+          evidence.textContent = summarizeEvidence(ruleResult.evidence);
+          item.appendChild(evidence);
+
+          list.appendChild(item);
+        });
+        return list;
+      }
+
+      function makeDecisionPill(decision) {
+        const pill = document.createElement("span");
+        pill.className = "pill";
+        pill.dataset.decision = decision;
+        pill.textContent = decision;
+        return pill;
+      }
+
+      function appendMetaLine(container, label, values) {
+        const item = document.createElement("span");
+        item.textContent = `${label}: ${joinValues(values)}`;
+        container.appendChild(item);
+      }
+
+      function joinValues(values) {
+        if (!Array.isArray(values) || !values.length) {
+          return "none";
+        }
+        return values.join(", ");
+      }
+
+      function summarizeEvidence(evidence) {
+        if (!evidence || typeof evidence !== "object") {
+          return "Evidence: none";
+        }
+        const parts = Object.entries(evidence)
+          .slice(0, 4)
+          .map(([key, value]) => `${key}=${Array.isArray(value) ? value.join("|") : String(value)}`);
+        return `Evidence: ${parts.length ? parts.join("; ") : "none"}`;
       }
 
       function setFeedbackStatus(message, state) {
