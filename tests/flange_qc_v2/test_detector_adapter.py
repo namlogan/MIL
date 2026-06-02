@@ -205,7 +205,7 @@ class ShadowDetectorBridgeTests(unittest.TestCase):
         self.assertEqual(status["model_ref"], "registry://flange-qc-v2/detector/punch-mark/2026-06-02")
         self.assertEqual(status["artifact_version"], "detector-shadow-2026-06-02")
         self.assertEqual(status["labels"], ["punch_mark", "corner_mark"])
-        self.assertEqual(status["eval_report_ref"], "docs/project/flange_qc_v2/eval/detector-shadow-2026-06-02.json")
+        self.assertEqual(status["eval_report_ref"], "templates/flange_qc_v2/artifact_intake/evaluation_report.json")
         self.assertEqual(status["approval_status"], "candidate")
         self.assertTrue(status["shadow_mode"])
         self.assertFalse(status["production_authority"])

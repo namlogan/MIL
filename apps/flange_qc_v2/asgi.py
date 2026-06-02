@@ -8,6 +8,10 @@ from typing import Any
 
 from apps.flange_qc_v2.artifact_intake import validate_artifact_intake
 from apps.flange_qc_v2.audit import AuditStore
+from apps.flange_qc_v2.detector import (
+    build_shadow_detector_status_from_intake,
+    build_shadow_detector_unconfigured_status,
+)
 from apps.flange_qc_v2.domain import ValidationError
 from apps.flange_qc_v2.feedback import QcFeedback
 from apps.flange_qc_v2.health import build_health_snapshot
@@ -52,6 +56,9 @@ async def _handle_http(scope: Scope, receive: Receive, send: Send) -> None:
         return
     if method == "GET" and path == "/artifact-intake/status":
         await _send_json(send, 200, _artifact_intake_status_from_env())
+        return
+    if method == "GET" and path == "/detector/shadow/status":
+        await _send_json(send, 200, _shadow_detector_status_from_env())
         return
     if method == "POST" and path == "/feedback":
         try:
@@ -188,3 +195,10 @@ def _artifact_intake_status_from_env() -> dict[str, Any]:
         "PRODUCTION_APPROVAL_REQUIRED",
     ]
     return result
+
+
+def _shadow_detector_status_from_env() -> dict[str, Any]:
+    intake_dir = os.environ.get(ARTIFACT_INTAKE_ENV, "").strip()
+    if not intake_dir:
+        return build_shadow_detector_unconfigured_status(f"{ARTIFACT_INTAKE_ENV} is not configured")
+    return build_shadow_detector_status_from_intake(intake_dir, repo_root=REPO_ROOT)
