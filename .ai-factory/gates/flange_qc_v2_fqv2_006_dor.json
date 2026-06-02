@@ -1,0 +1,46 @@
+{
+  "task_id": "FQV2-006",
+  "github_issue": 69,
+  "source_ref": "https://github.com/namlogan/MIL/issues/69",
+  "owner_agent": "codex_developer",
+  "qa_agent": "codex_qa",
+  "preferred_lane": "codex",
+  "branch": "agent/69-calibration-synthetic-validator",
+  "allowed_paths": [
+    "apps/flange_qc_v2/**",
+    "tests/flange_qc_v2/**",
+    "configs/flange_qc_v2/**",
+    "docs/project/flange_qc_v2/DATA_MODEL.md",
+    ".ai-factory/gates/flange_qc_v2_fqv2_006_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_006_handoff_2026-06-02.md"
+  ],
+  "restricted_paths": [
+    "production deploy",
+    "secrets",
+    "customer data policy",
+    "destructive migrations",
+    "live camera hardware validation",
+    "production calibration approval",
+    "geometry correction engine",
+    "model weights",
+    "TensorRT engines",
+    "production SOP PASS/NG decision engine"
+  ],
+  "acceptance_criteria": [
+    "Add app-level calibration loading/validation from configs/flange_qc_v2/camera_calibration.synthetic.example.json.",
+    "Synthetic calibration resolves to BLOCKED for production authority with reason CALIBRATION_MISSING or approval-missing equivalent.",
+    "Validator rejects invalid camera/lighting shape explicitly.",
+    "Validator exposes camera and lighting metadata for replay/bootstrap diagnostics.",
+    "No live camera hardware validation, production calibration approval, or geometry correction engine is implemented.",
+    "Existing product CI and full repository tests keep passing."
+  ],
+  "test_commands": [
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 -m compileall -q apps/flange_qc_v2 tests/flange_qc_v2",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m unittest discover -s tests -v",
+    "git diff --check"
+  ],
+  "handoff_required": true,
+  "rollback_note": "Revert the FQV2-006 PR to remove the calibration loader/validator, tests, and evidence. Existing draft calibration fixture may remain if not changed."
+}
