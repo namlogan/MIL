@@ -1,5 +1,7 @@
+import gc
 import tempfile
 import unittest
+import warnings
 from pathlib import Path
 
 from apps.flange_qc_v2.audit import AuditStore, MIGRATIONS
@@ -58,6 +60,27 @@ class AuditStoreTests(unittest.TestCase):
 
             with self.assertRaisesRegex(ValidationError, "inspection already exists"):
                 store.append_inspection(snapshot)
+
+    def test_store_operations_close_sqlite_connections(self) -> None:
+        snapshot = InspectionSnapshot.bootstrap_blocked(
+            inspection_id="insp-close-connection",
+            product_code="UNKNOWN",
+            reason_codes=["UNKNOWN_PRODUCT"],
+        )
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always", ResourceWarning)
+            with tempfile.TemporaryDirectory() as tmpdir:
+                store = AuditStore(Path(tmpdir) / "audit.sqlite")
+                store.initialize()
+                store.append_inspection(snapshot)
+                store.fetch_inspection("insp-close-connection")
+                store.applied_versions()
+            gc.collect()
+
+        resource_warnings = [
+            warning for warning in caught if issubclass(warning.category, ResourceWarning)
+        ]
+        self.assertEqual(resource_warnings, [])
 
 
 if __name__ == "__main__":

@@ -1,0 +1,89 @@
+{
+  "task_id": "FQV2-013",
+  "github_issue": 83,
+  "source_ref": "https://github.com/namlogan/MIL/issues/83",
+  "owner_agent": "codex_developer",
+  "qa_agent": "codex_qa",
+  "preferred_lane": "codex",
+  "branch": "agent/83-image-quality-gate-contract",
+  "allowed_paths": [
+    "apps/flange_qc_v2/**",
+    "contracts/flange_qc_v2/**",
+    "tests/flange_qc_v2/**",
+    "docs/project/flange_qc_v2/DATA_MODEL.md",
+    ".ai-factory/gates/flange_qc_v2_fqv2_013_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_013_handoff_2026-06-02.md"
+  ],
+  "restricted_paths": [
+    "live camera hardware validation or capture",
+    "raw media storage",
+    "raw customer or factory data",
+    "detector adapter implementation",
+    "model weights",
+    "TensorRT engines",
+    "MLOps artifacts",
+    "production PASS/NG authority",
+    "production auto-reject",
+    "QC/SOP tolerance approval",
+    "product spec approval authority",
+    "production release or deploy",
+    "secrets",
+    "billing",
+    "customer data",
+    "destructive migrations"
+  ],
+  "acceptance_criteria": [
+    "Add an image quality domain contract for synthetic/replay frame metadata.",
+    "Validate frame ID, source URI, score fields, source ref, and timestamp explicitly.",
+    "Quality score fields are normalized floats in [0, 1].",
+    "Evaluate default quality thresholds into PASS, ASSIST, or BLOCKED.",
+    "Dark, blurry, or severe occlusion evidence fails closed as BLOCKED.",
+    "Moderate occlusion returns ASSIST with review-required reason codes.",
+    "Passing quality evidence remains non-production-authoritative and includes approval blockers.",
+    "Invalid payloads are rejected with ValidationError.",
+    "Add unit/contract tests for quality states and schema/contract shape.",
+    "No live camera, raw media, raw customer/factory data, detector adapter, model weights, production deploy, secrets, destructive migrations, product spec approval, QC/SOP tolerance approval, production PASS/NG authority, or production auto-reject changes are introduced.",
+    "Existing Flange QC v2 unit/contract tests, product CI, and full repository tests pass."
+  ],
+  "memory_preflight": {
+    "query": "Flange QC v2 image quality gate, replay/shadow evidence, prior domain contract packages",
+    "retrieved_decisions": [
+      "Use synthetic fixtures only for baseline CI.",
+      "Production release/deploy, product spec approval, QC/SOP tolerance approval, and production PASS/NG authority remain human gates.",
+      "Detector observations are separate from deterministic gates."
+    ],
+    "retrieved_lessons": [
+      "Keep contracts explicit and TDD first.",
+      "Fail closed for missing or invalid bootstrap evidence.",
+      "Do not introduce live camera/raw media or MLOps artifacts in bootstrap contracts."
+    ],
+    "restricted_areas": [
+      "production release/deploy",
+      "secrets",
+      "customer data",
+      "destructive migrations",
+      "live camera/raw media",
+      "detector/MLOps artifacts",
+      "QC/SOP tolerance approval"
+    ],
+    "conflicts_found": [],
+    "sources_to_verify": [
+      "https://github.com/namlogan/MIL/issues/83",
+      "AGENTS.md",
+      "docs/project/flange_qc_v2/WORK_PACKAGES.md",
+      "docs/project/flange_qc_v2/USER_FLOWS.md",
+      "docs/project/flange_qc_v2/TEST_STRATEGY.md"
+    ]
+  },
+  "test_commands": [
+    "python3 -m unittest tests.flange_qc_v2.test_image_quality -v",
+    "python3 -m unittest tests.flange_qc_v2.test_audit_store -v",
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 -m compileall -q apps/flange_qc_v2 tests/flange_qc_v2",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m unittest discover -s tests -v",
+    "git diff --check"
+  ],
+  "handoff_required": true,
+  "rollback_note": "Revert the FQV2-013 PR to remove the image quality contract, schema/tests, docs, gate evidence, and sqlite connection hygiene fix. This task does not alter production data, migrations, secrets, or deploy configuration."
+}

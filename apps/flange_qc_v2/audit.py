@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -59,7 +61,7 @@ class AuditStore:
 
     def initialize(self) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        with self._connect() as connection:
+        with self._transaction() as connection:
             connection.execute(
                 """
                 CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -79,14 +81,14 @@ class AuditStore:
                 )
 
     def applied_versions(self) -> list[int]:
-        with self._connect() as connection:
+        with self._connection() as connection:
             return self._applied_versions(connection)
 
     def append_inspection(self, snapshot: InspectionSnapshot) -> None:
         payload = snapshot.to_payload()
         product = payload["product"]
         try:
-            with self._connect() as connection:
+            with self._transaction() as connection:
                 connection.execute(
                     """
                     INSERT INTO inspections (
@@ -115,7 +117,7 @@ class AuditStore:
             raise ValidationError(f"inspection already exists: {snapshot.inspection_id}") from exc
 
     def fetch_inspection(self, inspection_id: str) -> dict[str, Any] | None:
-        with self._connect() as connection:
+        with self._connection() as connection:
             row = connection.execute(
                 """
                 SELECT
@@ -148,7 +150,7 @@ class AuditStore:
     def append_feedback(self, feedback: QcFeedback) -> None:
         payload = feedback.to_payload()
         try:
-            with self._connect() as connection:
+            with self._transaction() as connection:
                 connection.execute(
                     """
                     INSERT INTO qc_feedback (
@@ -169,7 +171,7 @@ class AuditStore:
             raise ValidationError(f"inspection does not exist: {feedback.inspection_id}") from exc
 
     def fetch_feedback(self, inspection_id: str) -> list[dict[str, Any]]:
-        with self._connect() as connection:
+        with self._connection() as connection:
             rows = connection.execute(
                 """
                 SELECT
@@ -204,6 +206,20 @@ class AuditStore:
         connection.row_factory = sqlite3.Row
         connection.execute("PRAGMA foreign_keys = ON")
         return connection
+
+    @contextmanager
+    def _connection(self) -> Iterator[sqlite3.Connection]:
+        connection = self._connect()
+        try:
+            yield connection
+        finally:
+            connection.close()
+
+    @contextmanager
+    def _transaction(self) -> Iterator[sqlite3.Connection]:
+        with self._connection() as connection:
+            with connection:
+                yield connection
 
     def _applied_versions(self, connection: sqlite3.Connection) -> list[int]:
         rows = connection.execute(
