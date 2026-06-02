@@ -276,6 +276,12 @@ The intake validator coordinates the dataset manifest, evaluation report, model
 artifact manifest, and camera boundary into one JSON readiness result. It can
 recommend a shadow model integration issue when metadata is consistent, while
 keeping live camera implementation blocked until hardware readiness approval.
+The app exposes this readiness through `GET /artifact-intake/status`, reading
+only `FLANGE_QC_V2_ARTIFACT_INTAKE_DIR`. The HMI renders the endpoint as a
+metadata-only readiness panel with configured state, readiness flags, next task,
+warnings/errors, and artifact summaries. This does not accept request-supplied
+paths, load model binaries, connect to camera hardware, or grant production
+authority.
 
 Bootstrap Hikrobot camera boundary evidence lives in:
 
