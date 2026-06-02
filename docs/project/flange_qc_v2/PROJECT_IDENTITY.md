@@ -6,8 +6,10 @@
 |---|---|
 | Project ID | `flange-qc-v2` |
 | Product name | FLANGE QC App V2 |
-| Repo ID | TBD: target product repository is not confirmed |
+| Repo ID | `MIL/flange-qc-v2-bootstrap` |
 | Bootstrap location | `docs/project/flange_qc_v2/` in the MIL control-plane repo |
+| Canonical app root | `apps/flange_qc_v2/**` |
+| First implementation branch | `agent/fqv2-001-app-skeleton` |
 | Owner | Logan / product owner |
 | Initial source brief | `/Users/mac/.codex/attachments/29025915-a42c-4868-98b5-9de4595af87b/pasted-text.txt` |
 | Kickoff ZIP reviewed | `/Users/mac/Desktop/flange_project_kickoff_docs.zip` |
@@ -25,6 +27,7 @@
 ## Operating Boundary
 
 MIL remains the SDLC control plane. FLANGE QC App V2 is the product being bootstrapped.
-This package is an intake and architecture baseline. It is not yet permission to dispatch
-coding agents because target repository identity, product owner approvals, and active
-product CI are still unresolved.
+This package is an intake and architecture baseline. It permits only the scoped
+FQV2-001 app skeleton task after Definition of Ready evidence is recorded.
+Production SOP authority, product tolerance approval, live hardware validation,
+model promotion, and release approval remain unresolved.
