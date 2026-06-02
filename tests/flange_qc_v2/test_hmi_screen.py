@@ -35,6 +35,7 @@ class HmiScreenTests(unittest.TestCase):
         self.assertIn('id="reason-list"', body)
         self.assertIn('id="measurements"', body)
         self.assertIn('id="phase-results"', body)
+        self.assertIn('id="artifact-intake-status"', body)
         self.assertIn('id="refresh-replay"', body)
         self.assertIn('id="feedback-form"', body)
         self.assertIn('id="feedback-status"', body)
@@ -64,6 +65,20 @@ class HmiScreenTests(unittest.TestCase):
         self.assertIn("authority_blockers", html)
         self.assertIn("production_authority", html)
         self.assertIn("M1-SOP-6.4-PUNCH-MARK-001", html)
+
+    def test_hmi_html_renders_artifact_intake_readiness_panel(self) -> None:
+        html = HMI_HTML.read_text(encoding="utf-8")
+
+        self.assertIn('aria-label="Artifact intake readiness"', html)
+        self.assertIn('id="artifact-intake-status"', html)
+        self.assertIn('id="artifact-intake-artifacts"', html)
+        self.assertIn("fetchArtifactIntakeStatus", html)
+        self.assertIn("renderArtifactIntakeStatus", html)
+        self.assertIn('fetch("/artifact-intake/status"', html)
+        self.assertIn("FLANGE_QC_V2_ARTIFACT_INTAKE_DIR", html)
+        self.assertIn("shadow_model_integration_issue", html)
+        self.assertIn("live_camera_implementation_issue", html)
+        self.assertIn("dataset_manifest", html)
 
     def test_hmi_html_binds_operator_feedback_form_to_shadow_endpoint(self) -> None:
         html = HMI_HTML.read_text(encoding="utf-8")
