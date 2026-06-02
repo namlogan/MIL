@@ -67,6 +67,7 @@ Create `.ai-factory/gates/flange_qc_v2_fqv2_001_dor.json` matching `contracts/fl
   "allowed_paths": [
     "apps/flange_qc_v2/**",
     "tests/flange_qc_v2/**",
+    "tests/test_product_ci_config.py",
     ".ai-factory/product-ci.json",
     ".ai-factory/gates/flange_qc_v2_fqv2_001_dor.json",
     ".ai-factory/qa/flange_qc_v2_*",
@@ -345,6 +346,7 @@ Expected: `OK`.
 
 **Files:**
 - Modify: `tests/flange_qc_v2/test_health.py`
+- Modify: `tests/test_product_ci_config.py`
 - Create: `apps/flange_qc_v2/__main__.py`
 - Modify: `.ai-factory/product-ci.json`
 

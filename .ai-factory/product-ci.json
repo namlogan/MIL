@@ -1,4 +1,39 @@
 {
-  "enabled": false,
-  "checks": []
+  "enabled": true,
+  "checks": [
+    {
+      "name": "flange-qc-v2-compile",
+      "command": [
+        "python3",
+        "-m",
+        "compileall",
+        "-q",
+        "apps/flange_qc_v2",
+        "tests/flange_qc_v2"
+      ],
+      "required": true
+    },
+    {
+      "name": "flange-qc-v2-unit",
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests/flange_qc_v2",
+        "-v"
+      ],
+      "required": true
+    },
+    {
+      "name": "flange-qc-v2-health-smoke",
+      "command": [
+        "python3",
+        "-m",
+        "apps.flange_qc_v2"
+      ],
+      "required": true
+    }
+  ]
 }
