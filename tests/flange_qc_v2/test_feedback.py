@@ -157,6 +157,8 @@ class QcFeedbackEndpointTests(unittest.TestCase):
 
         self.assertEqual(start["status"], 200)
         self.assertEqual(response["feedback_type"], "CONFIRM_BLOCKED")
+        self.assertEqual(response["inspection_id"], "fqv2-phase2-synthetic-001")
+        self.assertEqual(response["shadow_decision"], "BLOCKED")
         self.assertEqual(response["authority_blockers"], ["PRODUCTION_APPROVAL_REQUIRED"])
         self.assertFalse(response["production_authority"])
 

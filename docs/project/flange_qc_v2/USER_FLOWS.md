@@ -20,6 +20,23 @@
 9. WebSocket pushes HMI payload to the UI.
 10. QC feedback can attach corrections or notes to the inspection evidence.
 
+## Critical Path: No-Camera HMI Feedback Loop
+
+1. Operator opens `/hmi` while camera hardware is pending.
+2. HMI loads the current synthetic replay snapshot through
+   `/inspection/replay` and continues to accept `/ws/inspection` updates.
+3. Operator refreshes the replay snapshot from the HMI header when a manual
+   no-camera check is needed.
+4. Operator records reviewer ID, feedback type, and note for the current
+   inspection.
+5. HMI submits the feedback payload to `/feedback` with the current inspection
+   ID and shadow decision.
+6. The feedback contract returns shadow evidence with
+   `production_authority=false` and `PRODUCTION_APPROVAL_REQUIRED`.
+7. Any production release, product spec approval, QC/SOP tolerance approval,
+   live hardware approval, or production PASS/NG authority remains outside this
+   flow.
+
 ## Critical Path: Production-Like Shadow Mode
 
 1. Owner approves shadow-mode runbook and rollback plan.
@@ -42,7 +59,8 @@
 ## Interfaces
 
 - HTTP health endpoint.
-- HTTP inspection API.
+- HTTP replay inspection API at `/inspection/replay`.
+- HTTP QC feedback validation endpoint at `/feedback`.
 - WebSocket HMI stream.
 - SQLite audit DB.
 - Product spec JSON config.
@@ -57,3 +75,6 @@
 - Missing calibration cannot PASS.
 - Diagonal deviation above 0.5 inch produces phase 2 NG.
 - Missing model does not create production PASS/NG for model-dependent defects.
+- HMI refresh returns the current no-camera replay snapshot.
+- HMI feedback submits the current inspection ID to `/feedback` and receives
+  shadow-only authority blockers.
