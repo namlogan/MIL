@@ -80,6 +80,19 @@ class HmiScreenTests(unittest.TestCase):
         self.assertIn("live_camera_implementation_issue", html)
         self.assertIn("dataset_manifest", html)
 
+    def test_hmi_html_renders_detector_observation_detail_panel(self) -> None:
+        html = HMI_HTML.read_text(encoding="utf-8")
+
+        self.assertIn('aria-label="Detector observations"', html)
+        self.assertIn('id="detector-observations"', html)
+        self.assertIn("renderDetectorObservations", html)
+        self.assertIn("observation-card", html)
+        self.assertIn("No detector observations", html)
+        self.assertIn("model_ref", html)
+        self.assertIn("evidence_ref", html)
+        self.assertIn("confidence", html)
+        self.assertIn("bbox", html)
+
     def test_hmi_html_binds_operator_feedback_form_to_shadow_endpoint(self) -> None:
         html = HMI_HTML.read_text(encoding="utf-8")
 
