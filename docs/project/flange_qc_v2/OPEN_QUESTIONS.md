@@ -11,9 +11,17 @@
 | FQV2-Q-005 | Which deployment target is first: local replay only, Jetson, RTX workstation, or hosted server? | Important | Product owner | Open | TBD |
 | FQV2-Q-006 | What camera/lens/lighting setup is approved for first live calibration? | Important | Engineering/operator | Open | TBD |
 | FQV2-Q-007 | What is the first replay fixture that can be committed or referenced safely? | Important | QC/domain owner | Open | TBD |
-| FQV2-Q-008 | What product groups/tolerances are approved for bootstrap config? | Critical | QC/domain owner | Open | TBD |
+| FQV2-Q-008 | Who approves the product groups/tolerances imported from `/Users/mac/Desktop/flange_project_kickoff_docs.zip:.ai-factory/rules/product.md`? | Critical | QC/domain owner | Open | TBD |
+| FQV2-Q-009 | Which package root is canonical for app code: `src/flange_qc/**` from the ZIP or `apps/flange_qc_v2/**` from the MIL scoped package? | Critical | Product owner + engineering | Open | TBD |
+| FQV2-Q-010 | Which branch naming convention wins for FLANGE work when ZIP guidance conflicts with MIL AGENTS.md? | Critical | Merge controller | Open | TBD |
+| FQV2-Q-011 | Which CI checks are blocking for the first app skeleton issue: pytest, ruff, mypy, config validation, replay smoke, or framework-only validators? | Critical | Merge controller + engineering | Open | TBD |
+| FQV2-Q-012 | Should length and width aggregate use average, min/max envelope, or all-points-must-pass logic? | Critical | QC/domain owner | Open | TBD |
+| FQV2-Q-013 | Are items 963 and 445 in first pilot scope? | Important | Product owner + QC/domain owner | Open | TBD |
+| FQV2-Q-014 | Which product IDs correspond to `M695UN` and `M587UN` in ERP/product labels? | Important | QC/domain owner | Open | TBD |
+| FQV2-Q-015 | Is diagonal deviation measured on corrected top boundary or raw detected corners? | Important | QC/domain owner + engineering | Open | TBD |
+| FQV2-Q-016 | Which migration approach is canonical if SQLite audit schema is implemented: Alembic, SQLModel metadata, or custom SQL migrations? | Important | Engineering | Open | TBD |
 
 ## Rule
 
 Open questions are not requirements. Critical questions block active coding-agent
-dispatch for the product repo.
+dispatch for app-code implementation in the product repo.

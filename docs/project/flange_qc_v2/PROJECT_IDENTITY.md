@@ -6,10 +6,11 @@
 |---|---|
 | Project ID | `flange-qc-v2` |
 | Product name | FLANGE QC App V2 |
-| Repo ID | TBD: target product repository is not confirmed in the attached brief |
+| Repo ID | TBD: target product repository is not confirmed |
 | Bootstrap location | `docs/project/flange_qc_v2/` in the MIL control-plane repo |
 | Owner | Logan / product owner |
-| Primary source brief | `/Users/mac/.codex/attachments/29025915-a42c-4868-98b5-9de4595af87b/pasted-text.txt` |
+| Initial source brief | `/Users/mac/.codex/attachments/29025915-a42c-4868-98b5-9de4595af87b/pasted-text.txt` |
+| Kickoff ZIP reviewed | `/Users/mac/Desktop/flange_project_kickoff_docs.zip` |
 | Bootstrap date | 2026-06-02 |
 
 ## Intended Stack

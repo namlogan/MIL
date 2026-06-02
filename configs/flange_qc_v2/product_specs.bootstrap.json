@@ -1,17 +1,241 @@
 {
   "schema_version": 1,
   "status": "draft_requires_qc_owner_approval",
-  "source_ref": "/Users/mac/.codex/attachments/29025915-a42c-4868-98b5-9de4595af87b/pasted-text.txt",
+  "source_ref": "/Users/mac/Desktop/flange_project_kickoff_docs.zip:.ai-factory/rules/product.md",
+  "source_reviewed_at": "2026-06-02",
+  "approval_required": true,
+  "intended_use": [
+    "bootstrap planning",
+    "contract tests after a Definition of Ready issue exists",
+    "replay tests after approved replay fixtures exist"
+  ],
+  "prohibited_use": [
+    "production PASS/NG decisions",
+    "model promotion",
+    "camera hardware validation",
+    "QC owner approval substitute"
+  ],
   "notes": [
-    "Bootstrap only. Do not use for production until original SOP/product sources and QC/domain owner approval are recorded.",
-    "Product-specific tolerance groups are known to exist, but exact product table values must be verified from source docs."
+    "Values are copied from the attached kickoff ZIP and remain draft until the original SOP/product source and QC/domain owner approval are recorded.",
+    "No app service may hardcode these dimensions or tolerances; implementation must load versioned config and fail closed when product or size is unknown.",
+    "Model-dependent punch, seam, corner, and defect rules must remain NOT_EVALUATED or ASSIST until validated and approved."
+  ],
+  "known_open_questions": [
+    "Are items 963 and 445 in first pilot scope?",
+    "Should length and width aggregate use average, min/max envelope, or all-points-must-pass logic?",
+    "Which product IDs correspond to M695UN and M587UN in ERP/product label format?",
+    "Is diagonal deviation measured on corrected top boundary or raw detected corners?",
+    "Who is the named QC/domain owner for approving this config?"
   ],
   "global_rules": {
     "diagonal_deviation_max_inch": 0.5,
-    "mark_deviation_max_inch": 0.25,
+    "punch_mark_offset_max_inch": 0.25,
     "seam_curvature_max_inch": 0.5,
     "corner_bend_default_max_inch": 0.25,
-    "corner_bend_special_group_max_inch": 0.75
+    "corner_bend_special_group_max_inch": 0.75,
+    "required_length_points": 3,
+    "required_width_points": 3,
+    "required_diagonal_points": 2,
+    "required_punch_marks_top": 6
   },
-  "product_groups": []
+  "product_groups": [
+    {
+      "group_id": "standard",
+      "product_ids": [
+        "611",
+        "612",
+        "613",
+        "621",
+        "622",
+        "623",
+        "633",
+        "696",
+        "697",
+        "589",
+        "590",
+        "717",
+        "718",
+        "626",
+        "627",
+        "525",
+        "899",
+        "842",
+        "509",
+        "572",
+        "406",
+        "416",
+        "411",
+        "412",
+        "421",
+        "422",
+        "434",
+        "496",
+        "497",
+        "481"
+      ],
+      "tolerances_in": {
+        "length_plus": 0,
+        "length_minus": 0.75,
+        "width_plus": 0.5,
+        "width_minus": 0.5
+      },
+      "source_sop_revision": "unverified_kickoff_zip_2026-06-02",
+      "effective_from": "draft",
+      "sizes": [
+        {"size_group": "11", "width_in": 37.5, "length_in": 75},
+        {"size_group": "21", "width_in": 52, "length_in": 75},
+        {"size_group": "31", "width_in": 59, "length_in": 80},
+        {"size_group": "41", "width_in": 75, "length_in": 80},
+        {"size_group": "51", "width_in": 71, "length_in": 84},
+        {"size_group": "71", "width_in": 37.5, "length_in": 80}
+      ]
+    },
+    {
+      "group_id": "m_series",
+      "product_ids": [
+        "M405",
+        "M407",
+        "M415",
+        "M417",
+        "M410",
+        "M420",
+        "M874",
+        "M571",
+        "M625",
+        "M716",
+        "M161",
+        "M162",
+        "M163"
+      ],
+      "tolerances_in": {
+        "length_plus": 0.5,
+        "length_minus": 0.5,
+        "width_plus": 0.5,
+        "width_minus": 0.5
+      },
+      "source_sop_revision": "unverified_kickoff_zip_2026-06-02",
+      "effective_from": "draft",
+      "sizes": [
+        {"size_group": "11", "width_in": 37.5, "length_in": 75},
+        {"size_group": "21", "width_in": 52, "length_in": 75},
+        {"size_group": "31", "width_in": 59, "length_in": 80},
+        {"size_group": "41", "width_in": 75, "length_in": 80},
+        {"size_group": "51", "width_in": 71, "length_in": 84},
+        {"size_group": "71", "width_in": 37.5, "length_in": 80}
+      ]
+    },
+    {
+      "group_id": "items_695_587",
+      "product_ids": ["695", "587"],
+      "tolerances_in": {
+        "length_plus": 0,
+        "length_minus": 0.75,
+        "width_plus": 0.5,
+        "width_minus": 0.5
+      },
+      "source_sop_revision": "unverified_kickoff_zip_2026-06-02",
+      "effective_from": "draft",
+      "sizes": [
+        {"size_group": "11", "width_in": 37.5, "length_in": 74.5},
+        {"size_group": "21", "width_in": 52.5, "length_in": 74.5},
+        {"size_group": "31", "width_in": 59, "length_in": 79.5},
+        {"size_group": "41", "width_in": 75, "length_in": 79.5},
+        {"size_group": "51", "width_in": 71, "length_in": 83}
+      ]
+    },
+    {
+      "group_id": "item_874",
+      "product_ids": ["874"],
+      "tolerances_in": {
+        "length_plus": 0.5,
+        "length_minus": 0.5,
+        "width_plus": 0.5,
+        "width_minus": 0.5
+      },
+      "source_sop_revision": "unverified_kickoff_zip_2026-06-02",
+      "effective_from": "draft",
+      "sizes": [
+        {"size_group": "11", "width_in": 37, "length_in": 74},
+        {"size_group": "21", "width_in": 52, "length_in": 74},
+        {"size_group": "31", "width_in": 59, "length_in": 79},
+        {"size_group": "41", "width_in": 75, "length_in": 79},
+        {"size_group": "51", "width_in": 71, "length_in": 83}
+      ]
+    },
+    {
+      "group_id": "item_963",
+      "product_ids": ["963"],
+      "tolerances_in": {
+        "length_plus": 0,
+        "length_minus": 0.75,
+        "width_plus": 0.5,
+        "width_minus": 0.5
+      },
+      "source_sop_revision": "unverified_kickoff_zip_2026-06-02",
+      "effective_from": "draft",
+      "sizes": [
+        {"size_group": "11", "width_in": 37, "length_in": 73.5},
+        {"size_group": "21", "width_in": 52, "length_in": 73.5},
+        {"size_group": "31", "width_in": 59, "length_in": 78.5}
+      ]
+    },
+    {
+      "group_id": "item_445",
+      "product_ids": ["445"],
+      "tolerances_in": {
+        "length_plus": 0,
+        "length_minus": 0.75,
+        "width_plus": 0.5,
+        "width_minus": 0.5
+      },
+      "source_sop_revision": "unverified_kickoff_zip_2026-06-02",
+      "effective_from": "draft",
+      "sizes": [
+        {"size_group": "11", "width_in": 37, "length_in": 73.5},
+        {"size_group": "21", "width_in": 51.5, "length_in": 73.5},
+        {"size_group": "31", "width_in": 58.5, "length_in": 78.5},
+        {"size_group": "41", "width_in": 74.25, "length_in": 78.5}
+      ]
+    },
+    {
+      "group_id": "items_m435_m436_m437",
+      "product_ids": ["M435", "M436", "M437"],
+      "tolerances_in": {
+        "length_plus": 0.25,
+        "length_minus": 0.5,
+        "width_plus": 0.25,
+        "width_minus": 0.75
+      },
+      "source_sop_revision": "unverified_kickoff_zip_2026-06-02",
+      "effective_from": "draft",
+      "sizes": [
+        {"size_group": "11", "width_in": 36.5, "length_in": 73},
+        {"size_group": "21", "width_in": 51.5, "length_in": 73},
+        {"size_group": "31", "width_in": 58.5, "length_in": 78},
+        {"size_group": "41", "width_in": 74.5, "length_in": 78},
+        {"size_group": "51", "width_in": 70.5, "length_in": 82},
+        {"size_group": "71", "width_in": 36.5, "length_in": 78}
+      ]
+    },
+    {
+      "group_id": "item_m573",
+      "product_ids": ["M573"],
+      "tolerances_in": {
+        "length_plus": 0.75,
+        "length_minus": 0,
+        "width_plus": 0.5,
+        "width_minus": 0.5
+      },
+      "source_sop_revision": "unverified_kickoff_zip_2026-06-02",
+      "effective_from": "draft",
+      "sizes": [
+        {"size_group": "11", "width_in": 37.5, "length_in": 75},
+        {"size_group": "21", "width_in": 52, "length_in": 75},
+        {"size_group": "31", "width_in": 59, "length_in": 80},
+        {"size_group": "41", "width_in": 75, "length_in": 80},
+        {"size_group": "51", "width_in": 71, "length_in": 84},
+        {"size_group": "71", "width_in": 37.5, "length_in": 80}
+      ]
+    }
+  ]
 }

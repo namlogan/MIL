@@ -4,15 +4,22 @@ Date: 2026-06-02
 
 ## Source Reviewed
 
-Attached intake brief:
+Initial attached intake brief:
 
 ```text
 /Users/mac/.codex/attachments/29025915-a42c-4868-98b5-9de4595af87b/pasted-text.txt
 ```
 
-The brief references a sandbox ZIP and folder, but those artifacts were not
-available in this environment. This bootstrap therefore treats the pasted text as
-an intake brief, not as fully verified source documentation.
+Follow-up kickoff ZIP reviewed on 2026-06-02:
+
+```text
+/Users/mac/Desktop/flange_project_kickoff_docs.zip
+```
+
+The ZIP contains 13 framework/intake files, including `AGENTS.md`,
+`.ai-factory/DESCRIPTION.md`, `.ai-factory/ARCHITECTURE.md`,
+`.ai-factory/RULES.md`, `.ai-factory/rules/*.md`, and the core
+`docs/project/*.md` intake package.
 
 ## Files Created
 
@@ -38,13 +45,17 @@ The brief is compatible with the MIL framework because it preserves these rules:
 ## Readiness Decision
 
 The material is enough to bootstrap intake, architecture, contracts, and planning
-artifacts. It is not enough to dispatch coding agents yet.
+artifacts. The ZIP adds concrete draft product/tolerance data and has been
+captured in `configs/flange_qc_v2/product_specs.bootstrap.json`. It is still not
+enough to dispatch app-code implementation because Definition of Ready and
+source-of-truth blockers remain open.
 
 ## Blockers Before Coding Dispatch
 
 - Target repo and `repo_id` are not confirmed.
-- Full referenced docs bundle is not available in this environment.
-- Original SOP sources are not attached.
+- Canonical app package root is not confirmed.
+- Branch naming conflict between ZIP guidance and MIL AGENTS.md is unresolved.
+- Original SOP sources or QC/domain owner approval are not attached.
 - QC/domain owner approval for product specs and tolerance values is missing.
 - Active product CI cannot be enabled until the target app skeleton exists.
 - No GitHub issue exists with Definition of Ready fields for first implementation.
@@ -62,7 +73,8 @@ artifact. No app runtime code was created.
   "blocking": true,
   "blockers": [
     "target_repo_id_missing",
-    "full_source_docs_unavailable",
+    "canonical_app_layout_unconfirmed",
+    "branch_naming_conflict_unresolved",
     "sop_source_refs_missing",
     "qc_product_spec_approval_missing",
     "definition_of_ready_issue_missing"

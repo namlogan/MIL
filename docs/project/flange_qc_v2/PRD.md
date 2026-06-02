@@ -65,8 +65,8 @@ later receive approved model observations through contracts.
 
 ## Risks
 
-- SOP interpretation may be incomplete because only a pasted summary is available
-  in this session, not the full generated ZIP/folder or original SOP PDFs.
+- SOP interpretation may be incomplete until the kickoff ZIP product rules are
+  reconciled with original SOP PDFs and QC/domain owner approval.
 - Product tolerance config must be approved by QC/domain owner before production.
 - Camera installation details need factory-site validation.
 - Model-dependent defect decisions must not silently become production PASS/NG.
