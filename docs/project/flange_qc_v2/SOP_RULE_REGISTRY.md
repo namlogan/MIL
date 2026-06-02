@@ -57,6 +57,21 @@ behavior, or grant production SOP authority. Model-dependent and post-MVP rules
 return safe fallback states such as `ASSIST`, `NOT_EVALUATED`, or `BLOCKED`
 until later approval gates provide evidence.
 
+Bootstrap shadow decision evaluation lives in:
+
+```text
+apps/flange_qc_v2/decision_engine.py
+```
+
+The current engine can emit shadow Phase 1 length/width evidence and shadow
+Phase 2 diagonal-deviation evidence after product spec, calibration, and
+geometry blockers clear. Phase 1 uses an explicit
+`all_points_must_pass_bootstrap` aggregate assumption so any length or width
+point outside the configured tolerance produces shadow `NG` evidence. This is a
+conservative bootstrap behavior for tests and QC comparison only; production
+authority remains gated by product spec approval, QC/SOP tolerance approval, and
+release approval.
+
 ## Core Rule IDs
 
 | Rule ID | Phase | Rule | Production authority |
@@ -83,6 +98,9 @@ until later approval gates provide evidence.
 - Missing product spec returns `BLOCKED`.
 - Missing or pending calibration returns `BLOCKED`.
 - Missing required length, width, or diagonal points returns `BLOCKED`.
+- Length or width evidence outside product tolerance can return shadow `NG` in
+  phase 1 with `LENGTH_OUT_OF_TOLERANCE` or `WIDTH_OUT_OF_TOLERANCE`, but
+  production authority remains gated by QC/SOP tolerance approval.
 - Diagonal deviation greater than 0.5 inch can return shadow `NG` evidence in
   phase 2, but production authority remains gated by QC/SOP tolerance approval.
 - Missing model returns `NOT_EVALUATED`, `ASSIST`, or `BLOCKED` for model-dependent rules.
@@ -92,6 +110,8 @@ until later approval gates provide evidence.
 ## Open Rule Questions
 
 - Confirm whether items 963 and 445 are in first pilot scope.
-- Confirm aggregate method for length and width: average, min/max envelope, or all-points-must-pass.
+- Confirm aggregate method for length and width: average, min/max envelope, or
+  all-points-must-pass. Current implementation is shadow-only
+  `all_points_must_pass_bootstrap`.
 - Map `M695UN` and `M587UN` to canonical product IDs.
 - Confirm whether diagonal deviation uses corrected top boundary or raw detected corners.
