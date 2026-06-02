@@ -31,3 +31,18 @@ through explicit contracts.
 The detector adapter may return observations with labels, confidence, bbox, source
 model reference, and evidence reference. The SOP rule engine remains the only
 component that can produce final inspection decisions.
+
+Bootstrap detector adapter implementation lives in:
+
+```text
+apps/flange_qc_v2/detector.py
+contracts/flange_qc_v2/detector/detector_result.schema.json
+```
+
+The default stub adapter returns `NOT_EVALUATED` with `MODEL_MISSING` when no
+model evidence is configured, or `ASSIST` with `MODEL_REVIEW_REQUIRED` when stub
+observations are supplied for review. The adapter rejects raw media paths and
+validates observation label, confidence, bbox, model reference, and evidence
+reference through the app domain contract. It does not load model weights,
+TensorRT engines, production datasets, or MLOps artifacts, and it cannot emit
+`PASS` or `NG`.
