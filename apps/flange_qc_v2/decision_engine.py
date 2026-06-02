@@ -7,7 +7,7 @@ from apps.flange_qc_v2.calibration import CalibrationConfig
 from apps.flange_qc_v2.domain import DECISION_STATES, PHASE_STATES, ValidationError
 from apps.flange_qc_v2.geometry import GeometryMeasurementResolution
 from apps.flange_qc_v2.product_specs import ProductSpecResolution
-from apps.flange_qc_v2.sop_registry import get_reason_code
+from apps.flange_qc_v2.sop_registry import SopRule, get_reason_code, list_rules
 
 
 PHASE_TWO_DIAGONAL_THRESHOLD_IN = 0.5
@@ -17,6 +17,7 @@ PHASE_TWO_DIAGONAL_RULE_ID = "M1-SOP-6.1-DIAGONAL-002"
 SOP_AUTHORITY_BLOCKER = "SOP_TOLERANCE_APPROVAL_MISSING"
 BOOTSTRAP_AGGREGATE_METHOD = "all_points_must_pass_bootstrap"
 MM_PER_INCH = 25.4
+MODEL_AUTHORITY_BLOCKER = "MODEL_APPROVAL_REQUIRED"
 
 
 @dataclass(frozen=True)
@@ -188,6 +189,41 @@ def evaluate_phase_one_measurements(
     )
 
 
+def evaluate_sop_safe_fallbacks(*, phase: str) -> DecisionResult:
+    if phase not in ("PHASE_3", "PHASE_4"):
+        raise ValidationError("SOP safe fallback evaluator supports PHASE_3 or PHASE_4")
+
+    rule_results = tuple(
+        _safe_fallback_rule_result(rule)
+        for rule in list_rules()
+        if rule.phase == phase
+    )
+    if not rule_results:
+        raise ValidationError(f"no SOP fallback rules configured for phase: {phase}")
+
+    reason_codes = _unique_codes(
+        [
+            code
+            for rule_result in rule_results
+            for code in rule_result.reason_codes
+        ]
+    )
+    authority_blockers = (
+        (MODEL_AUTHORITY_BLOCKER,)
+        if "MODEL_REVIEW_REQUIRED" in reason_codes
+        else ()
+    )
+    return DecisionResult(
+        phase=phase,
+        decision=_aggregate_safe_fallback_decision(rule_results),
+        reason_codes=reason_codes,
+        authority_blockers=authority_blockers,
+        rule_results=rule_results,
+        production_authority=False,
+        shadow_mode=True,
+    )
+
+
 def _geometry_blockers(geometry: GeometryMeasurementResolution) -> list[str]:
     return [
         code
@@ -242,6 +278,30 @@ def _evaluate_dimension_rule(
             "out_of_tolerance_point_indexes": out_of_tolerance_indexes,
         },
     )
+
+
+def _safe_fallback_rule_result(rule: SopRule) -> RuleResult:
+    return RuleResult(
+        rule_id=rule.rule_id,
+        phase=rule.phase,
+        decision=rule.safe_fallback_decision,
+        reason_codes=(rule.reason_code,),
+        evidence={
+            "fallback_source": "sop_registry",
+            "category": rule.category,
+            "authority": rule.authority,
+            "production_enabled": rule.production_enabled,
+        },
+    )
+
+
+def _aggregate_safe_fallback_decision(rule_results: tuple[RuleResult, ...]) -> str:
+    decisions = {rule_result.decision for rule_result in rule_results}
+    if "BLOCKED" in decisions:
+        return "BLOCKED"
+    if "ASSIST" in decisions:
+        return "ASSIST"
+    return "NOT_EVALUATED"
 
 
 def _points_to_inches(points: list[float], unit: str) -> list[float]:
