@@ -5,6 +5,7 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 
 from apps.flange_qc_v2.health import build_health_snapshot
+from apps.flange_qc_v2.hmi_stream import build_replay_inspection_snapshot
 
 Scope = dict[str, Any]
 Receive = Callable[[], Awaitable[dict[str, Any]]]
@@ -12,9 +13,17 @@ Send = Callable[[dict[str, Any]], Awaitable[None]]
 
 
 async def app(scope: Scope, receive: Receive, send: Send) -> None:
-    if scope.get("type") != "http":
-        raise RuntimeError("FLANGE QC V2 bootstrap app only supports HTTP ASGI scopes")
+    scope_type = scope.get("type")
+    if scope_type == "http":
+        await _handle_http(scope, send)
+        return
+    if scope_type == "websocket":
+        await _handle_websocket(scope, receive, send)
+        return
+    raise RuntimeError("FLANGE QC V2 bootstrap app only supports HTTP and WebSocket ASGI scopes")
 
+
+async def _handle_http(scope: Scope, send: Send) -> None:
     path = scope.get("path", "")
     method = scope.get("method", "GET")
     if method == "GET" and path == "/health":
@@ -22,6 +31,25 @@ async def app(scope: Scope, receive: Receive, send: Send) -> None:
         return
 
     await _send_json(send, 404, {"detail": "not found"})
+
+
+async def _handle_websocket(scope: Scope, receive: Receive, send: Send) -> None:
+    message = await receive()
+    if message.get("type") != "websocket.connect":
+        return
+    if scope.get("path", "") != "/ws/inspection":
+        await send({"type": "websocket.close", "code": 1008})
+        return
+
+    snapshot = build_replay_inspection_snapshot()
+    await send({"type": "websocket.accept"})
+    await send(
+        {
+            "type": "websocket.send",
+            "text": json.dumps(snapshot.to_payload(), sort_keys=True),
+        }
+    )
+    await send({"type": "websocket.close", "code": 1000})
 
 
 async def _send_json(send: Send, status: int, payload: dict[str, Any]) -> None:

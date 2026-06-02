@@ -1,0 +1,51 @@
+{
+  "task_id": "FQV2-010",
+  "github_issue": 77,
+  "source_ref": "https://github.com/namlogan/MIL/issues/77",
+  "owner_agent": "codex_developer",
+  "qa_agent": "codex_qa",
+  "preferred_lane": "codex",
+  "branch": "agent/77-websocket-hmi-payload-stream",
+  "allowed_paths": [
+    "apps/flange_qc_v2/**",
+    "tests/flange_qc_v2/**",
+    "docs/project/flange_qc_v2/DATA_MODEL.md",
+    ".ai-factory/gates/flange_qc_v2_fqv2_010_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_010_handoff_2026-06-02.md"
+  ],
+  "restricted_paths": [
+    "HMI screen or UI implementation",
+    "live camera hardware validation or capture",
+    "raw media storage",
+    "raw customer or factory data",
+    "model weights",
+    "TensorRT engines",
+    "MLOps artifacts",
+    "production PASS/NG authority",
+    "production auto-reject",
+    "QC/SOP tolerance approval",
+    "product spec approval authority",
+    "production deploy",
+    "secrets",
+    "destructive migrations"
+  ],
+  "acceptance_criteria": [
+    "Add an app-level HMI stream builder that converts no-camera replay results into the existing inspection snapshot payload contract.",
+    "Add an ASGI WebSocket endpoint for /ws/inspection that accepts a client, sends one replay-backed inspection snapshot, and closes cleanly.",
+    "Snapshot payload includes product, phase, decision, reason codes, measurements, observations, and created timestamp.",
+    "Current draft product specs and synthetic calibration still produce fail-closed BLOCKED evidence.",
+    "Existing WebSocket inspection snapshot contract remains compatible.",
+    "No HMI UI, live camera, raw media, model weights, production deploy, secrets, or production authority are introduced.",
+    "Existing Flange QC v2 unit/contract tests, product CI, and full repository tests pass."
+  ],
+  "test_commands": [
+    "python3 -m unittest tests.flange_qc_v2.test_hmi_stream -v",
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 -m compileall -q apps/flange_qc_v2 tests/flange_qc_v2",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m unittest discover -s tests -v",
+    "git diff --check"
+  ],
+  "handoff_required": true,
+  "rollback_note": "Revert the FQV2-010 PR to remove the HMI stream builder, WebSocket endpoint change, tests, and evidence artifacts. This task does not alter production data, migrations, secrets, or deploy configuration."
+}

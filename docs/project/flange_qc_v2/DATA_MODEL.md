@@ -102,3 +102,16 @@ only. It does not read live camera frames, raw media, model outputs, customer
 data, or production file paths. The replay runner connects product specs,
 calibration, geometry, and the phase-2 shadow decision engine, then fails closed
 while product spec and calibration authority remain missing.
+
+Bootstrap HMI stream payload generation lives in:
+
+```text
+apps/flange_qc_v2/hmi_stream.py
+apps/flange_qc_v2/asgi.py
+contracts/flange_qc_v2/websocket/inspection_snapshot.schema.json
+```
+
+The current WebSocket endpoint `/ws/inspection` sends one replay-backed
+`inspection.snapshot` payload and closes cleanly. It is contract-only HMI
+streaming for bootstrap clients and does not implement the HMI screen, live
+camera streaming, production deploy, or production decision authority.
