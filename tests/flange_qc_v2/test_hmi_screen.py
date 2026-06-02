@@ -66,6 +66,25 @@ class HmiScreenTests(unittest.TestCase):
         self.assertIn("production_authority", html)
         self.assertIn("M1-SOP-6.4-PUNCH-MARK-001", html)
 
+    def test_hmi_html_renders_qc_device_phase_layout(self) -> None:
+        html = HMI_HTML.read_text(encoding="utf-8")
+
+        self.assertIn('aria-label="QC device phase layout"', html)
+        self.assertIn('id="qc-device-layout"', html)
+        self.assertIn('id="phase-one-device-card"', html)
+        self.assertIn('id="phase-two-device-card"', html)
+        self.assertIn('id="phase-two-stitch-zone"', html)
+        self.assertIn('id="phase-one-device-status"', html)
+        self.assertIn('id="phase-two-device-status"', html)
+        self.assertIn('id="phase-two-stitch-status"', html)
+        self.assertIn("Phase 1 Dimensions", html)
+        self.assertIn("Phase 2 Stitch Watch", html)
+        self.assertIn("renderQcDevicePhaseLayout", html)
+        self.assertIn("trafficStateForDecision", html)
+        self.assertIn('data-state="ok"', html)
+        self.assertIn('data-state="error"', html)
+        self.assertIn('data-state="warn"', html)
+
     def test_hmi_html_renders_artifact_intake_readiness_panel(self) -> None:
         html = HMI_HTML.read_text(encoding="utf-8")
 
