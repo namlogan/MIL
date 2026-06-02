@@ -1,0 +1,28 @@
+{
+  "approval_status": "candidate",
+  "contains_customer_data": false,
+  "contains_pii": false,
+  "contract_version": "mlops.dataset_manifest.v1",
+  "dataset_snapshot_ref": "dataset://flange-qc-v2/shadow/snapshot-2026-06-02",
+  "entity_grain": "frame",
+  "labels": [
+    "punch_mark",
+    "corner_mark"
+  ],
+  "privacy_class": "sanitized_metadata_only",
+  "production_authority": false,
+  "raw_media_included": false,
+  "source_ref": "https://github.com/namlogan/MIL/issues/103",
+  "split_counts": {
+    "test": 25,
+    "train": 100,
+    "validation": 25
+  },
+  "split_policy": {
+    "feature_timestamp_field": "frame_captured_at",
+    "label_timestamp_field": "label_created_at",
+    "leakage_guard": "point_in_time",
+    "method": "time_blocked"
+  },
+  "storage_ref": "dataset://flange-qc-v2/sanitized/snapshot-2026-06-02"
+}
