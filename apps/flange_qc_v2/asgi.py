@@ -37,6 +37,9 @@ async def _handle_http(scope: Scope, receive: Receive, send: Send) -> None:
     if method == "GET" and path == "/hmi":
         await _send_html(send, 200, HMI_SCREEN.read_text(encoding="utf-8"))
         return
+    if method == "GET" and path == "/inspection/replay":
+        await _send_json(send, 200, build_replay_inspection_snapshot().to_payload())
+        return
     if method == "POST" and path == "/feedback":
         try:
             payload = await _read_json_body(receive)

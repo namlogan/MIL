@@ -62,6 +62,13 @@
         color: var(--muted);
       }
 
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+      }
+
       main {
         display: grid;
         gap: 14px;
@@ -213,6 +220,97 @@
         background: #fff8ed;
       }
 
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      .button {
+        min-height: 36px;
+        border: 1px solid var(--blue);
+        border-radius: 6px;
+        padding: 0 12px;
+        color: #ffffff;
+        background: var(--blue);
+        font-weight: 750;
+        cursor: pointer;
+      }
+
+      .button:disabled {
+        cursor: not-allowed;
+        opacity: 0.65;
+      }
+
+      .feedback-form {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      label.field {
+        display: grid;
+        gap: 6px;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .field-wide {
+        grid-column: 1 / -1;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        min-width: 0;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #ffffff;
+        color: var(--ink);
+        padding: 9px 10px;
+        font-weight: 650;
+      }
+
+      textarea {
+        min-height: 72px;
+        resize: vertical;
+      }
+
+      .form-actions {
+        grid-column: 1 / -1;
+        display: flex;
+        justify-content: flex-end;
+      }
+
+      .feedback-status {
+        min-height: 44px;
+        margin-top: 12px;
+        padding: 10px;
+        border: 1px solid var(--surface-strong);
+        border-radius: 6px;
+        background: #f8fafc;
+        color: var(--muted);
+        font-weight: 700;
+        overflow-wrap: anywhere;
+      }
+
+      .feedback-status[data-state="ok"] {
+        border-color: #9bd8b9;
+        background: #effaf4;
+        color: var(--green);
+      }
+
+      .feedback-status[data-state="error"] {
+        border-color: #f4b3aa;
+        background: #fff7f5;
+        color: var(--red);
+      }
+
       @media (max-width: 760px) {
         header,
         main {
@@ -224,6 +322,10 @@
         .grid,
         .status-strip,
         .measurement-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .feedback-form {
           grid-template-columns: 1fr;
         }
 
@@ -240,7 +342,10 @@
         <h1>Flange QC HMI</h1>
         <p id="service">flange-qc-v2 / no-camera replay</p>
       </div>
-      <div id="connection" class="connection" data-state="blocked">connecting</div>
+      <div class="header-actions">
+        <button id="refresh-replay" class="button" type="button">Refresh</button>
+        <div id="connection" class="connection" data-state="blocked">connecting</div>
+      </div>
     </header>
 
     <main>
@@ -297,10 +402,48 @@
           <div class="detail-row"><span class="label">Unit</span><span id="unit" class="value">inch</span></div>
         </div>
       </section>
+
+      <section class="grid">
+        <div class="panel">
+          <h2>Feedback</h2>
+          <form id="feedback-form" class="feedback-form">
+            <label class="field">
+              Reviewer
+              <input name="reviewer_id" type="text" value="qc-operator-1" autocomplete="off">
+            </label>
+            <label class="field">
+              Type
+              <select name="feedback_type">
+                <option value="CONFIRM_BLOCKED">Confirm blocked</option>
+                <option value="MARK_FALSE_POSITIVE">False positive</option>
+                <option value="MARK_FALSE_NEGATIVE">False negative</option>
+                <option value="REQUEST_REVIEW">Request review</option>
+              </select>
+            </label>
+            <label class="field field-wide">
+              Note
+              <textarea name="note">Synthetic replay reviewed while camera hardware is pending.</textarea>
+            </label>
+            <div class="form-actions">
+              <button class="button" type="submit">Submit</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="panel">
+          <h2>Feedback Status</h2>
+          <div id="feedback-status" class="feedback-status" data-state="idle">pending</div>
+          <div class="detail-row"><span class="label">Production Authority</span><span id="production-authority" class="value">false</span></div>
+          <div class="detail-row"><span class="label">Authority Blockers</span><span id="authority-blockers" class="value">PRODUCTION_APPROVAL_REQUIRED</span></div>
+        </div>
+      </section>
     </main>
 
     <script>
       const connection = document.getElementById("connection");
+      const feedbackForm = document.getElementById("feedback-form");
+      const refreshReplay = document.getElementById("refresh-replay");
+      let currentSnapshot = null;
       const fields = {
         decision: document.getElementById("decision"),
         phase: document.getElementById("phase"),
@@ -312,7 +455,10 @@
         frameId: document.getElementById("frame-id"),
         sourceUri: document.getElementById("source-uri"),
         unit: document.getElementById("unit"),
-        reasonList: document.getElementById("reason-list")
+        reasonList: document.getElementById("reason-list"),
+        feedbackStatus: document.getElementById("feedback-status"),
+        productionAuthority: document.getElementById("production-authority"),
+        authorityBlockers: document.getElementById("authority-blockers")
       };
 
       function setConnection(label, state) {
@@ -321,6 +467,7 @@
       }
 
       function renderSnapshot(payload) {
+        currentSnapshot = payload;
         fields.decision.textContent = payload.decision;
         fields.decision.className = "decision-" + payload.decision.toLowerCase();
         fields.phase.textContent = payload.phase;
@@ -352,6 +499,77 @@
         });
       }
 
+      function setFeedbackStatus(message, state) {
+        fields.feedbackStatus.textContent = message;
+        fields.feedbackStatus.dataset.state = state;
+      }
+
+      async function fetchReplaySnapshot() {
+        refreshReplay.disabled = true;
+        setConnection("refreshing", "blocked");
+        try {
+          const response = await fetch("/inspection/replay", {
+            headers: { "Accept": "application/json" }
+          });
+          const payload = await response.json();
+          if (!response.ok) {
+            throw new Error(payload.detail || `replay ${response.status}`);
+          }
+          renderSnapshot(payload);
+          fields.frameId.textContent = "frame-001";
+          fields.sourceUri.textContent = "synthetic://flange-qc-v2/phase2/frame-001";
+          setConnection("replay", "live");
+        } catch (error) {
+          setConnection("blocked", "blocked");
+          setFeedbackStatus(`Replay error: ${error.message}`, "error");
+        } finally {
+          refreshReplay.disabled = false;
+        }
+      }
+
+      async function submitFeedback() {
+        const form = new FormData(feedbackForm);
+        const reviewerId = String(form.get("reviewer_id") || "").trim();
+        const feedbackType = String(form.get("feedback_type") || "").trim();
+        const note = String(form.get("note") || "").trim();
+        if (!currentSnapshot) {
+          setFeedbackStatus("No inspection loaded", "error");
+          return;
+        }
+        if (!reviewerId || !feedbackType || !note) {
+          setFeedbackStatus("Reviewer, type, and note are required", "error");
+          return;
+        }
+        const payload = {
+          schema_version: 1,
+          feedback_id: `hmi-${Date.now()}`,
+          inspection_id: currentSnapshot.inspection_id,
+          feedback_type: feedbackType,
+          reviewer_id: reviewerId,
+          note,
+          shadow_decision: currentSnapshot.decision,
+          source_ref: `hmi://flange-qc-v2/${currentSnapshot.inspection_id}`,
+          created_at: new Date().toISOString(),
+          production_authority: false
+        };
+        try {
+          const response = await fetch("/feedback", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          const result = await response.json();
+          if (!response.ok) {
+            throw new Error(result.detail || `feedback ${response.status}`);
+          }
+          fields.productionAuthority.textContent = String(result.production_authority);
+          fields.authorityBlockers.textContent = result.authority_blockers.join(", ");
+          setFeedbackStatus(`${result.feedback_type} saved for ${result.inspection_id}`, "ok");
+        } catch (error) {
+          setFeedbackStatus(`Feedback error: ${error.message}`, "error");
+        }
+      }
+
       function connect() {
         const scheme = window.location.protocol === "https:" ? "wss" : "ws";
         const socket = new WebSocket(`${scheme}://${window.location.host}/ws/inspection`);
@@ -366,7 +584,14 @@
         socket.addEventListener("error", () => setConnection("blocked", "blocked"));
       }
 
+      refreshReplay.addEventListener("click", fetchReplaySnapshot);
+      feedbackForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        submitFeedback();
+      });
+
       connect();
+      fetchReplaySnapshot();
     </script>
   </body>
 </html>
