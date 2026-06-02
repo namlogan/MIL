@@ -115,3 +115,14 @@ The current WebSocket endpoint `/ws/inspection` sends one replay-backed
 `inspection.snapshot` payload and closes cleanly. It is contract-only HMI
 streaming for bootstrap clients and does not implement the HMI screen, live
 camera streaming, production deploy, or production decision authority.
+
+Bootstrap minimum HMI screen lives in:
+
+```text
+apps/flange_qc_v2/static/hmi.html
+```
+
+The current screen is served at `/hmi`, connects to `/ws/inspection`, and renders
+the latest replay-backed `inspection.snapshot` payload. It displays operator
+status, reason codes, product/spec, measurements, frame source, timestamp, and
+observations state. QC feedback capture remains a later package.
