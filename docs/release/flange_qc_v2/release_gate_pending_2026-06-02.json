@@ -1,0 +1,11 @@
+{
+  "release_id": "flange-qc-v2-shadow-readiness-2026-06-02",
+  "source_pr": "https://github.com/namlogan/MIL/pull/90",
+  "target_environment": "shadow",
+  "ci_status": "passed",
+  "ai_gate_status": "passed",
+  "staging_smoke": "pending",
+  "rollback_plan": "docs/release/flange_qc_v2/rollback_drill_2026-06-02.md",
+  "human_approval": "pending human release approval",
+  "monitoring_plan": "docs/release/flange_qc_v2/2026-06-02-shadow-readiness.md#monitoring-plan"
+}

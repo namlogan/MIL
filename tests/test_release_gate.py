@@ -60,6 +60,27 @@ class ReleaseGateTests(unittest.TestCase):
         self.assertIn("staging_smoke", result["missing"])
         self.assertIn("rollback_plan", result["missing"])
 
+    def test_release_gate_blocks_pending_human_approval_text(self) -> None:
+        for human_approval in ["pending", "blocked", "not approved", "missing", "none"]:
+            with self.subTest(human_approval=human_approval):
+                result = self.release_gate.evaluate_release_evidence(
+                    {
+                        "release_id": "2026-06-02-shadow-readiness",
+                        "source_pr": "https://github.com/namlogan/MIL/pull/90",
+                        "target_environment": "shadow",
+                        "ci_status": "passed",
+                        "ai_gate_status": "passed",
+                        "staging_smoke": "passed",
+                        "rollback_plan": "Revert the merge commit.",
+                        "human_approval": human_approval,
+                        "monitoring_plan": "Watch CI, health, audit writes, and HMI smoke.",
+                    }
+                )
+
+                self.assertEqual(result["decision"], "RELEASE_BLOCKED")
+                self.assertFalse(result["ok"])
+                self.assertIn("human_approval must be an explicit approval", result["errors"])
+
 
 if __name__ == "__main__":
     unittest.main()

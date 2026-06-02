@@ -1,0 +1,101 @@
+{
+  "task_id": "FQV2-017",
+  "github_issue": 91,
+  "source_ref": "https://github.com/namlogan/MIL/issues/91",
+  "owner_agent": "codex_developer",
+  "qa_agent": "codex_qa",
+  "preferred_lane": "codex",
+  "branch": "agent/91-release-readiness-report",
+  "allowed_paths": [
+    "docs/release/flange_qc_v2/**",
+    "docs/release/README.md",
+    "docs/project/flange_qc_v2/BOOTSTRAP_READINESS.md",
+    "scripts/release/release_gate.py",
+    "tests/test_release_gate.py",
+    ".ai-factory/gates/flange_qc_v2_fqv2_017_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_017_handoff_2026-06-02.md"
+  ],
+  "restricted_paths": [
+    "executing staging, shadow, or production deploys",
+    "approving production release",
+    "owner release approval",
+    "secrets",
+    "tokens",
+    "passwords",
+    "private keys",
+    "provider credentials",
+    "camera credentials",
+    "raw media",
+    "customer or factory data",
+    "production datasets",
+    "model weights",
+    "TensorRT engines",
+    "MLOps promotion",
+    "live camera capture",
+    "Hikrobot SDK dependency",
+    "GPU or hardware validation",
+    "destructive migrations",
+    "billing",
+    "legal or compliance behavior",
+    "security boundary changes",
+    "QC/SOP tolerance approval",
+    "product spec approval",
+    "production PASS/NG authority",
+    "production auto-reject"
+  ],
+  "acceptance_criteria": [
+    "Add a release readiness pack under docs/release/flange_qc_v2/** for the current replay/shadow baseline.",
+    "The pack includes release identity, linked issues/PRs, local/main CI evidence, product CI evidence, shadow readiness status, blocked approvals, rollback plan, monitoring plan, and residual risks.",
+    "Add rollback drill/checklist evidence that documents a safe revert path without executing production rollback.",
+    "Add release gate evidence that remains blocked/pending until human release approval and staging/shadow smoke evidence exist.",
+    "Tighten the release gate so pending, blocked, or not-approved human approval text cannot satisfy release approval.",
+    "Update the release index and Flange QC v2 bootstrap readiness docs.",
+    "No staging deploy, shadow deploy, production deploy, release approval, secrets, live camera, raw media, model promotion, destructive migration, or production PASS/NG authority is introduced.",
+    "Required local checks pass."
+  ],
+  "memory_preflight": {
+    "query": "Flange QC v2 release rollback shadow readiness, release gate, human approval, rollback evidence",
+    "retrieved_decisions": [
+      "Release/deploy remains a human gate.",
+      "Current app baseline is replay/shadow-only.",
+      "Deployment scaffold is disabled/manual.",
+      "Product specs, live hardware, and production release remain blocked until owner/domain approvals."
+    ],
+    "retrieved_lessons": [
+      "Release evidence should document blockers explicitly.",
+      "Machine evidence must never substitute for human release approval."
+    ],
+    "restricted_areas": [
+      "production release/deploy",
+      "secrets/credentials/tokens",
+      "raw media/customer data",
+      "live camera/hardware validation",
+      "model/TensorRT artifacts",
+      "destructive migrations",
+      "QC/SOP tolerance approval",
+      "product spec approval",
+      "production PASS/NG authority"
+    ],
+    "conflicts_found": [
+      "Release gate accepted any non-empty human_approval text before this task; FQV2-017 tightens pending/blocked values."
+    ],
+    "sources_to_verify": [
+      "https://github.com/namlogan/MIL/issues/91",
+      "AGENTS.md",
+      ".ai-factory/RULES.md",
+      ".ai-factory/RELEASE_POLICY.md",
+      "docs/project/flange_qc_v2/WORK_PACKAGES.md",
+      "docs/project/flange_qc_v2/MVP_SCOPE.md",
+      "docs/project/flange_qc_v2/DEPLOYMENT.md"
+    ]
+  },
+  "test_commands": [
+    "python3 -m unittest tests.test_release_gate -v",
+    "python3 scripts/release/release_gate.py --self-test",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m unittest discover -s tests -v",
+    "git diff --check"
+  ],
+  "handoff_required": true,
+  "rollback_note": "Revert the FQV2-017 PR to remove the release readiness pack, release index/readiness doc updates, release gate tightening, tests, and gate evidence. This task does not alter deployment provider config, production infrastructure, secrets, hardware state, raw media, customer data, migrations, or release/deploy state."
+}
