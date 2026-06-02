@@ -59,6 +59,8 @@ class HmiScreenTests(unittest.TestCase):
         self.assertIn('fetch("/inspection/replay"', html)
         self.assertIn("submitFeedback", html)
         self.assertIn('fetch("/feedback"', html)
+        self.assertIn("result.audit.persisted", html)
+        self.assertIn("auditStatus", html)
         self.assertIn("production_authority", html)
         self.assertIn("authority_blockers", html)
 

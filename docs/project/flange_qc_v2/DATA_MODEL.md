@@ -50,11 +50,19 @@ Bootstrap audit storage lives in:
 
 ```text
 apps/flange_qc_v2/audit.py
+apps/flange_qc_v2/asgi.py
 ```
 
 The current migration set only creates tables and records applied migration
 versions. It does not define production retention, deletion, export, backup, or
-destructive migration behavior.
+destructive migration behavior. When `FLANGE_QC_V2_AUDIT_DB_PATH` is configured
+for the ASGI app, `/inspection/replay` initializes the local SQLite audit store
+and records the replay inspection idempotently; `/feedback` stores valid
+operator feedback for that inspection and returns audit persistence evidence.
+Without the audit DB path, the HTTP endpoints keep the previous validate-and-
+return behavior. This local audit path is replay/shadow evidence only and does
+not approve production data retention, production migrations, customer data
+handling, release, deploy, or production PASS/NG authority.
 
 Bootstrap calibration validation lives in:
 
@@ -143,7 +151,9 @@ for an existing inspection. Supported feedback types are `CONFIRM_BLOCKED`,
 `MARK_FALSE_POSITIVE`, `MARK_FALSE_NEGATIVE`, and `REQUEST_REVIEW`. Feedback is
 validated by the HTTP `/feedback` endpoint and can be stored append-only in the
 `qc_feedback` audit table by audit workflows that have an existing inspection
-record. Feedback payloads always set `production_authority` to `false` and carry
+record. When the ASGI audit DB path is configured, the no-camera HMI feedback
+flow ensures the current replay inspection exists before appending feedback.
+Feedback payloads always set `production_authority` to `false` and carry
 `PRODUCTION_APPROVAL_REQUIRED` as an authority blocker. This contract does not
 approve product specs, QC/SOP tolerances, production PASS/NG authority,
 production auto-reject, release, deploy, secrets, customer data, or destructive

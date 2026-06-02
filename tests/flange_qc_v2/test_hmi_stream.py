@@ -1,9 +1,12 @@
 import asyncio
 import json
+import os
+import tempfile
 import unittest
 from pathlib import Path
 
 from apps.flange_qc_v2.asgi import app
+from apps.flange_qc_v2.audit import AuditStore
 from apps.flange_qc_v2.domain import InspectionSnapshot
 from apps.flange_qc_v2.hmi_stream import build_replay_inspection_snapshot
 
@@ -15,6 +18,14 @@ SAMPLE_REPLAY = REPO_ROOT / "samples/replay/flange_qc_v2/phase2_synthetic_measur
 
 
 class HmiStreamSnapshotTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._previous_audit_path = os.environ.pop("FLANGE_QC_V2_AUDIT_DB_PATH", None)
+
+    def tearDown(self) -> None:
+        os.environ.pop("FLANGE_QC_V2_AUDIT_DB_PATH", None)
+        if self._previous_audit_path is not None:
+            os.environ["FLANGE_QC_V2_AUDIT_DB_PATH"] = self._previous_audit_path
+
     def test_replay_snapshot_matches_inspection_websocket_contract(self) -> None:
         snapshot = build_replay_inspection_snapshot(
             manifest_path=SAMPLE_REPLAY,
@@ -80,6 +91,41 @@ class HmiStreamSnapshotTests(unittest.TestCase):
         self.assertEqual(parsed.inspection_id, "fqv2-phase2-synthetic-001")
         self.assertEqual(parsed.decision, "BLOCKED")
         self.assertIn("PRODUCT_SPEC_APPROVAL_MISSING", parsed.reason_codes)
+
+    def test_replay_http_endpoint_persists_snapshot_idempotently_when_audit_db_is_configured(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            audit_path = Path(tmpdir) / "audit.sqlite"
+            os.environ["FLANGE_QC_V2_AUDIT_DB_PATH"] = str(audit_path)
+
+            first = self._call_replay_endpoint()
+            second = self._call_replay_endpoint()
+            store = AuditStore(audit_path)
+            record = store.fetch_inspection("fqv2-phase2-synthetic-001")
+
+        self.assertEqual(first["status"], 200)
+        self.assertEqual(second["status"], 200)
+        self.assertIsNotNone(record)
+        assert record is not None
+        self.assertEqual(record["inspection_id"], "fqv2-phase2-synthetic-001")
+        self.assertEqual(record["decision"], "BLOCKED")
+        self.assertEqual(record["payload"]["event_type"], "inspection.snapshot")
+
+    def _call_replay_endpoint(self) -> dict[str, object]:
+        messages = []
+
+        async def receive():
+            return {"type": "http.request", "body": b"", "more_body": False}
+
+        async def send(message):
+            messages.append(message)
+
+        scope = {"type": "http", "method": "GET", "path": "/inspection/replay"}
+        asyncio.run(app(scope, receive, send))
+
+        return {
+            "status": messages[0]["status"],
+            "body": json.loads(messages[1]["body"].decode("utf-8")),
+        }
 
 
 if __name__ == "__main__":

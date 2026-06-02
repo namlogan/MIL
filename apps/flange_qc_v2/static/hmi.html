@@ -565,7 +565,10 @@
           }
           fields.productionAuthority.textContent = String(result.production_authority);
           fields.authorityBlockers.textContent = result.authority_blockers.join(", ");
-          setFeedbackStatus(`${result.feedback_type} saved for ${result.inspection_id}`, "ok");
+          const auditStatus = result.audit && result.audit.persisted
+            ? `audit ${result.audit.feedback_count}`
+            : "audit off";
+          setFeedbackStatus(`${result.feedback_type} saved for ${result.inspection_id} / ${auditStatus}`, "ok");
         } catch (error) {
           setFeedbackStatus(`Feedback error: ${error.message}`, "error");
         }
