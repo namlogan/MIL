@@ -55,3 +55,13 @@ apps/flange_qc_v2/audit.py
 The current migration set only creates tables and records applied migration
 versions. It does not define production retention, deletion, export, backup, or
 destructive migration behavior.
+
+Bootstrap calibration validation lives in:
+
+```text
+apps/flange_qc_v2/calibration.py
+```
+
+The current synthetic calibration fixture exposes camera and lighting metadata
+for bootstrap/replay diagnostics only. It does not approve live camera hardware,
+geometry correction, or production calibration authority.
