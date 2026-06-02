@@ -119,6 +119,111 @@
         gap: 14px;
       }
 
+      .qc-device-layout {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .device-phase-card {
+        display: grid;
+        gap: 12px;
+        min-width: 0;
+        min-height: 168px;
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-left: 8px solid var(--amber);
+        border-radius: var(--radius);
+        background: var(--surface);
+      }
+
+      .device-phase-card[data-state="ok"] {
+        border-left-color: var(--green);
+      }
+
+      .device-phase-card[data-state="error"] {
+        border-left-color: var(--red);
+      }
+
+      .device-phase-card[data-state="warn"] {
+        border-left-color: var(--amber);
+      }
+
+      .device-phase-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .phase-signal {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 76px;
+        min-height: 36px;
+        padding: 0 10px;
+        border-radius: 6px;
+        color: #ffffff;
+        background: var(--amber);
+        font-weight: 850;
+      }
+
+      .phase-signal[data-state="ok"] {
+        background: var(--green);
+      }
+
+      .phase-signal[data-state="error"] {
+        background: var(--red);
+      }
+
+      .phase-signal[data-state="warn"] {
+        background: var(--amber);
+      }
+
+      .phase-device-detail {
+        min-height: 48px;
+        color: var(--muted);
+        font-weight: 700;
+        overflow-wrap: anywhere;
+      }
+
+      .stitch-zone {
+        display: grid;
+        gap: 6px;
+        min-height: 72px;
+        padding: 12px;
+        border: 1px solid #f7c78b;
+        border-radius: var(--radius);
+        background: #fff8ed;
+      }
+
+      .stitch-zone[data-state="ok"] {
+        border-color: #9bd8b9;
+        background: #effaf4;
+      }
+
+      .stitch-zone[data-state="error"] {
+        border-color: #f4b3aa;
+        background: #fff7f5;
+      }
+
+      .stitch-zone[data-state="warn"] {
+        border-color: #f7c78b;
+        background: #fff8ed;
+      }
+
+      .stitch-zone span {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .stitch-zone strong {
+        font-size: 22px;
+        line-height: 1;
+      }
+
       .panel {
         border: 1px solid var(--line);
         border-radius: var(--radius);
@@ -497,6 +602,7 @@
 
         header,
         .grid,
+        .qc-device-layout,
         .status-strip,
         .phase-results,
         .measurement-grid {
@@ -544,6 +650,32 @@
           <h2>Spec</h2>
           <strong id="spec">bootstrap_replay</strong>
         </div>
+      </section>
+
+      <section id="qc-device-layout" class="qc-device-layout" aria-label="QC device phase layout">
+        <article id="phase-one-device-card" class="device-phase-card" data-state="warn">
+          <div class="device-phase-header">
+            <div>
+              <h2>Phase 1 Dimensions</h2>
+              <p id="phase-one-device-detail" class="phase-device-detail">Waiting for length and width evidence.</p>
+            </div>
+            <strong id="phase-one-device-status" class="phase-signal" data-state="warn">REVIEW</strong>
+          </div>
+        </article>
+
+        <article id="phase-two-device-card" class="device-phase-card" data-state="warn">
+          <div class="device-phase-header">
+            <div>
+              <h2>Phase 2 Stitch Watch</h2>
+              <p id="phase-two-device-detail" class="phase-device-detail">Independent QC review zone.</p>
+            </div>
+            <strong id="phase-two-device-status" class="phase-signal" data-state="warn">REVIEW</strong>
+          </div>
+          <div id="phase-two-stitch-zone" class="stitch-zone" data-state="warn">
+            <span>Suspected stitch area</span>
+            <strong id="phase-two-stitch-status">REVIEW</strong>
+          </div>
+        </article>
       </section>
 
       <section class="grid">
@@ -756,6 +888,14 @@
         unit: document.getElementById("unit"),
         reasonList: document.getElementById("reason-list"),
         phaseResults: document.getElementById("phase-results"),
+        phaseOneDeviceCard: document.getElementById("phase-one-device-card"),
+        phaseOneDeviceStatus: document.getElementById("phase-one-device-status"),
+        phaseOneDeviceDetail: document.getElementById("phase-one-device-detail"),
+        phaseTwoDeviceCard: document.getElementById("phase-two-device-card"),
+        phaseTwoDeviceStatus: document.getElementById("phase-two-device-status"),
+        phaseTwoDeviceDetail: document.getElementById("phase-two-device-detail"),
+        phaseTwoStitchZone: document.getElementById("phase-two-stitch-zone"),
+        phaseTwoStitchStatus: document.getElementById("phase-two-stitch-status"),
         artifactIntakeStatus: document.getElementById("artifact-intake-status"),
         artifactConfigured: document.getElementById("artifact-configured"),
         artifactShadowReady: document.getElementById("artifact-shadow-ready"),
@@ -799,6 +939,7 @@
         });
         renderMeasurements(payload.measurements);
         renderPhaseResults(payload.phase_results);
+        renderQcDevicePhaseLayout(payload.phase_results);
         renderDetectorObservations(observations);
       }
 
@@ -814,6 +955,76 @@
             group.appendChild(item);
           });
         });
+      }
+
+      function renderQcDevicePhaseLayout(phaseResults) {
+        const results = Array.isArray(phaseResults) ? phaseResults : [];
+        const phaseOne = findPhaseResult(results, "PHASE_1");
+        const phaseTwo = findPhaseResult(results, "PHASE_2");
+        renderDevicePhase(
+          fields.phaseOneDeviceCard,
+          fields.phaseOneDeviceStatus,
+          fields.phaseOneDeviceDetail,
+          phaseOne,
+          "PHASE_1"
+        );
+        renderDevicePhase(
+          fields.phaseTwoDeviceCard,
+          fields.phaseTwoDeviceStatus,
+          fields.phaseTwoDeviceDetail,
+          phaseTwo,
+          "PHASE_2"
+        );
+        renderPhaseTwoStitchZone(phaseTwo);
+      }
+
+      function findPhaseResult(results, phaseName) {
+        return results.find((result) => result && result.phase === phaseName) || null;
+      }
+
+      function renderDevicePhase(card, status, detail, phaseResult, fallbackPhase) {
+        const decision = phaseResult && phaseResult.decision ? phaseResult.decision : "BLOCKED";
+        const state = trafficStateForDecision(decision);
+        card.dataset.state = state;
+        status.dataset.state = state;
+        status.textContent = trafficLabelForDecision(decision);
+        detail.textContent = summarizeDevicePhase(phaseResult, fallbackPhase);
+      }
+
+      function renderPhaseTwoStitchZone(phaseResult) {
+        const decision = phaseResult && phaseResult.decision ? phaseResult.decision : "BLOCKED";
+        const state = trafficStateForDecision(decision);
+        fields.phaseTwoStitchZone.dataset.state = state;
+        fields.phaseTwoStitchStatus.textContent = trafficLabelForDecision(decision);
+      }
+
+      function trafficStateForDecision(decision) {
+        if (decision === "PASS") {
+          return "ok";
+        }
+        if (decision === "NG") {
+          return "error";
+        }
+        return "warn";
+      }
+
+      function trafficLabelForDecision(decision) {
+        if (decision === "PASS") {
+          return "OK";
+        }
+        if (decision === "NG") {
+          return "NG";
+        }
+        return "REVIEW";
+      }
+
+      function summarizeDevicePhase(phaseResult, fallbackPhase) {
+        if (!phaseResult) {
+          return `${fallbackPhase}: waiting for phase evidence.`;
+        }
+        const reasons = joinValues(phaseResult.reason_codes);
+        const blockers = joinValues(phaseResult.authority_blockers);
+        return `${phaseResult.phase}: ${phaseResult.decision}; reasons: ${reasons}; authority: ${blockers}`;
       }
 
       function renderPhaseResults(phaseResults) {
