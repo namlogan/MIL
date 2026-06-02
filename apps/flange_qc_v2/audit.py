@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from apps.flange_qc_v2.domain import InspectionSnapshot, ValidationError
+from apps.flange_qc_v2.feedback import QcFeedback
 
 
 @dataclass(frozen=True)
@@ -143,6 +144,60 @@ class AuditStore:
             "payload": json.loads(row["payload_json"]),
             "created_at": row["created_at"],
         }
+
+    def append_feedback(self, feedback: QcFeedback) -> None:
+        payload = feedback.to_payload()
+        try:
+            with self._connect() as connection:
+                connection.execute(
+                    """
+                    INSERT INTO qc_feedback (
+                        inspection_id,
+                        feedback_type,
+                        payload_json,
+                        created_at
+                    ) VALUES (?, ?, ?, ?)
+                    """,
+                    (
+                        feedback.inspection_id,
+                        feedback.feedback_type,
+                        json.dumps(payload, sort_keys=True),
+                        feedback.created_at,
+                    ),
+                )
+        except sqlite3.IntegrityError as exc:
+            raise ValidationError(f"inspection does not exist: {feedback.inspection_id}") from exc
+
+    def fetch_feedback(self, inspection_id: str) -> list[dict[str, Any]]:
+        with self._connect() as connection:
+            rows = connection.execute(
+                """
+                SELECT
+                    id,
+                    inspection_id,
+                    feedback_type,
+                    payload_json,
+                    created_at
+                FROM qc_feedback
+                WHERE inspection_id = ?
+                ORDER BY id
+                """,
+                (inspection_id,),
+            ).fetchall()
+        records: list[dict[str, Any]] = []
+        for row in rows:
+            payload = json.loads(row["payload_json"])
+            records.append(
+                {
+                    "id": row["id"],
+                    "inspection_id": row["inspection_id"],
+                    "feedback_id": payload["feedback_id"],
+                    "feedback_type": row["feedback_type"],
+                    "payload": payload,
+                    "created_at": row["created_at"],
+                }
+            )
+        return records
 
     def _connect(self) -> sqlite3.Connection:
         connection = sqlite3.connect(self.path)

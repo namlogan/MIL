@@ -1,0 +1,83 @@
+{
+  "task_id": "FQV2-012",
+  "github_issue": 81,
+  "source_ref": "https://github.com/namlogan/MIL/issues/81",
+  "owner_agent": "codex_developer",
+  "qa_agent": "codex_qa",
+  "preferred_lane": "codex",
+  "branch": "agent/81-qc-feedback-shadow-evidence",
+  "allowed_paths": [
+    "apps/flange_qc_v2/**",
+    "contracts/flange_qc_v2/**",
+    "tests/flange_qc_v2/**",
+    "docs/project/flange_qc_v2/DATA_MODEL.md",
+    ".ai-factory/gates/flange_qc_v2_fqv2_012_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_012_handoff_2026-06-02.md"
+  ],
+  "restricted_paths": [
+    "live camera hardware validation or capture",
+    "raw media storage",
+    "raw customer or factory data",
+    "model weights",
+    "TensorRT engines",
+    "MLOps artifacts",
+    "production PASS/NG authority",
+    "production auto-reject",
+    "QC/SOP tolerance approval",
+    "product spec approval authority",
+    "production release or deploy",
+    "secrets",
+    "billing",
+    "customer data",
+    "destructive migrations"
+  ],
+  "acceptance_criteria": [
+    "Add a QC feedback domain contract for shadow evidence.",
+    "Supported feedback types are CONFIRM_BLOCKED, MARK_FALSE_POSITIVE, MARK_FALSE_NEGATIVE, and REQUEST_REVIEW.",
+    "Feedback payloads always deny production authority and include production approval blockers.",
+    "Feedback can be persisted append-only to the existing qc_feedback audit table for an existing inspection.",
+    "Feedback can be fetched by inspection ID.",
+    "Add a minimal HTTP JSON endpoint for validating and returning QC feedback shadow evidence.",
+    "Invalid payloads are explicitly rejected.",
+    "No product spec approval, QC/SOP tolerance approval, production PASS/NG authority, production auto-reject, production deploy, secrets, customer data, or destructive migration changes are introduced.",
+    "Existing Flange QC v2 unit/contract tests, product CI, and full repository tests pass."
+  ],
+  "memory_preflight": {
+    "query": "Flange QC v2 issue #81 feedback/shadow evidence, prior HMI/audit packages, MIL agent workflow",
+    "retrieved_decisions": [
+      "Product spec approval and QC/SOP tolerance approval remain human gates.",
+      "Shadow PASS/NG/BLOCKED evidence cannot grant production authority.",
+      "Audit evidence is append-only for bootstrap/replay."
+    ],
+    "retrieved_lessons": [
+      "Start each implementation package from a GitHub issue with DoR evidence.",
+      "Use TDD red/green before implementation.",
+      "Keep production release/deploy, secrets, customer data, and destructive migrations out of routine automation."
+    ],
+    "restricted_areas": [
+      "production release/deploy",
+      "secrets",
+      "customer data",
+      "destructive migrations",
+      "QC/SOP tolerance approval",
+      "product spec approval authority"
+    ],
+    "conflicts_found": [],
+    "sources_to_verify": [
+      "https://github.com/namlogan/MIL/issues/81",
+      "AGENTS.md",
+      ".ai-factory/RULES.md",
+      "docs/project/flange_qc_v2/DATA_MODEL.md"
+    ]
+  },
+  "test_commands": [
+    "python3 -m unittest tests.flange_qc_v2.test_feedback -v",
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 -m compileall -q apps/flange_qc_v2 tests/flange_qc_v2",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m unittest discover -s tests -v",
+    "git diff --check"
+  ],
+  "handoff_required": true,
+  "rollback_note": "Revert the FQV2-012 PR to remove the QC feedback contract, endpoint validation, audit helpers, tests, and evidence artifacts. This task uses the existing qc_feedback table and does not alter production data, secrets, deploy configuration, or destructive migrations."
+}

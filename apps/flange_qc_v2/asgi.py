@@ -5,6 +5,8 @@ from collections.abc import Awaitable, Callable
 from pathlib import Path
 from typing import Any
 
+from apps.flange_qc_v2.domain import ValidationError
+from apps.flange_qc_v2.feedback import QcFeedback
 from apps.flange_qc_v2.health import build_health_snapshot
 from apps.flange_qc_v2.hmi_stream import build_replay_inspection_snapshot
 
@@ -18,7 +20,7 @@ HMI_SCREEN = STATIC_DIR / "hmi.html"
 async def app(scope: Scope, receive: Receive, send: Send) -> None:
     scope_type = scope.get("type")
     if scope_type == "http":
-        await _handle_http(scope, send)
+        await _handle_http(scope, receive, send)
         return
     if scope_type == "websocket":
         await _handle_websocket(scope, receive, send)
@@ -26,7 +28,7 @@ async def app(scope: Scope, receive: Receive, send: Send) -> None:
     raise RuntimeError("FLANGE QC V2 bootstrap app only supports HTTP and WebSocket ASGI scopes")
 
 
-async def _handle_http(scope: Scope, send: Send) -> None:
+async def _handle_http(scope: Scope, receive: Receive, send: Send) -> None:
     path = scope.get("path", "")
     method = scope.get("method", "GET")
     if method == "GET" and path == "/health":
@@ -34,6 +36,15 @@ async def _handle_http(scope: Scope, send: Send) -> None:
         return
     if method == "GET" and path == "/hmi":
         await _send_html(send, 200, HMI_SCREEN.read_text(encoding="utf-8"))
+        return
+    if method == "POST" and path == "/feedback":
+        try:
+            payload = await _read_json_body(receive)
+            feedback = QcFeedback.from_payload(payload)
+        except (ValidationError, json.JSONDecodeError) as exc:
+            await _send_json(send, 400, {"detail": str(exc)})
+            return
+        await _send_json(send, 200, feedback.to_payload())
         return
 
     await _send_json(send, 404, {"detail": "not found"})
@@ -86,3 +97,21 @@ async def _send_html(send: Send, status: int, html: str) -> None:
         }
     )
     await send({"type": "http.response.body", "body": body})
+
+
+async def _read_json_body(receive: Receive) -> dict[str, Any]:
+    chunks: list[bytes] = []
+    while True:
+        message = await receive()
+        if message.get("type") == "http.disconnect":
+            raise ValidationError("request disconnected")
+        chunks.append(message.get("body", b""))
+        if not message.get("more_body", False):
+            break
+    raw = b"".join(chunks)
+    if not raw:
+        return {}
+    data = json.loads(raw.decode("utf-8"))
+    if not isinstance(data, dict):
+        raise ValidationError("feedback payload must be an object")
+    return data
