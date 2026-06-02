@@ -41,3 +41,18 @@ Source reviewed by Codex:
 - Product dimensions and tolerances must not be hardcoded in service code.
 - Model-dependent punch, seam, corner, and defect behavior remains `ASSIST`,
   `NOT_EVALUATED`, or blocked until separately approved.
+
+## Bootstrap Resolver
+
+Runtime draft config validation and lookup lives in:
+
+```text
+apps/flange_qc_v2/product_specs.py
+```
+
+The resolver may be used for bootstrap unit and replay-test setup. It carries
+the config approval status into the result and returns `production_authority:
+false` for the current draft config. Known products and sizes expose nominal
+dimensions and tolerances, but the decision remains `BLOCKED` until approval
+evidence exists. Unknown products and sizes also return `BLOCKED` with stable
+reason codes.
