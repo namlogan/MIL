@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "FLANGE QC V2 Memory Event",
+  "type": "object",
+  "required": [
+    "memory_type",
+    "scope",
+    "status",
+    "source_ref",
+    "content",
+    "sensitivity"
+  ],
+  "properties": {
+    "memory_type": {
+      "type": "string",
+      "enum": [
+        "architecture_decision",
+        "requirement_interpretation",
+        "implementation_lesson",
+        "test_lesson",
+        "review_lesson",
+        "deployment_runbook",
+        "incident_postmortem",
+        "agent_handoff",
+        "open_question",
+        "deprecated_decision"
+      ]
+    },
+    "scope": {
+      "type": "string",
+      "enum": ["framework", "project", "task"]
+    },
+    "project_id": {
+      "type": "string"
+    },
+    "repo_id": {
+      "type": "string"
+    },
+    "task_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["candidate", "reviewed", "approved", "superseded", "retired", "needs_review"]
+    },
+    "source_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_type": {
+      "type": "string",
+      "enum": ["issue", "pull_request", "commit", "docs", "adr", "test", "ci_run", "windmill_run", "release", "incident"]
+    },
+    "content": {
+      "type": "string",
+      "minLength": 1
+    },
+    "confidence": {
+      "type": "string",
+      "enum": ["low", "medium", "high"]
+    },
+    "sensitivity": {
+      "type": "string",
+      "enum": ["public", "internal", "confidential"]
+    }
+  }
+}

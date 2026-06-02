@@ -27,11 +27,21 @@ class ProductCIConfigTests(unittest.TestCase):
             "scripts/product-ci/run_product_checks.py",
         )
 
-    def test_default_product_ci_config_is_versioned_and_disabled_until_app_exists(self) -> None:
+    def test_product_ci_config_is_enabled_for_flange_app_skeleton(self) -> None:
         config = self.product_ci.load_config(REPO_ROOT / ".ai-factory/product-ci.json")
 
-        self.assertFalse(config["enabled"])
-        self.assertEqual(config["checks"], [])
+        self.assertTrue(config["enabled"])
+        self.assertEqual(
+            [check["name"] for check in config["checks"]],
+            [
+                "flange-qc-v2-compile",
+                "flange-qc-v2-unit",
+                "flange-qc-v2-health-smoke",
+            ],
+        )
+        for check in config["checks"]:
+            self.assertTrue(check["required"])
+            self.assertTrue(all(part != "pytest" for part in check["command"]))
 
     def test_product_ci_stack_profiles_are_versioned(self) -> None:
         profiles = self.product_ci.load_profiles(REPO_ROOT / ".ai-factory/product-ci.profiles.json")
@@ -118,6 +128,11 @@ class ProductCIConfigTests(unittest.TestCase):
 
         self.assertTrue(config["enabled"])
         self.assertEqual(config["checks"][0]["name"], "unit")
+
+    def test_self_test_does_not_require_repo_product_ci_to_be_disabled(self) -> None:
+        self.assertTrue(self.product_ci.load_config(REPO_ROOT / ".ai-factory/product-ci.json")["enabled"])
+
+        self.product_ci.run_self_test()
 
 
 if __name__ == "__main__":

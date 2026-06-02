@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "environment": "local",
+  "frame_source": {
+    "mode": "replay",
+    "requires_camera": false
+  },
+  "detector": {
+    "mode": "stub",
+    "production_model_required": false
+  },
+  "audit_db": {
+    "driver": "sqlite",
+    "path": "var/flange_qc_v2/audit.sqlite"
+  },
+  "calibration": {
+    "required_for_pass": true,
+    "default_status": "missing"
+  },
+  "decision_policy": {
+    "unknown_product": "BLOCKED",
+    "missing_calibration": "BLOCKED",
+    "missing_model_for_model_dependent_rules": "NOT_EVALUATED"
+  }
+}

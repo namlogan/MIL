@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "FLANGE QC V2 Agent Job Manifest",
+  "type": "object",
+  "required": [
+    "task_id",
+    "source_ref",
+    "owner_agent",
+    "branch",
+    "allowed_paths",
+    "restricted_paths",
+    "acceptance_criteria",
+    "test_commands",
+    "rollback_note"
+  ],
+  "properties": {
+    "task_id": {"type": "string", "minLength": 1},
+    "source_ref": {"type": "string", "minLength": 1},
+    "owner_agent": {"type": "string", "enum": ["codex_developer"]},
+    "qa_agent": {"type": "string", "enum": ["codex_qa"]},
+    "preferred_lane": {"type": "string", "enum": ["codex"]},
+    "branch": {"type": "string", "minLength": 1},
+    "allowed_paths": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string"}
+    },
+    "restricted_paths": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "acceptance_criteria": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string"}
+    },
+    "test_commands": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string"}
+    },
+    "handoff_required": {"type": "boolean"},
+    "rollback_note": {"type": "string", "minLength": 1}
+  }
+}
