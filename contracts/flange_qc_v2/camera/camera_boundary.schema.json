@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "FLANGE QC V2 Camera Boundary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "adapter_id",
+    "vendor",
+    "enabled",
+    "live_capture_enabled",
+    "sdk_loaded",
+    "credentials_configured",
+    "source_ref",
+    "hardware_profile",
+    "decision",
+    "reason_codes",
+    "authority_blockers",
+    "production_authority"
+  ],
+  "properties": {
+    "contract_version": {
+      "type": "string",
+      "const": "camera.boundary.v1"
+    },
+    "adapter_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "vendor": {
+      "type": "string",
+      "const": "Hikrobot"
+    },
+    "enabled": {
+      "type": "boolean",
+      "const": false
+    },
+    "live_capture_enabled": {
+      "type": "boolean",
+      "const": false
+    },
+    "sdk_loaded": {
+      "type": "boolean",
+      "const": false
+    },
+    "credentials_configured": {
+      "type": "boolean",
+      "const": false
+    },
+    "source_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "hardware_profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["camera_model", "lens", "lighting", "mount"],
+      "properties": {
+        "camera_model": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lens": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lighting": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mount": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "decision": {
+      "type": "string",
+      "enum": ["BLOCKED", "NOT_EVALUATED"]
+    },
+    "reason_codes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["CAMERA_HARDWARE_READINESS_MISSING", "LIVE_CAMERA_DISABLED"]
+      }
+    },
+    "authority_blockers": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "CAMERA_HARDWARE_APPROVAL_REQUIRED",
+          "CALIBRATION_APPROVAL_REQUIRED",
+          "PRODUCTION_APPROVAL_REQUIRED"
+        ]
+      }
+    },
+    "production_authority": {
+      "type": "boolean",
+      "const": false
+    }
+  }
+}

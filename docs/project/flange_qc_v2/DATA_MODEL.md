@@ -176,3 +176,18 @@ When no model evidence exists, the stub emits `NOT_EVALUATED` with
 `MODEL_REVIEW_REQUIRED`. Detector results cannot emit `PASS` or `NG`, cannot
 approve production authority, and carry `MODEL_APPROVAL_REQUIRED` plus
 `PRODUCTION_APPROVAL_REQUIRED` blockers.
+
+Bootstrap Hikrobot camera boundary evidence lives in:
+
+```text
+apps/flange_qc_v2/camera.py
+contracts/flange_qc_v2/camera/camera_boundary.schema.json
+```
+
+The current camera boundary is disabled and no-hardware by design. It records
+pending Hikrobot hardware readiness metadata, rejects enabled/live-capture,
+SDK-loading, and credential states, and blocks `capture_frame()` until hardware
+readiness approval exists. Boundary payloads cannot emit `PASS` or `NG`, cannot
+approve production authority, and carry camera hardware, calibration, and
+production approval blockers. This contract does not import a camera SDK, connect
+to hardware, capture frames, store raw media, or configure camera credentials.

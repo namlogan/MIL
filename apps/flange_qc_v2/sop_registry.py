@@ -85,6 +85,12 @@ REASON_CODES = (
         severity="blocker",
     ),
     ReasonCode(
+        code="CALIBRATION_APPROVAL_REQUIRED",
+        decision="BLOCKED",
+        description="Live camera calibration requires approval before production use.",
+        severity="blocker",
+    ),
+    ReasonCode(
         code="MEASUREMENTS_INCOMPLETE",
         decision="BLOCKED",
         description="Required length, width, or diagonal measurement points are incomplete.",
@@ -136,6 +142,24 @@ REASON_CODES = (
         code="PRODUCTION_APPROVAL_REQUIRED",
         decision="BLOCKED",
         description="Production release approval is required before evidence can grant production authority.",
+        severity="blocker",
+    ),
+    ReasonCode(
+        code="CAMERA_HARDWARE_READINESS_MISSING",
+        decision="BLOCKED",
+        description="Live camera hardware readiness has not been approved.",
+        severity="blocker",
+    ),
+    ReasonCode(
+        code="CAMERA_HARDWARE_APPROVAL_REQUIRED",
+        decision="BLOCKED",
+        description="Camera hardware approval is required before live capture can run.",
+        severity="blocker",
+    ),
+    ReasonCode(
+        code="LIVE_CAMERA_DISABLED",
+        decision="BLOCKED",
+        description="Live camera capture is disabled in bootstrap/no-hardware mode.",
         severity="blocker",
     ),
     ReasonCode(
