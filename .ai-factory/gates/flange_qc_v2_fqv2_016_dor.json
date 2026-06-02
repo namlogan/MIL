@@ -1,0 +1,101 @@
+{
+  "task_id": "FQV2-016",
+  "github_issue": 89,
+  "source_ref": "https://github.com/namlogan/MIL/issues/89",
+  "owner_agent": "codex_developer",
+  "qa_agent": "codex_qa",
+  "preferred_lane": "codex",
+  "branch": "agent/89-jetson-rtx-deploy-scaffold",
+  "allowed_paths": [
+    "deploy/flange_qc_v2/**",
+    "scripts/deploy/**",
+    "tests/flange_qc_v2/**",
+    "tests/test_product_ci_config.py",
+    "docs/project/flange_qc_v2/DEPLOYMENT.md",
+    ".ai-factory/product-ci.json",
+    ".ai-factory/gates/flange_qc_v2_fqv2_016_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_016_handoff_2026-06-02.md"
+  ],
+  "restricted_paths": [
+    "executing staging or production deploys",
+    "enabling production deploy behavior",
+    "production release approval",
+    "secrets",
+    "tokens",
+    "passwords",
+    "private keys",
+    "camera credentials",
+    "raw media storage paths",
+    "customer or factory data",
+    "model weights",
+    "TensorRT engines",
+    "MLOps promotion",
+    "live camera capture",
+    "Hikrobot SDK dependency",
+    "GPU or hardware validation",
+    "destructive migrations",
+    "billing",
+    "legal or compliance behavior",
+    "security boundary changes",
+    "QC/SOP tolerance approval",
+    "product spec approval",
+    "production PASS/NG authority",
+    "production auto-reject"
+  ],
+  "acceptance_criteria": [
+    "Add a versioned deployment scaffold under deploy/flange_qc_v2/** for local replay, Jetson shadow, and RTX shadow targets.",
+    "The scaffold is disabled/manual by default and contains no production deploy commands, production release behavior, literal secrets, credential values, camera credentials, raw media paths, customer data, model weights, TensorRT engines, or live hardware requirements.",
+    "Add a deploy plan validator that fails closed if production deploy, live camera, raw media, secret-like values, or executable deploy commands are enabled.",
+    "Add unit tests proving the checked-in scaffold validates and unsafe variants are rejected.",
+    "Update Flange QC v2 deployment docs with the scaffold validation command, remaining open target decision, human release gate, and rollback expectations.",
+    "Add deploy plan validation to product CI without enabling any actual deploy provider.",
+    "Required local checks and product CI pass."
+  ],
+  "memory_preflight": {
+    "query": "Flange QC v2 deployment scaffold, Jetson/RTX target, manual disabled provider, no-secrets deployment validation",
+    "retrieved_decisions": [
+      "Deployment target is still open.",
+      "Release/deploy remains a human gate.",
+      "Baseline app remains replay/shadow-only.",
+      ".ai-factory/deploy-provider.json is manual and disabled."
+    ],
+    "retrieved_lessons": [
+      "Use contract-first validation.",
+      "Keep deployment scaffolds disabled by default.",
+      "Make blocked authorities explicit instead of implicit."
+    ],
+    "restricted_areas": [
+      "production deploy/release",
+      "secrets/credentials/tokens",
+      "customer data",
+      "raw media",
+      "destructive migrations",
+      "live camera/hardware validation",
+      "model weights/TensorRT engines",
+      "QC/SOP tolerance approval",
+      "product spec approval"
+    ],
+    "conflicts_found": [],
+    "sources_to_verify": [
+      "https://github.com/namlogan/MIL/issues/89",
+      "AGENTS.md",
+      ".ai-factory/RULES.md",
+      ".ai-factory/RELEASE_POLICY.md",
+      "docs/project/flange_qc_v2/WORK_PACKAGES.md",
+      "docs/project/flange_qc_v2/DEPLOYMENT.md",
+      "docs/project/flange_qc_v2/OPEN_QUESTIONS.md",
+      "docs/project/flange_qc_v2/RISK_REGISTER.md"
+    ]
+  },
+  "test_commands": [
+    "python3 -m unittest tests.flange_qc_v2.test_deploy_plan -v",
+    "python3 scripts/deploy/validate_flange_qc_v2_deploy_plan.py --plan deploy/flange_qc_v2/deploy_plan.json",
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 -m compileall -q apps/flange_qc_v2 tests/flange_qc_v2 scripts/deploy",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m unittest discover -s tests -v",
+    "git diff --check"
+  ],
+  "handoff_required": true,
+  "rollback_note": "Revert the FQV2-016 PR to remove the deployment scaffold, validator/tests, product CI deploy-plan check, docs update, and gate evidence. This task does not alter production infrastructure, secrets, hardware state, raw media, customer data, migrations, or release/deploy configuration."
+}

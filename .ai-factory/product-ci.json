@@ -34,6 +34,16 @@
         "apps.flange_qc_v2"
       ],
       "required": true
+    },
+    {
+      "name": "flange-qc-v2-deploy-plan",
+      "command": [
+        "python3",
+        "scripts/deploy/validate_flange_qc_v2_deploy_plan.py",
+        "--plan",
+        "deploy/flange_qc_v2/deploy_plan.json"
+      ],
+      "required": true
     }
   ]
 }

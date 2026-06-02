@@ -37,6 +37,7 @@ class ProductCIConfigTests(unittest.TestCase):
                 "flange-qc-v2-compile",
                 "flange-qc-v2-unit",
                 "flange-qc-v2-health-smoke",
+                "flange-qc-v2-deploy-plan",
             ],
         )
         for check in config["checks"]:
