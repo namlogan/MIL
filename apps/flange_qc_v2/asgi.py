@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Awaitable, Callable
+from pathlib import Path
 from typing import Any
 
 from apps.flange_qc_v2.health import build_health_snapshot
@@ -10,6 +11,8 @@ from apps.flange_qc_v2.hmi_stream import build_replay_inspection_snapshot
 Scope = dict[str, Any]
 Receive = Callable[[], Awaitable[dict[str, Any]]]
 Send = Callable[[dict[str, Any]], Awaitable[None]]
+STATIC_DIR = Path(__file__).resolve().parent / "static"
+HMI_SCREEN = STATIC_DIR / "hmi.html"
 
 
 async def app(scope: Scope, receive: Receive, send: Send) -> None:
@@ -28,6 +31,9 @@ async def _handle_http(scope: Scope, send: Send) -> None:
     method = scope.get("method", "GET")
     if method == "GET" and path == "/health":
         await _send_json(send, 200, build_health_snapshot())
+        return
+    if method == "GET" and path == "/hmi":
+        await _send_html(send, 200, HMI_SCREEN.read_text(encoding="utf-8"))
         return
 
     await _send_json(send, 404, {"detail": "not found"})
@@ -60,6 +66,21 @@ async def _send_json(send: Send, status: int, payload: dict[str, Any]) -> None:
             "status": status,
             "headers": [
                 (b"content-type", b"application/json"),
+                (b"content-length", str(len(body)).encode("ascii")),
+            ],
+        }
+    )
+    await send({"type": "http.response.body", "body": body})
+
+
+async def _send_html(send: Send, status: int, html: str) -> None:
+    body = html.encode("utf-8")
+    await send(
+        {
+            "type": "http.response.start",
+            "status": status,
+            "headers": [
+                (b"content-type", b"text/html; charset=utf-8"),
                 (b"content-length", str(len(body)).encode("ascii")),
             ],
         }

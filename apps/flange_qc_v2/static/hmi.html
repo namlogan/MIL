@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Flange QC HMI</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f5f7fa;
+        --surface: #ffffff;
+        --surface-strong: #e6edf5;
+        --ink: #172033;
+        --muted: #64748b;
+        --line: #cbd5e1;
+        --blue: #175cd3;
+        --green: #027a48;
+        --red: #b42318;
+        --amber: #b54708;
+        --radius: 8px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        letter-spacing: 0;
+      }
+
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 16px 24px;
+        background: #ffffff;
+        border-bottom: 1px solid var(--line);
+      }
+
+      h1,
+      h2,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        font-size: 22px;
+        line-height: 1.2;
+        font-weight: 750;
+      }
+
+      h2 {
+        font-size: 14px;
+        line-height: 1.25;
+        font-weight: 700;
+        color: var(--muted);
+      }
+
+      main {
+        display: grid;
+        gap: 14px;
+        padding: 16px;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .status-strip {
+        display: grid;
+        grid-template-columns: minmax(180px, 1.2fr) repeat(3, minmax(120px, 1fr));
+        gap: 1px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--line);
+      }
+
+      .metric,
+      .panel {
+        background: var(--surface);
+        padding: 14px;
+      }
+
+      .metric strong {
+        display: block;
+        margin-top: 6px;
+        font-size: clamp(20px, 2vw, 34px);
+        line-height: 1;
+      }
+
+      .decision-blocked {
+        color: var(--red);
+      }
+
+      .decision-pass {
+        color: var(--green);
+      }
+
+      .decision-ng {
+        color: var(--red);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: minmax(260px, 1fr) minmax(320px, 1.4fr);
+        gap: 14px;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+      }
+
+      .list {
+        display: grid;
+        gap: 8px;
+        margin: 12px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .list li {
+        padding: 9px 10px;
+        border-left: 4px solid var(--red);
+        background: #fff7f5;
+        border-radius: 0 6px 6px 0;
+        font-weight: 650;
+        overflow-wrap: anywhere;
+      }
+
+      .measurement-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .measurement-group {
+        border: 1px solid var(--surface-strong);
+        border-radius: 6px;
+        padding: 10px;
+        min-width: 0;
+      }
+
+      .measurement-group b {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--blue);
+        font-size: 13px;
+      }
+
+      .measurement-group span {
+        display: inline-flex;
+        min-width: 52px;
+        height: 28px;
+        align-items: center;
+        justify-content: center;
+        margin: 0 6px 6px 0;
+        border-radius: 6px;
+        background: var(--surface-strong);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .detail-row {
+        display: grid;
+        grid-template-columns: 140px minmax(0, 1fr);
+        gap: 10px;
+        padding: 9px 0;
+        border-bottom: 1px solid var(--surface-strong);
+      }
+
+      .detail-row:last-child {
+        border-bottom: 0;
+      }
+
+      .label {
+        color: var(--muted);
+        font-weight: 650;
+      }
+
+      .value {
+        overflow-wrap: anywhere;
+        font-weight: 650;
+      }
+
+      .connection {
+        display: inline-flex;
+        align-items: center;
+        min-height: 32px;
+        padding: 0 10px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        color: var(--muted);
+        background: #ffffff;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .connection[data-state="live"] {
+        color: var(--green);
+        border-color: #9bd8b9;
+        background: #effaf4;
+      }
+
+      .connection[data-state="blocked"] {
+        color: var(--amber);
+        border-color: #f7c78b;
+        background: #fff8ed;
+      }
+
+      @media (max-width: 760px) {
+        header,
+        main {
+          padding-left: 12px;
+          padding-right: 12px;
+        }
+
+        header,
+        .grid,
+        .status-strip,
+        .measurement-grid {
+          grid-template-columns: 1fr;
+        }
+
+        header {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <h1>Flange QC HMI</h1>
+        <p id="service">flange-qc-v2 / no-camera replay</p>
+      </div>
+      <div id="connection" class="connection" data-state="blocked">connecting</div>
+    </header>
+
+    <main>
+      <section class="status-strip" aria-label="Inspection status">
+        <div class="metric">
+          <h2>Decision</h2>
+          <strong id="decision" class="decision-blocked">BLOCKED</strong>
+        </div>
+        <div class="metric">
+          <h2>Phase</h2>
+          <strong id="phase">PHASE_2</strong>
+        </div>
+        <div class="metric">
+          <h2>Product</h2>
+          <strong id="product">611</strong>
+        </div>
+        <div class="metric">
+          <h2>Spec</h2>
+          <strong id="spec">bootstrap_replay</strong>
+        </div>
+      </section>
+
+      <section class="grid">
+        <div class="panel">
+          <h2>Reason Codes</h2>
+          <ul id="reason-list" class="list">
+            <li>PRODUCT_SPEC_APPROVAL_MISSING</li>
+            <li>CALIBRATION_MISSING</li>
+          </ul>
+        </div>
+
+        <div class="panel">
+          <h2>Measurements</h2>
+          <div id="measurements" class="measurement-grid">
+            <div class="measurement-group" data-group="length_points"><b>Length</b><span>74.90</span><span>75.00</span><span>75.10</span></div>
+            <div class="measurement-group" data-group="width_points"><b>Width</b><span>37.40</span><span>37.50</span><span>37.60</span></div>
+            <div class="measurement-group" data-group="diagonals"><b>Diagonals</b><span>83.00</span><span>83.25</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid">
+        <div class="panel">
+          <h2>Inspection</h2>
+          <div class="detail-row"><span class="label">Inspection</span><span id="inspection-id" class="value">fqv2-phase2-synthetic-001</span></div>
+          <div class="detail-row"><span class="label">Created</span><span id="created-at" class="value">2026-06-02T00:00:00Z</span></div>
+          <div class="detail-row"><span class="label">Observation</span><span id="observation-state" class="value">none</span></div>
+        </div>
+
+        <div class="panel">
+          <h2>Frame Source</h2>
+          <div class="detail-row"><span class="label">Frame</span><span id="frame-id" class="value">frame-001</span></div>
+          <div class="detail-row"><span class="label">Source</span><span id="source-uri" class="value">synthetic://flange-qc-v2/phase2/frame-001</span></div>
+          <div class="detail-row"><span class="label">Unit</span><span id="unit" class="value">inch</span></div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const connection = document.getElementById("connection");
+      const fields = {
+        decision: document.getElementById("decision"),
+        phase: document.getElementById("phase"),
+        product: document.getElementById("product"),
+        spec: document.getElementById("spec"),
+        inspectionId: document.getElementById("inspection-id"),
+        createdAt: document.getElementById("created-at"),
+        observationState: document.getElementById("observation-state"),
+        frameId: document.getElementById("frame-id"),
+        sourceUri: document.getElementById("source-uri"),
+        unit: document.getElementById("unit"),
+        reasonList: document.getElementById("reason-list")
+      };
+
+      function setConnection(label, state) {
+        connection.textContent = label;
+        connection.dataset.state = state;
+      }
+
+      function renderSnapshot(payload) {
+        fields.decision.textContent = payload.decision;
+        fields.decision.className = "decision-" + payload.decision.toLowerCase();
+        fields.phase.textContent = payload.phase;
+        fields.product.textContent = payload.product.code;
+        fields.spec.textContent = payload.product.spec_version;
+        fields.inspectionId.textContent = payload.inspection_id;
+        fields.createdAt.textContent = payload.created_at;
+        fields.observationState.textContent = payload.observations.length ? "present" : "none";
+        fields.reasonList.innerHTML = "";
+        payload.reason_codes.forEach((reason) => {
+          const item = document.createElement("li");
+          item.textContent = reason;
+          fields.reasonList.appendChild(item);
+        });
+        renderMeasurements(payload.measurements);
+      }
+
+      function renderMeasurements(measurements) {
+        fields.unit.textContent = measurements.unit;
+        ["length_points", "width_points", "diagonals"].forEach((groupName) => {
+          const group = document.querySelector(`[data-group="${groupName}"]`);
+          const label = group.querySelector("b").textContent;
+          group.innerHTML = `<b>${label}</b>`;
+          measurements[groupName].forEach((value) => {
+            const item = document.createElement("span");
+            item.textContent = Number(value).toFixed(2);
+            group.appendChild(item);
+          });
+        });
+      }
+
+      function connect() {
+        const scheme = window.location.protocol === "https:" ? "wss" : "ws";
+        const socket = new WebSocket(`${scheme}://${window.location.host}/ws/inspection`);
+        socket.addEventListener("open", () => setConnection("live", "live"));
+        socket.addEventListener("message", (event) => {
+          const payload = JSON.parse(event.data);
+          renderSnapshot(payload);
+          fields.frameId.textContent = "frame-001";
+          fields.sourceUri.textContent = "synthetic://flange-qc-v2/phase2/frame-001";
+        });
+        socket.addEventListener("close", () => setConnection("closed", "blocked"));
+        socket.addEventListener("error", () => setConnection("blocked", "blocked"));
+      }
+
+      connect();
+    </script>
+  </body>
+</html>

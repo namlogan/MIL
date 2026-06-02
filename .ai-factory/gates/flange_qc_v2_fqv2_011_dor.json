@@ -1,0 +1,53 @@
+{
+  "task_id": "FQV2-011",
+  "github_issue": 79,
+  "source_ref": "https://github.com/namlogan/MIL/issues/79",
+  "owner_agent": "codex_developer",
+  "qa_agent": "codex_qa",
+  "preferred_lane": "codex",
+  "branch": "agent/79-minimum-hmi-screen",
+  "allowed_paths": [
+    "apps/flange_qc_v2/**",
+    "tests/flange_qc_v2/**",
+    "docs/project/flange_qc_v2/DATA_MODEL.md",
+    ".ai-factory/gates/flange_qc_v2_fqv2_011_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_011_handoff_2026-06-02.md"
+  ],
+  "restricted_paths": [
+    "QC feedback submission or persistence",
+    "live camera hardware validation or capture",
+    "raw media storage",
+    "raw customer or factory data",
+    "model weights",
+    "TensorRT engines",
+    "MLOps artifacts",
+    "production PASS/NG authority",
+    "production auto-reject",
+    "QC/SOP tolerance approval",
+    "product spec approval authority",
+    "production deploy",
+    "secrets",
+    "destructive migrations"
+  ],
+  "acceptance_criteria": [
+    "Add a served HMI screen at /hmi.",
+    "The screen connects to /ws/inspection and renders the latest inspection.snapshot payload.",
+    "The screen shows service context, connection state, phase, decision, reason codes, product/spec, measurements, frame/source/timestamp, and observations state.",
+    "Current draft product specs and synthetic calibration display fail-closed BLOCKED evidence.",
+    "The design is operator-focused, compact, scan-friendly, and not a marketing/landing page.",
+    "Existing health and WebSocket endpoints remain compatible.",
+    "No QC feedback form, live camera, raw media, model weights, production deploy, secrets, or production authority are introduced.",
+    "Existing Flange QC v2 unit/contract tests, product CI, and full repository tests pass."
+  ],
+  "test_commands": [
+    "python3 -m unittest tests.flange_qc_v2.test_hmi_screen -v",
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 -m compileall -q apps/flange_qc_v2 tests/flange_qc_v2",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m unittest discover -s tests -v",
+    "git diff --check",
+    "Browser smoke: open /hmi locally and verify the screen renders the blocked replay payload."
+  ],
+  "handoff_required": true,
+  "rollback_note": "Revert the FQV2-011 PR to remove the HMI screen, ASGI static serving change, tests, and evidence artifacts. This task does not alter production data, migrations, secrets, or deploy configuration."
+}
