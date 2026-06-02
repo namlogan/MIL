@@ -1,0 +1,112 @@
+{
+  "task_id": "FQV2-033",
+  "github_issue": 123,
+  "source_ref": "https://github.com/namlogan/MIL/issues/123",
+  "owner_agent": "codex_developer",
+  "qa_agent": "codex_qa",
+  "preferred_lane": "codex",
+  "branch": "agent/123-qc-device-phase-layout",
+  "allowed_paths": [
+    ".ai-factory/gates/flange_qc_v2_fqv2_033_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_033_handoff_2026-06-02.md",
+    ".ai-factory/qa/flange_qc_v2_fqv2_033_hmi.png",
+    ".ai-factory/qa/flange_qc_v2_fqv2_033_hmi_snapshot.md",
+    "apps/flange_qc_v2/static/hmi.html",
+    "tests/flange_qc_v2/test_hmi_screen.py",
+    "docs/project/flange_qc_v2/USER_FLOWS.md",
+    "docs/project/flange_qc_v2/DATA_MODEL.md",
+    "docs/project/flange_qc_v2/TEST_STRATEGY.md"
+  ],
+  "restricted_paths": [
+    "decision engine authority changes",
+    "backend detector or replay contract changes",
+    "request-supplied arbitrary filesystem paths",
+    "production deploy behavior",
+    "release approval",
+    "merge policy changes",
+    "GitHub Actions workflow changes",
+    "branch protection changes",
+    "secrets",
+    "tokens",
+    "passwords",
+    "private keys",
+    "provider credentials",
+    "camera credentials",
+    "raw media",
+    "customer or factory data",
+    "raw datasets",
+    "notebooks",
+    "model weights",
+    "model binaries",
+    "model deserialization",
+    "training code",
+    "TensorRT engines",
+    "ONNX/PyTorch runtime execution",
+    "inference runtime execution",
+    "GPU or hardware validation",
+    "MLOps promotion",
+    "live camera capture",
+    "destructive migrations",
+    "production DB migration behavior",
+    "QC/SOP tolerance approval",
+    "product spec approval",
+    "production PASS/NG authority",
+    "production auto-reject"
+  ],
+  "acceptance_criteria": [
+    "HMI renders a QC-device phase layout before the detailed SOP drilldown.",
+    "Phase 1 dimensions and Phase 2 stitch-watch cards are displayed independently from ordered phase_results.",
+    "Phase 2 suspected-stitch area uses traffic states: green/ok for PASS, red/error for NG, and amber/warn for REVIEW, BLOCKED, ASSIST, or NOT_EVALUATED states.",
+    "Existing SOP phase-results drilldown, detector bridge, detector observations, artifact intake, and feedback panels remain compatible.",
+    "HMI screen tests prove layout ids, bindings, labels, and traffic-state mappings exist.",
+    "Browser verification records the QC-device layout with template artifact intake metadata.",
+    "No backend decision authority, detector contract, inference, camera access, raw media, production PASS/NG authority, model promotion, deploy, release, product spec approval, or QC/SOP tolerance approval is introduced."
+  ],
+  "memory_preflight": {
+    "query": "flange_qc_v2 HMI QC device phase layout phase 1 phase 2 stitch traffic colors",
+    "retrieved_decisions": [
+      "Phase 1 and Phase 2 SOP outcomes are separate phase_results in the HMI payload.",
+      "HMI may surface operator-facing evidence without changing backend authority.",
+      "Stitch/model-dependent defects remain review-only until model and production approvals are complete."
+    ],
+    "retrieved_lessons": [
+      "Keep operator scanability near the top of the HMI while retaining detailed SOP evidence below.",
+      "Use visual traffic states for review workflow only; do not grant production authority through layout changes."
+    ],
+    "restricted_areas": [
+      "backend authority",
+      "decision engine logic",
+      "request paths",
+      "secrets",
+      "raw media/data",
+      "model binaries/deserialization/inference",
+      "live camera/hardware",
+      "destructive migrations",
+      "production deploy/release",
+      "product spec approval",
+      "QC/SOP tolerance approval",
+      "model promotion",
+      "production PASS/NG authority"
+    ],
+    "conflicts_found": [],
+    "sources_to_verify": [
+      "https://github.com/namlogan/MIL/issues/123",
+      "apps/flange_qc_v2/static/hmi.html",
+      "tests/flange_qc_v2/test_hmi_screen.py",
+      "docs/project/flange_qc_v2/USER_FLOWS.md"
+    ]
+  },
+  "test_commands": [
+    "python3 -m unittest tests.flange_qc_v2.test_hmi_screen -v",
+    "Browser/Playwright verification on http://127.0.0.1:8765/hmi with FLANGE_QC_V2_ARTIFACT_INTAKE_DIR=templates/flange_qc_v2/artifact_intake",
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 -m compileall -q apps/flange_qc_v2 tests/flange_qc_v2",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m unittest discover -s tests -v",
+    "git diff --check",
+    "python3 -m json.tool .ai-factory/gates/flange_qc_v2_fqv2_033_dor.json"
+  ],
+  "handoff_required": true,
+  "browser_verification_required": true,
+  "rollback_note": "Revert the FQV2-033 PR to remove the QC-device phase layout and Phase 2 suspected-stitch visual zone. Existing SOP drilldown, replay/HMI snapshots, detector bridge, detector observations, artifact intake, and feedback behavior remain valid. No migration, model rollback, camera rollback, dataset rollback, or deploy rollback is required."
+}

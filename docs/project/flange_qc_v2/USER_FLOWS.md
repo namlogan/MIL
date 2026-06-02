@@ -27,28 +27,33 @@
    `/inspection/replay` and continues to accept `/ws/inspection` updates.
    The snapshot exposes a top-level `FINAL` aggregate decision and ordered
    `phase_results` for Phase 1 through Phase 4 SOP evidence.
-3. Operator inspects the HMI SOP phase-results drilldown to see each phase
+3. Operator first scans the QC-device phase layout. Phase 1 dimension status
+   and Phase 2 stitch-watch status are rendered as independent cards so a Phase
+   1 review state does not imply a Phase 2 logic state. The Phase 2 suspected
+   stitch area uses traffic colors only for operator scanability: green for
+   PASS/OK, red for NG, and amber for REVIEW/BLOCKED/ASSIST/NOT_EVALUATED.
+4. Operator inspects the HMI SOP phase-results drilldown to see each phase
    decision, blockers, production-authority state, rule ids, and compact rule
    evidence without opening raw JSON.
-4. HMI shows detector bridge status from `/detector/shadow/status`, including
+5. HMI shows detector bridge status from `/detector/shadow/status`, including
    ready state, adapter, model reference, labels, approval status, and remaining
    authority blockers when metadata is available.
-5. If review-only detector observations are present, the HMI detector
+6. If review-only detector observations are present, the HMI detector
    observations panel shows label, confidence, bbox, model reference, and
    evidence reference without granting inspection authority.
-6. When `FLANGE_QC_V2_AUDIT_DB_PATH` is configured, replay refresh initializes
+7. When `FLANGE_QC_V2_AUDIT_DB_PATH` is configured, replay refresh initializes
    the local audit store and records the current inspection idempotently.
-7. Operator refreshes the replay snapshot from the HMI header when a manual
+8. Operator refreshes the replay snapshot from the HMI header when a manual
    no-camera check is needed.
-8. Operator records reviewer ID, feedback type, and note for the current
+9. Operator records reviewer ID, feedback type, and note for the current
    inspection.
-9. HMI submits the feedback payload to `/feedback` with the current inspection
+10. HMI submits the feedback payload to `/feedback` with the current inspection
    ID and shadow decision.
-10. The feedback contract returns shadow evidence with
+11. The feedback contract returns shadow evidence with
    `production_authority=false` and `PRODUCTION_APPROVAL_REQUIRED`.
-11. When audit persistence is configured, `/feedback` stores the feedback in
+12. When audit persistence is configured, `/feedback` stores the feedback in
    `qc_feedback` and returns audit persistence evidence for the HMI status.
-12. Any production release, product spec approval, QC/SOP tolerance approval,
+13. Any production release, product spec approval, QC/SOP tolerance approval,
    live hardware approval, or production PASS/NG authority remains outside this
    flow.
 
@@ -132,6 +137,9 @@
 - Diagonal deviation above 0.5 inch produces phase 2 NG.
 - Missing model does not create production PASS/NG for model-dependent defects.
 - HMI refresh returns the current no-camera replay snapshot.
+- HMI renders an operator-first QC-device phase layout with Phase 1 and Phase 2
+  independent cards, plus green/red/amber Phase 2 suspected-stitch status
+  mapping driven by the current phase decision.
 - HMI feedback submits the current inspection ID to `/feedback` and receives
   shadow-only authority blockers.
 - Shadow detector status returns a safe unconfigured state without env setup and

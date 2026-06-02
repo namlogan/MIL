@@ -54,6 +54,9 @@
   phase-results drilldown renders ordered phase cards, rule ids, compact
   evidence summaries, authority blockers, production-authority state, and a
   safe empty state.
+- HMI screen tests and browser evidence validate the QC-device phase layout,
+  independent Phase 1/Phase 2 cards, and Phase 2 suspected-stitch traffic
+  states for PASS/green, NG/red, and review-or-blocked/amber display.
 - HMI screen tests and browser evidence validate detector observation details
   render label, confidence, bbox, model reference, evidence reference, and a
   safe empty state without changing production authority.
