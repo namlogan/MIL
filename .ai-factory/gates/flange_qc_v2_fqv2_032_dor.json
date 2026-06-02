@@ -1,0 +1,112 @@
+{
+  "task_id": "FQV2-032",
+  "github_issue": 121,
+  "source_ref": "https://github.com/namlogan/MIL/issues/121",
+  "owner_agent": "codex_developer",
+  "qa_agent": "codex_qa",
+  "preferred_lane": "codex",
+  "branch": "agent/121-hmi-detector-shadow-status",
+  "allowed_paths": [
+    ".ai-factory/gates/flange_qc_v2_fqv2_032_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_032_handoff_2026-06-02.md",
+    ".ai-factory/qa/flange_qc_v2_fqv2_032_hmi.png",
+    ".ai-factory/qa/flange_qc_v2_fqv2_032_hmi_snapshot.md",
+    "apps/flange_qc_v2/static/hmi.html",
+    "tests/flange_qc_v2/test_hmi_screen.py",
+    "docs/project/flange_qc_v2/USER_FLOWS.md",
+    "docs/project/flange_qc_v2/DATA_MODEL.md",
+    "docs/project/flange_qc_v2/TEST_STRATEGY.md"
+  ],
+  "restricted_paths": [
+    "backend detector or replay contract changes",
+    "request-supplied arbitrary filesystem paths",
+    "production deploy behavior",
+    "release approval",
+    "merge policy changes",
+    "GitHub Actions workflow changes",
+    "branch protection changes",
+    "secrets",
+    "tokens",
+    "passwords",
+    "private keys",
+    "provider credentials",
+    "camera credentials",
+    "raw media",
+    "customer or factory data",
+    "raw datasets",
+    "notebooks",
+    "model weights",
+    "model binaries",
+    "model deserialization",
+    "training code",
+    "TensorRT engines",
+    "ONNX/PyTorch runtime execution",
+    "inference runtime execution",
+    "GPU or hardware validation",
+    "MLOps promotion",
+    "live camera capture",
+    "destructive migrations",
+    "production DB migration behavior",
+    "QC/SOP tolerance approval",
+    "product spec approval",
+    "production PASS/NG authority",
+    "production auto-reject"
+  ],
+  "acceptance_criteria": [
+    "HMI renders a detector shadow status panel fed by /detector/shadow/status.",
+    "Safe unconfigured state remains clear when FLANGE_QC_V2_ARTIFACT_INTAKE_DIR is missing.",
+    "Ready shadow metadata renders ready state, adapter id, model reference, labels, approval status, and authority blockers.",
+    "Existing artifact intake and detector observation panels remain compatible.",
+    "HMI screen tests prove the panel, bindings, endpoint fetch, and ready/unconfigured strings exist.",
+    "Browser verification records HMI behavior with ready template artifact intake metadata.",
+    "No backend detector contract, inference, model deserialization, camera access, raw media, production PASS/NG authority, model promotion, deploy, release, product spec approval, or QC/SOP tolerance approval is introduced."
+  ],
+  "memory_preflight": {
+    "query": "flange_qc_v2 HMI detector shadow status /detector/shadow/status metadata bridge artifact intake",
+    "retrieved_decisions": [
+      "The shadow detector bridge endpoint is metadata-only and reads artifact intake through FLANGE_QC_V2_ARTIFACT_INTAKE_DIR.",
+      "The detector bridge cannot grant production authority or emit production PASS/NG.",
+      "HMI should surface operator-facing evidence without raw JSON."
+    ],
+    "retrieved_lessons": [
+      "After adding backend metadata endpoints, surface actionable status in HMI.",
+      "Preserve safe empty and unconfigured states when env/intake is missing."
+    ],
+    "restricted_areas": [
+      "backend authority",
+      "request paths",
+      "secrets",
+      "raw media/data",
+      "model binaries/deserialization/inference",
+      "live camera/hardware",
+      "destructive migrations",
+      "production deploy/release",
+      "product spec approval",
+      "QC/SOP tolerance approval",
+      "model promotion",
+      "production PASS/NG authority"
+    ],
+    "conflicts_found": [],
+    "sources_to_verify": [
+      "https://github.com/namlogan/MIL/issues/121",
+      "apps/flange_qc_v2/static/hmi.html",
+      "tests/flange_qc_v2/test_hmi_screen.py",
+      "apps/flange_qc_v2/asgi.py",
+      "tests/flange_qc_v2/test_detector_adapter.py",
+      "docs/project/flange_qc_v2/USER_FLOWS.md"
+    ]
+  },
+  "test_commands": [
+    "python3 -m unittest tests.flange_qc_v2.test_hmi_screen -v",
+    "Browser/Playwright verification on http://127.0.0.1:8765/hmi with FLANGE_QC_V2_ARTIFACT_INTAKE_DIR=templates/flange_qc_v2/artifact_intake",
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 -m compileall -q apps/flange_qc_v2 tests/flange_qc_v2",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m unittest discover -s tests -v",
+    "git diff --check",
+    "python3 -m json.tool .ai-factory/gates/flange_qc_v2_fqv2_032_dor.json"
+  ],
+  "handoff_required": true,
+  "browser_verification_required": true,
+  "rollback_note": "Revert the FQV2-032 PR to remove the HMI detector bridge status panel. Existing artifact intake, shadow detector status endpoint, detector observation panel, replay/HMI snapshots, and feedback behavior remain valid. No migration, model rollback, camera rollback, dataset rollback, or deploy rollback is required."
+}

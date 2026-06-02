@@ -65,6 +65,9 @@
   returns manifest metadata only after artifact intake is ready. Adapter tests
   prove `ManifestDetectorAdapter` remains review-only and cannot emit production
   PASS/NG authority.
+- HMI screen tests and browser evidence validate that detector bridge status
+  renders ready state, adapter, model reference, labels, approval status, and
+  authority blockers from `/detector/shadow/status`.
 - Replay/HMI stream tests validate optional synthetic `detector_observations`,
   invalid observation rejection, safe empty observations without artifact intake,
   and manifest-filled review-only observations when artifact intake is ready.
