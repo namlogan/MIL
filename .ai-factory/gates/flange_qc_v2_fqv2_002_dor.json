@@ -1,0 +1,44 @@
+{
+  "task_id": "FQV2-002",
+  "github_issue": 61,
+  "source_ref": "https://github.com/namlogan/MIL/issues/61",
+  "owner_agent": "codex_developer",
+  "qa_agent": "codex_qa",
+  "preferred_lane": "codex",
+  "branch": "agent/61-domain-models-websocket-contracts",
+  "allowed_paths": [
+    "apps/flange_qc_v2/**",
+    "contracts/flange_qc_v2/**",
+    "tests/flange_qc_v2/**",
+    ".ai-factory/gates/flange_qc_v2_fqv2_002_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_002_handoff_2026-06-02.md",
+    "docs/project/flange_qc_v2/**"
+  ],
+  "restricted_paths": [
+    "production deploy",
+    "secrets",
+    "customer data",
+    "destructive migrations",
+    "factory datasets",
+    "camera hardware",
+    "model weights",
+    "TensorRT engines",
+    "SOP production PASS/NG tolerance approval"
+  ],
+  "acceptance_criteria": [
+    "Add app-level domain models for inspection identifiers, measurements, bbox observations, phase decisions, subsystem health, and WebSocket inspection snapshots.",
+    "Add JSON schema contracts for the WebSocket/HMI inspection snapshot payload under contracts/flange_qc_v2/**.",
+    "WebSocket payload validation rejects bounding boxes outside [0, 1] and unknown decision states.",
+    "Unknown or missing production capability remains represented as BLOCKED or bootstrap/degraded state; no SOP PASS/NG production rule is implemented.",
+    "Existing health endpoint and product CI keep passing."
+  ],
+  "test_commands": [
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 -m compileall -q apps/flange_qc_v2 tests/flange_qc_v2",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m unittest discover -s tests -v",
+    "git diff --check"
+  ],
+  "handoff_required": true,
+  "rollback_note": "Revert the FQV2-002 PR to remove the domain model module, WebSocket schema contract, and related tests while leaving the FQV2-001 bootstrap app skeleton intact."
+}
