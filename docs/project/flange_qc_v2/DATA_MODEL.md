@@ -45,3 +45,13 @@ results, one decision, and optional QC feedback entries.
 SQLite is acceptable for bootstrap and replay. Production retention, export,
 privacy, and backup rules must be approved before production release. Destructive
 migrations require human approval and rollback/forward-fix evidence.
+
+Bootstrap audit storage lives in:
+
+```text
+apps/flange_qc_v2/audit.py
+```
+
+The current migration set only creates tables and records applied migration
+versions. It does not define production retention, deletion, export, backup, or
+destructive migration behavior.
