@@ -65,10 +65,20 @@
 
 ## Browser Evidence
 
-- Local HMI should be exercised at `http://127.0.0.1:8765/hmi` before PR review.
-- Required HMI checks: replay refresh updates the current snapshot, feedback
-  submit returns shadow evidence, production authority remains false, and no
-  console/runtime errors appear.
+- Local HMI was exercised at `http://127.0.0.1:8766/hmi` using a local no-camera
+  test server for the current branch code. The previous `8765` server was a
+  static-only process and did not expose the new API route.
+- HMI element counts were exactly one each for refresh, feedback form,
+  feedback status, reviewer input, feedback type select, note textarea, and
+  submit button.
+- Replay refresh kept the decision at `BLOCKED` for
+  `fqv2-phase2-synthetic-001`.
+- Feedback submit returned `CONFIRM_BLOCKED saved for
+  fqv2-phase2-synthetic-001`.
+- Feedback status state was `ok`.
+- `production_authority` rendered as `false`.
+- `authority_blockers` rendered as `PRODUCTION_APPROVAL_REQUIRED`.
+- Browser console/page errors after favicon fix: none.
 
 ## Residual Risks
 
