@@ -54,6 +54,9 @@
   phase-results drilldown renders ordered phase cards, rule ids, compact
   evidence summaries, authority blockers, production-authority state, and a
   safe empty state.
+- HMI screen tests and browser evidence validate detector observation details
+  render label, confidence, bbox, model reference, evidence reference, and a
+  safe empty state without changing production authority.
 - Artifact intake endpoint tests validate safe unconfigured state and configured
   template readiness from `FLANGE_QC_V2_ARTIFACT_INTAKE_DIR`; HMI screen tests
   and browser evidence validate the metadata-only readiness panel.
