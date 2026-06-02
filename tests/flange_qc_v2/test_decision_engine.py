@@ -131,7 +131,7 @@ class PhaseOneDecisionEngineTests(unittest.TestCase):
         self.assertFalse(result.production_authority)
         self.assertEqual(result.rule_results[0].decision, "NG")
         self.assertEqual(result.rule_results[0].reason_codes, ("LENGTH_OUT_OF_TOLERANCE",))
-        self.assertEqual(result.rule_results[0].evidence["average_in"], 74.86666666666666)
+        self.assertEqual(result.rule_results[0].evidence["average_in"], 74.53333333333333)
         self.assertEqual(result.rule_results[0].evidence["out_of_tolerance_point_indexes"], [1])
         self.assertEqual(result.rule_results[1].decision, "NG")
         self.assertEqual(result.rule_results[1].reason_codes, ("WIDTH_OUT_OF_TOLERANCE",))

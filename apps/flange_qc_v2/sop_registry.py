@@ -97,6 +97,18 @@ REASON_CODES = (
         severity="blocker",
     ),
     ReasonCode(
+        code="LENGTH_OUT_OF_TOLERANCE",
+        decision="NG",
+        description="Shadow phase-1 length evidence has at least one point outside product tolerance.",
+        severity="reject",
+    ),
+    ReasonCode(
+        code="WIDTH_OUT_OF_TOLERANCE",
+        decision="NG",
+        description="Shadow phase-1 width evidence has at least one point outside product tolerance.",
+        severity="reject",
+    ),
+    ReasonCode(
         code="DIAGONAL_DEVIATION_EXCEEDS_LIMIT",
         decision="NG",
         description="Shadow phase-2 diagonal deviation evidence is greater than the configured limit.",
