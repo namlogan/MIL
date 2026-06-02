@@ -1,5 +1,6 @@
 import asyncio
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -129,6 +130,14 @@ class QcFeedbackAuditTests(unittest.TestCase):
 
 
 class QcFeedbackEndpointTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._previous_audit_path = os.environ.pop("FLANGE_QC_V2_AUDIT_DB_PATH", None)
+
+    def tearDown(self) -> None:
+        os.environ.pop("FLANGE_QC_V2_AUDIT_DB_PATH", None)
+        if self._previous_audit_path is not None:
+            os.environ["FLANGE_QC_V2_AUDIT_DB_PATH"] = self._previous_audit_path
+
     def test_feedback_endpoint_validates_and_returns_shadow_evidence(self) -> None:
         payload = {
             "feedback_id": "fb-http-001",
@@ -162,6 +171,39 @@ class QcFeedbackEndpointTests(unittest.TestCase):
         self.assertEqual(response["authority_blockers"], ["PRODUCTION_APPROVAL_REQUIRED"])
         self.assertFalse(response["production_authority"])
 
+    def test_feedback_endpoint_persists_shadow_evidence_when_audit_db_is_configured(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            audit_path = Path(tmpdir) / "audit.sqlite"
+            os.environ["FLANGE_QC_V2_AUDIT_DB_PATH"] = str(audit_path)
+
+            self._call_json_endpoint("GET", "/inspection/replay")
+            response = self._call_json_endpoint(
+                "POST",
+                "/feedback",
+                {
+                    "feedback_id": "fb-http-persist-001",
+                    "inspection_id": "fqv2-phase2-synthetic-001",
+                    "feedback_type": "CONFIRM_BLOCKED",
+                    "reviewer_id": "qc-reviewer-1",
+                    "note": "Persist this operator feedback to the audit DB.",
+                    "shadow_decision": "BLOCKED",
+                    "source_ref": "https://github.com/namlogan/MIL/issues/97",
+                    "created_at": "2026-06-02T00:00:00Z",
+                },
+            )
+
+            store = AuditStore(audit_path)
+            inspection = store.fetch_inspection("fqv2-phase2-synthetic-001")
+            records = store.fetch_feedback("fqv2-phase2-synthetic-001")
+
+        self.assertEqual(response["status"], 200)
+        self.assertTrue(response["body"]["audit"]["persisted"])
+        self.assertEqual(response["body"]["audit"]["feedback_count"], 1)
+        self.assertIsNotNone(inspection)
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0]["feedback_id"], "fb-http-persist-001")
+        self.assertFalse(records[0]["payload"]["production_authority"])
+
     def test_feedback_endpoint_rejects_invalid_payload(self) -> None:
         payload = {
             "feedback_id": "fb-http-bad",
@@ -190,6 +232,55 @@ class QcFeedbackEndpointTests(unittest.TestCase):
 
         self.assertEqual(start["status"], 400)
         self.assertIn("unknown feedback type", response["detail"])
+
+    def test_invalid_feedback_is_not_persisted_when_audit_db_is_configured(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            audit_path = Path(tmpdir) / "audit.sqlite"
+            os.environ["FLANGE_QC_V2_AUDIT_DB_PATH"] = str(audit_path)
+            self._call_json_endpoint("GET", "/inspection/replay")
+
+            response = self._call_json_endpoint(
+                "POST",
+                "/feedback",
+                {
+                    "feedback_id": "fb-http-bad-persist",
+                    "inspection_id": "fqv2-phase2-synthetic-001",
+                    "feedback_type": "APPROVE_PRODUCTION",
+                    "reviewer_id": "qc-reviewer-1",
+                    "note": "This must not create audit feedback.",
+                    "shadow_decision": "PASS",
+                    "source_ref": "https://github.com/namlogan/MIL/issues/97",
+                    "created_at": "2026-06-02T00:00:00Z",
+                },
+            )
+            store = AuditStore(audit_path)
+            records = store.fetch_feedback("fqv2-phase2-synthetic-001")
+
+        self.assertEqual(response["status"], 400)
+        self.assertEqual(records, [])
+
+    def _call_json_endpoint(
+        self,
+        method: str,
+        path: str,
+        payload: dict[str, object] | None = None,
+    ) -> dict[str, object]:
+        body = b"" if payload is None else json.dumps(payload).encode("utf-8")
+        messages = []
+
+        async def receive():
+            return {"type": "http.request", "body": body, "more_body": False}
+
+        async def send(message):
+            messages.append(message)
+
+        scope = {"type": "http", "method": method, "path": path}
+        asyncio.run(app(scope, receive, send))
+
+        return {
+            "status": messages[0]["status"],
+            "body": json.loads(messages[1]["body"].decode("utf-8")),
+        }
 
 
 if __name__ == "__main__":
