@@ -1,7 +1,11 @@
+import asyncio
 import json
+import os
 import unittest
 from pathlib import Path
 
+from apps.flange_qc_v2 import detector
+from apps.flange_qc_v2.asgi import app
 from apps.flange_qc_v2.detector import DetectorRequest, DetectorResult, ManifestDetectorAdapter, StubDetectorAdapter
 from apps.flange_qc_v2.domain import ValidationError
 from apps.flange_qc_v2.model_artifact import ModelArtifactManifest
@@ -9,6 +13,7 @@ from apps.flange_qc_v2.model_artifact import ModelArtifactManifest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DETECTOR_SCHEMA = REPO_ROOT / "contracts/flange_qc_v2/detector/detector_result.schema.json"
+TEMPLATE_DIR = REPO_ROOT / "templates/flange_qc_v2/artifact_intake"
 
 
 def detector_request_payload(**overrides):
@@ -40,6 +45,22 @@ def model_manifest_payload(**overrides):
     }
     payload.update(overrides)
     return payload
+
+
+def asgi_get_json(path: str) -> dict:
+    messages = []
+
+    async def receive():
+        return {"type": "http.request", "body": b"", "more_body": False}
+
+    async def send(message):
+        messages.append(message)
+
+    asyncio.run(app({"type": "http", "method": "GET", "path": path}, receive, send))
+    return {
+        "status": messages[0]["status"],
+        "body": json.loads(messages[1]["body"].decode("utf-8")),
+    }
 
 
 class DetectorAdapterSchemaTests(unittest.TestCase):
@@ -170,6 +191,73 @@ class ManifestDetectorAdapterTests(unittest.TestCase):
 
         with self.assertRaisesRegex(ValidationError, "observation label is not declared"):
             adapter.detect(request)
+
+
+class ShadowDetectorBridgeTests(unittest.TestCase):
+    def test_builds_shadow_detector_metadata_from_ready_artifact_intake(self) -> None:
+        self.assertTrue(hasattr(detector, "build_shadow_detector_status_from_intake"))
+
+        status = detector.build_shadow_detector_status_from_intake(TEMPLATE_DIR, repo_root=REPO_ROOT)
+
+        self.assertTrue(status["configured"])
+        self.assertTrue(status["ready"])
+        self.assertEqual(status["adapter_id"], "manifest-detector")
+        self.assertEqual(status["model_ref"], "registry://flange-qc-v2/detector/punch-mark/2026-06-02")
+        self.assertEqual(status["artifact_version"], "detector-shadow-2026-06-02")
+        self.assertEqual(status["labels"], ["punch_mark", "corner_mark"])
+        self.assertEqual(status["eval_report_ref"], "docs/project/flange_qc_v2/eval/detector-shadow-2026-06-02.json")
+        self.assertEqual(status["approval_status"], "candidate")
+        self.assertTrue(status["shadow_mode"])
+        self.assertFalse(status["production_authority"])
+        self.assertEqual(status["authority_blockers"], ["MODEL_APPROVAL_REQUIRED", "PRODUCTION_APPROVAL_REQUIRED"])
+
+    def test_builds_manifest_detector_adapter_from_ready_artifact_intake(self) -> None:
+        self.assertTrue(hasattr(detector, "build_manifest_detector_from_intake"))
+
+        adapter = detector.build_manifest_detector_from_intake(TEMPLATE_DIR, repo_root=REPO_ROOT)
+        request = DetectorRequest.from_payload(detector_request_payload())
+        result = adapter.detect(request)
+
+        self.assertEqual(adapter.manifest.model_ref, "registry://flange-qc-v2/detector/punch-mark/2026-06-02")
+        self.assertEqual(adapter.manifest.labels, ("punch_mark", "corner_mark"))
+        self.assertEqual(result.decision, "NOT_EVALUATED")
+        self.assertEqual(result.reason_codes, ("MODEL_MISSING",))
+        self.assertFalse(result.production_authority)
+
+    def test_shadow_detector_status_endpoint_uses_env_only(self) -> None:
+        previous = os.environ.get("FLANGE_QC_V2_ARTIFACT_INTAKE_DIR")
+        os.environ["FLANGE_QC_V2_ARTIFACT_INTAKE_DIR"] = str(TEMPLATE_DIR)
+        try:
+            response = asgi_get_json("/detector/shadow/status")
+        finally:
+            if previous is None:
+                os.environ.pop("FLANGE_QC_V2_ARTIFACT_INTAKE_DIR", None)
+            else:
+                os.environ["FLANGE_QC_V2_ARTIFACT_INTAKE_DIR"] = previous
+
+        body = response["body"]
+        self.assertEqual(response["status"], 200)
+        self.assertTrue(body["configured"])
+        self.assertTrue(body["ready"])
+        self.assertEqual(body["adapter_id"], "manifest-detector")
+        self.assertEqual(body["model_ref"], "registry://flange-qc-v2/detector/punch-mark/2026-06-02")
+        self.assertFalse(body["production_authority"])
+
+    def test_shadow_detector_status_endpoint_reports_safe_unconfigured_state(self) -> None:
+        previous = os.environ.pop("FLANGE_QC_V2_ARTIFACT_INTAKE_DIR", None)
+        try:
+            response = asgi_get_json("/detector/shadow/status")
+        finally:
+            if previous is not None:
+                os.environ["FLANGE_QC_V2_ARTIFACT_INTAKE_DIR"] = previous
+
+        body = response["body"]
+        self.assertEqual(response["status"], 200)
+        self.assertFalse(body["configured"])
+        self.assertFalse(body["ready"])
+        self.assertEqual(body["next_issue"]["recommended_task"], "configure_artifact_intake")
+        self.assertFalse(body["production_authority"])
+        self.assertEqual(body["authority_blockers"], ["MODEL_APPROVAL_REQUIRED", "PRODUCTION_APPROVAL_REQUIRED"])
 
 
 if __name__ == "__main__":
