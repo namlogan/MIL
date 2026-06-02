@@ -69,7 +69,9 @@ deadlock.
 
 ## Auto-Merge Labels
 
-Agents may propose auto-merge with:
+The AI Delivery Coordinator applies routine auto labels when Definition of Ready,
+Codex handoff evidence, Codex QA, rollback, and restricted-change checks are in
+place. Agents may propose auto-merge with:
 
 ```text
 agent:auto-build

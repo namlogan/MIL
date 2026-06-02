@@ -195,6 +195,7 @@ Recommended labels:
 agent:plan
 agent:build
 agent:auto-build
+automerge:candidate
 agent:fix
 blocked
 ready-for-human-review

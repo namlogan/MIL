@@ -43,6 +43,42 @@
       "requires_issue_scope": true,
       "requires_pull_request": true
     },
+    "ai_delivery_coordinator": {
+      "runtime": "windmill_plus_policy_scripts",
+      "role": "routine_delivery_coordinator",
+      "allowed_actions": [
+        "check_definition_of_ready",
+        "label_auto_dispatch_ready_issue",
+        "dispatch_exactly_one_codex_worker",
+        "watch_pr_checks",
+        "request_codex_qa_gate",
+        "label_automerge_candidate_pr",
+        "route_fix_ci_or_review",
+        "request_human_approval_for_exceptions",
+        "write_delivery_evidence"
+      ],
+      "forbidden_actions": [
+        "author_app_code",
+        "merge_main",
+        "bypass_branch_protection",
+        "approve_restricted_change",
+        "approve_production_release",
+        "approve_qc_sop_or_tolerance",
+        "deploy_production",
+        "read_production_secrets"
+      ],
+      "requires_definition_of_ready": true,
+      "routine_prs_do_not_require_owner_review": true,
+      "human_escalation_only_for": [
+        "restricted_changes",
+        "production_release",
+        "qc_sop_or_tolerance_approval",
+        "policy_exception",
+        "failed_auto_fix_limit",
+        "explicit_hold"
+      ],
+      "writes_code": false
+    },
     "augment_context_provider": {
       "runtime": "augment_mcp",
       "role": "codebase_index_and_context_provider",

@@ -22,6 +22,7 @@ CONFIG_PATH = ".ai-factory/config.yaml"
 REQUIRED_AGENT_IDS = {
     "codex_developer",
     "codex_qa",
+    "ai_delivery_coordinator",
     "augment_context_provider",
     "auggie_advisory",
     "mem0_memory",
@@ -30,11 +31,13 @@ REQUIRED_AGENT_IDS = {
 }
 
 REQUIRED_DEFAULT_STAGES = [
+    "ai_delivery_coordinator_issue_gate",
     "issue_to_plan",
     "plan_to_pr",
     "control_plane_ci",
     "augment_context_review",
     "codex_qa_gate",
+    "ai_delivery_coordinator_pr_gate",
     "protected_merge",
 ]
 
@@ -162,6 +165,8 @@ def _validate_workflows(workflows: dict[str, Any], errors: list[str]) -> None:
     for checkpoint in ["wm_memory_preflight", "wm_task_context_pack", "wm_pr_merge_memory_writeback"]:
         if checkpoint not in memory_checkpoints:
             errors.append(f"default_issue_to_merge memory_checkpoints missing {checkpoint}")
+    if default.get("routine_coordinator") != "ai_delivery_coordinator":
+        errors.append("default_issue_to_merge.routine_coordinator must be ai_delivery_coordinator")
     stage_names = [stage.get("name") for stage in stages if isinstance(stage, dict)]
     if stage_names != REQUIRED_DEFAULT_STAGES:
         errors.append(

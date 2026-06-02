@@ -45,7 +45,7 @@ def default_config(repo_root: Path | None = None) -> dict[str, Any]:
         },
         "required_contexts": ["control-plane", "ai-gate/final-review", "merge-controller-policy"],
         "allowed_head_prefixes": ["agent/", "fix/", "codex/"],
-        "allow_labels": ["agent:auto-build", "automerge:allowed", "owner:auto-approve"],
+        "allow_labels": ["agent:auto-build", "automerge:candidate", "automerge:allowed", "owner:auto-approve"],
         "owner_approval_labels": ["owner:auto-approve"],
         "block_labels": ["hold", "owner-review", "do-not-merge", "blocked", "security-review"],
         "restricted_labels": [

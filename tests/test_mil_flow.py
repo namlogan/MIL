@@ -130,6 +130,26 @@ class MilFlowTests(unittest.TestCase):
         )
         self.assertEqual(result.decision, "FIX_PUSH_READY")
 
+    def test_delivery_coordinator_routes_routine_work_without_owner_review(self) -> None:
+        result = mil_flow.run_flow("delivery_coordinator", self.task)
+
+        calls = [(call.agent, call.action) for call in result.agent_calls]
+        self.assertEqual(
+            calls,
+            [
+                ("ai_delivery_coordinator", "check_definition_of_ready"),
+                ("ai_delivery_coordinator", "label_auto_dispatch"),
+                ("windmill", "dispatch_coding_agent"),
+                ("ai_delivery_coordinator", "watch_pr_checks"),
+                ("codex", "qa"),
+                ("ai_delivery_coordinator", "label_automerge_candidate"),
+                ("mem0_memory", "wm_pr_merge_memory_writeback"),
+            ],
+        )
+        self.assertEqual(result.decision, "ROUTINE_AUTOMERGE_READY")
+        self.assertFalse(result.blocking)
+        self.assertFalse(result.artifacts["coordinator"]["human_required"])
+
     def test_cli_writes_flow_artifact(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             out_path = Path(tmpdir) / "artifact.json"

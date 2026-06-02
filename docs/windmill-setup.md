@@ -418,9 +418,10 @@ export MIL_AUTO_DISPATCH_QUEUE=.ai-factory/queue/webhooks
 scripts/windmill/run_github_webhook_relay_from_windmill_secret.sh
 ```
 
-Auto execution is still opt-in per GitHub task. Use label `agent:auto-build` or
-comment `/agent autobuild`. Label `agent:build` continues to prepare a command
-pack without launching Codex.
+Auto execution is policy-gated per GitHub task. The AI Delivery Coordinator may
+apply `agent:auto-build` to Definition-of-Ready routine issues, or an operator
+may use comment `/agent autobuild` for a scoped task. Label `agent:build`
+continues to prepare a command pack without launching Codex.
 
 The dispatcher refuses to run when issue scope is incomplete, `allowed_files` is
 missing, restricted changes are selected, AI Factory rules are unavailable, or

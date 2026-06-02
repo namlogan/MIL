@@ -34,6 +34,19 @@ allowed to act and what evidence is required before moving forward.
    gates, review latency, memory conflicts, release readiness, and postmortem
    actions.
 
+## AI Delivery Coordinator Mode
+
+Routine agent delivery is coordinated by `ai_delivery_coordinator`. The
+coordinator checks Definition of Ready, applies `agent:auto-build` to ready
+routine issues, watches worker PRs, requests Codex QA, applies
+`automerge:candidate` to routine PRs, and lets GitHub auto-merge proceed after
+`control-plane`, `ai-gate/final-review`, and `merge-controller-policy` pass.
+
+Routine PRs do not require owner review. The owner is escalated only for
+restricted changes, production release, QC/SOP or product tolerance approval,
+policy exceptions, explicit hold labels, or auto-fix loops beyond the configured
+limit.
+
 ## New Project Startup Pipeline
 
 Use `docs/runbooks/new_project_startup_pipeline.md` when applying the framework
@@ -61,6 +74,8 @@ and CI baseline are ready.
 - `wm_project_intake_gate`: validates intake completeness before bootstrap.
 - `wm_project_bootstrap`: creates the initial framework pack for a new project.
 - `wm_project_readiness_score`: reports whether the project is ready for agents.
+- `wm_ai_delivery_coordinator`: routes routine ready work and escalates only
+  exceptions.
 - `wm_definition_of_ready_check`: blocks unclear tasks before dispatch.
 - `wm_memory_preflight`: retrieves approved scoped memory before planning.
 - `wm_task_context_pack`: compacts docs, memory, and Augment context for Codex.
@@ -73,6 +88,8 @@ and CI baseline are ready.
 
 ## Operating Principle
 
-The framework can automate routing, checks, reports, and evidence collection.
-It must not automate final trust decisions that belong to branch protection,
-human approval, restricted escalation, or production release ownership.
+The framework can automate routine routing, checks, reports, evidence
+collection, PR labeling, and auto-merge candidacy. GitHub branch protection and
+`merge-controller-policy` handle routine merge approval. Human approval remains
+mandatory for restricted escalation, QC/SOP authority, and production release
+ownership.
