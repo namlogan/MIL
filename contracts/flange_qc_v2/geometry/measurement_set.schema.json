@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "FLANGE QC V2 Geometry Measurement Set",
+  "type": "object",
+  "required": [
+    "contract_version",
+    "decision",
+    "reason_codes",
+    "production_authority",
+    "measurements",
+    "expected_counts",
+    "received_counts",
+    "diagonal_deviation"
+  ],
+  "properties": {
+    "contract_version": {
+      "type": "string",
+      "const": "geometry.measurement_set.v1"
+    },
+    "decision": {
+      "type": "string",
+      "enum": ["BLOCKED", "NOT_EVALUATED", "ASSIST"]
+    },
+    "reason_codes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "production_authority": {
+      "type": "boolean",
+      "const": false
+    },
+    "measurements": {
+      "type": "object",
+      "required": ["length_points", "width_points", "diagonals", "unit"],
+      "properties": {
+        "length_points": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        },
+        "width_points": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        },
+        "diagonals": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "unit": {
+          "type": "string",
+          "enum": ["inch", "mm"]
+        }
+      }
+    },
+    "expected_counts": {
+      "type": "object",
+      "required": ["length_points", "width_points", "diagonals"],
+      "properties": {
+        "length_points": {
+          "type": "integer",
+          "const": 3
+        },
+        "width_points": {
+          "type": "integer",
+          "const": 3
+        },
+        "diagonals": {
+          "type": "integer",
+          "const": 2
+        }
+      }
+    },
+    "received_counts": {
+      "type": "object",
+      "required": ["length_points", "width_points", "diagonals"],
+      "properties": {
+        "length_points": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "width_points": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "diagonals": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "diagonal_deviation": {
+      "type": ["number", "null"],
+      "minimum": 0
+    }
+  }
+}

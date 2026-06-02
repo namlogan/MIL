@@ -1,0 +1,48 @@
+{
+  "task_id": "FQV2-007",
+  "github_issue": 71,
+  "source_ref": "https://github.com/namlogan/MIL/issues/71",
+  "owner_agent": "codex_developer",
+  "qa_agent": "codex_qa",
+  "preferred_lane": "codex",
+  "branch": "agent/71-geometry-measurement-contract",
+  "allowed_paths": [
+    "apps/flange_qc_v2/**",
+    "contracts/flange_qc_v2/**",
+    "tests/flange_qc_v2/**",
+    "docs/project/flange_qc_v2/DATA_MODEL.md",
+    ".ai-factory/gates/flange_qc_v2_fqv2_007_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_007_handoff_2026-06-02.md"
+  ],
+  "restricted_paths": [
+    "production deploy",
+    "secrets",
+    "customer data policy",
+    "destructive migrations",
+    "live camera hardware validation",
+    "geometry correction or calibration transform engine",
+    "model weights",
+    "TensorRT engines",
+    "QC/SOP tolerance approval",
+    "product spec approval authority",
+    "production PASS/NG decision engine"
+  ],
+  "acceptance_criteria": [
+    "Add a geometry measurement contract for exactly 3 length points, 3 width points, and 2 diagonals.",
+    "Expose normalized measurement payload fields reusable by HMI/WebSocket/audit flows.",
+    "Missing or incomplete measurements fail closed with MEASUREMENTS_INCOMPLETE / BLOCKED evidence.",
+    "Diagonal deviation is computed as evidence only and does not create production PASS/NG authority.",
+    "Unit validation remains explicit and limited to supported measurement units.",
+    "Existing Flange QC v2 unit/contract tests, product CI, and full repository tests pass."
+  ],
+  "test_commands": [
+    "python3 -m unittest tests.flange_qc_v2.test_geometry -v",
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 -m compileall -q apps/flange_qc_v2 tests/flange_qc_v2",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m unittest discover -s tests -v",
+    "git diff --check"
+  ],
+  "handoff_required": true,
+  "rollback_note": "Revert the FQV2-007 PR to remove the geometry contract, tests, schema, and evidence artifacts. This task does not alter production data or migrations."
+}
