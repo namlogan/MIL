@@ -112,3 +112,14 @@ approval blockers. Missing or invalid intake returns a non-ready state with
 `production_authority=false`. The bridge does not load weights, deserialize model
 binaries, run inference, import camera SDKs, capture frames, approve model
 promotion, or grant production PASS/NG authority.
+
+No-camera replay frames may carry optional synthetic `detector_observations`
+metadata for review. The replay parser validates label, confidence, and bbox
+through the detector observation domain contract, then strips any model or
+evidence reference from the replay fixture. HMI snapshot generation attaches
+these observations only when `FLANGE_QC_V2_ARTIFACT_INTAKE_DIR` points to a
+ready intake bundle; `ManifestDetectorAdapter` fills the manifest `model_ref`
+and evaluation evidence reference. Missing or invalid intake preserves the safe
+empty observation state. This path is still replay/shadow evidence only and
+does not execute model inference, read raw media, touch camera hardware, or
+grant production PASS/NG authority.
