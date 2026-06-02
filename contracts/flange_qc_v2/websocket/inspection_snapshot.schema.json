@@ -9,6 +9,7 @@
     "phase",
     "decision",
     "reason_codes",
+    "phase_results",
     "measurements",
     "observations",
     "created_at"
@@ -48,6 +49,80 @@
       "type": "array",
       "items": {
         "type": "string"
+      }
+    },
+    "phase_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "phase",
+          "decision",
+          "reason_codes",
+          "authority_blockers",
+          "production_authority",
+          "shadow_mode",
+          "rule_results"
+        ],
+        "properties": {
+          "phase": {
+            "type": "string",
+            "enum": ["BOOTSTRAP", "PHASE_1", "PHASE_2", "PHASE_3", "PHASE_4", "FINAL"]
+          },
+          "decision": {
+            "type": "string",
+            "enum": ["PASS", "NG", "BLOCKED", "NOT_EVALUATED", "ASSIST"]
+          },
+          "reason_codes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "authority_blockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "production_authority": {
+            "type": "boolean",
+            "const": false
+          },
+          "shadow_mode": {
+            "type": "boolean"
+          },
+          "rule_results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["rule_id", "phase", "decision", "reason_codes", "evidence"],
+              "properties": {
+                "rule_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "phase": {
+                  "type": "string",
+                  "enum": ["BOOTSTRAP", "PHASE_1", "PHASE_2", "PHASE_3", "PHASE_4", "FINAL"]
+                },
+                "decision": {
+                  "type": "string",
+                  "enum": ["PASS", "NG", "BLOCKED", "NOT_EVALUATED", "ASSIST"]
+                },
+                "reason_codes": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "evidence": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "measurements": {

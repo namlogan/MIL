@@ -6,7 +6,12 @@ from pathlib import Path
 from typing import Any
 
 from apps.flange_qc_v2.calibration import load_calibration_config
-from apps.flange_qc_v2.decision_engine import DecisionResult, evaluate_phase_two_geometry
+from apps.flange_qc_v2.decision_engine import (
+    DecisionResult,
+    evaluate_phase_one_measurements,
+    evaluate_phase_two_geometry,
+    evaluate_sop_safe_fallbacks,
+)
 from apps.flange_qc_v2.domain import ValidationError
 from apps.flange_qc_v2.geometry import resolve_geometry_measurements
 from apps.flange_qc_v2.product_specs import load_product_specs
@@ -113,6 +118,7 @@ class ReplayRunResult:
     size_group: str
     frame_count: int
     decision: DecisionResult
+    phase_results: tuple[DecisionResult, ...]
     frames: tuple[ReplayFrame, ...]
 
     def to_payload(self) -> dict[str, Any]:
@@ -123,6 +129,7 @@ class ReplayRunResult:
             "size_group": self.size_group,
             "frame_count": self.frame_count,
             "decision": self.decision.to_payload(),
+            "phase_results": [phase_result.to_payload() for phase_result in self.phase_results],
             "frames": [frame.to_payload() for frame in self.frames],
         }
 
@@ -145,10 +152,19 @@ def run_no_camera_replay(
     )
     calibration = load_calibration_config(calibration_path)
     geometry = resolve_geometry_measurements(manifest.frames[0].measurements)
-    decision = evaluate_phase_two_geometry(
-        product_spec=product_spec,
-        calibration=calibration,
-        geometry=geometry,
+    phase_results = (
+        evaluate_phase_one_measurements(
+            product_spec=product_spec,
+            calibration=calibration,
+            geometry=geometry,
+        ),
+        evaluate_phase_two_geometry(
+            product_spec=product_spec,
+            calibration=calibration,
+            geometry=geometry,
+        ),
+        evaluate_sop_safe_fallbacks(phase="PHASE_3"),
+        evaluate_sop_safe_fallbacks(phase="PHASE_4"),
     )
     return ReplayRunResult(
         replay_id=manifest.replay_id,
@@ -156,6 +172,46 @@ def run_no_camera_replay(
         product_code=manifest.product_code,
         size_group=manifest.size_group,
         frame_count=len(manifest.frames),
-        decision=decision,
+        decision=_aggregate_phase_results(phase_results),
+        phase_results=phase_results,
         frames=manifest.frames,
     )
+
+
+def _aggregate_phase_results(phase_results: tuple[DecisionResult, ...]) -> DecisionResult:
+    return DecisionResult(
+        phase="FINAL",
+        decision=_aggregate_decision_state(phase_results),
+        reason_codes=_unique_codes(
+            [
+                code
+                for phase_result in phase_results
+                for code in phase_result.reason_codes
+            ]
+        ),
+        authority_blockers=_unique_codes(
+            [
+                code
+                for phase_result in phase_results
+                for code in phase_result.authority_blockers
+            ]
+        ),
+        production_authority=False,
+        shadow_mode=True,
+    )
+
+
+def _aggregate_decision_state(phase_results: tuple[DecisionResult, ...]) -> str:
+    decisions = {phase_result.decision for phase_result in phase_results}
+    for decision in ("BLOCKED", "NG", "ASSIST", "NOT_EVALUATED"):
+        if decision in decisions:
+            return decision
+    return "PASS"
+
+
+def _unique_codes(codes: list[str]) -> tuple[str, ...]:
+    unique: list[str] = []
+    for code in codes:
+        if code and code not in unique:
+            unique.append(code)
+    return tuple(unique)

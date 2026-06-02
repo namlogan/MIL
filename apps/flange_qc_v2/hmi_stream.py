@@ -33,5 +33,6 @@ def build_replay_inspection_snapshot(
         reason_codes=list(result.decision.reason_codes),
         measurements=InspectionMeasurements.from_payload(frame.measurements),
         observations=[],
+        phase_results=[phase_result.to_payload() for phase_result in result.phase_results],
         created_at=frame.captured_at,
     )

@@ -56,11 +56,15 @@ class ReplayFrameSourceTests(unittest.TestCase):
         self.assertEqual(payload["mode"], "no_camera_replay")
         self.assertEqual(payload["decision"]["phase"], "FINAL")
         self.assertEqual(payload["phase_results"][0]["phase"], "PHASE_1")
+        self.assertEqual(
+            payload["phase_results"][0]["reason_codes"],
+            ["PRODUCT_SPEC_APPROVAL_MISSING", "CALIBRATION_MISSING"],
+        )
         self.assertEqual(payload["phase_results"][2]["decision"], "ASSIST")
         self.assertEqual(payload["phase_results"][3]["decision"], "ASSIST")
         self.assertEqual(
-            payload["phase_results"][0]["rule_results"][0]["rule_id"],
-            "M1-SOP-6.1-LENGTH-001",
+            payload["phase_results"][2]["rule_results"][0]["rule_id"],
+            "M1-SOP-6.4-PUNCH-MARK-001",
         )
         self.assertEqual(payload["frames"][0]["frame_id"], "frame-001")
 
