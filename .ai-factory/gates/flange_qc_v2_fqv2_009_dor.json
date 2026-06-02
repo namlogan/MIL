@@ -1,0 +1,53 @@
+{
+  "task_id": "FQV2-009",
+  "github_issue": 75,
+  "source_ref": "https://github.com/namlogan/MIL/issues/75",
+  "owner_agent": "codex_developer",
+  "qa_agent": "codex_qa",
+  "preferred_lane": "codex",
+  "branch": "agent/75-replay-frame-source-no-camera-e2e",
+  "allowed_paths": [
+    "apps/flange_qc_v2/**",
+    "samples/replay/flange_qc_v2/**",
+    "tests/flange_qc_v2/**",
+    "docs/project/flange_qc_v2/DATA_MODEL.md",
+    ".ai-factory/gates/flange_qc_v2_fqv2_009_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_009_handoff_2026-06-02.md"
+  ],
+  "restricted_paths": [
+    "live camera hardware validation or capture",
+    "raw media storage",
+    "raw customer or factory data",
+    "model weights",
+    "TensorRT engines",
+    "MLOps artifacts",
+    "WebSocket or HMI streaming",
+    "production PASS/NG authority",
+    "production auto-reject",
+    "QC/SOP tolerance approval",
+    "product spec approval authority",
+    "production deploy",
+    "secrets",
+    "destructive migrations"
+  ],
+  "acceptance_criteria": [
+    "Add a replay manifest loader with explicit schema/version checks.",
+    "Add a synthetic sample replay manifest under samples/replay/flange_qc_v2/.",
+    "Replay frames expose frame ID, source URI, capture timestamp, and measurement payload.",
+    "Add a no-camera replay runner that connects product specs, calibration, geometry, and phase-2 decision engine.",
+    "Current draft product specs and synthetic calibration return fail-closed BLOCKED evidence rather than production authority.",
+    "Invalid replay manifests are rejected explicitly.",
+    "No live camera, raw media, model weights, TensorRT engines, production deploy, or customer data are used.",
+    "Existing Flange QC v2 unit/contract tests, product CI, and full repository tests pass."
+  ],
+  "test_commands": [
+    "python3 -m unittest tests.flange_qc_v2.test_replay -v",
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 -m compileall -q apps/flange_qc_v2 tests/flange_qc_v2",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m unittest discover -s tests -v",
+    "git diff --check"
+  ],
+  "handoff_required": true,
+  "rollback_note": "Revert the FQV2-009 PR to remove the replay loader/runner, synthetic manifest, tests, and evidence artifacts. This task does not alter production data, migrations, secrets, or deploy configuration."
+}
