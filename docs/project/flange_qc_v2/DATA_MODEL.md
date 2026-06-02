@@ -136,8 +136,11 @@ samples/replay/flange_qc_v2/phase2_synthetic_measurements.json
 The current replay source uses synthetic frame metadata and measurement evidence
 only. It does not read live camera frames, raw media, model outputs, customer
 data, or production file paths. The replay runner connects product specs,
-calibration, geometry, and the phase-2 shadow decision engine, then fails closed
-while product spec and calibration authority remain missing.
+calibration, geometry, Phase 1 length/width, Phase 2 diagonal, and Phase 3/4
+safe fallback evaluators. Replay output includes ordered `phase_results` for
+`PHASE_1` through `PHASE_4` and a top-level `FINAL` aggregate decision for HMI
+scanability. The aggregate remains fail-closed while product spec and
+calibration authority remain missing.
 
 Bootstrap HMI stream payload generation lives in:
 
@@ -148,9 +151,11 @@ contracts/flange_qc_v2/websocket/inspection_snapshot.schema.json
 ```
 
 The current WebSocket endpoint `/ws/inspection` sends one replay-backed
-`inspection.snapshot` payload and closes cleanly. It is contract-only HMI
-streaming for bootstrap clients and does not implement the HMI screen, live
-camera streaming, production deploy, or production decision authority.
+`inspection.snapshot` payload and closes cleanly. The payload includes
+top-level `phase`, `decision`, and `reason_codes` plus detailed `phase_results`
+for the SOP chain. It is contract-only HMI streaming for bootstrap clients and
+does not implement live camera streaming, production deploy, or production
+decision authority.
 
 Bootstrap minimum HMI screen lives in:
 

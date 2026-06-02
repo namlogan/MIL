@@ -187,6 +187,7 @@ class InspectionSnapshot:
     reason_codes: list[str]
     measurements: InspectionMeasurements = field(default_factory=InspectionMeasurements)
     observations: list[DetectorObservation] = field(default_factory=list)
+    phase_results: list[dict[str, Any]] = field(default_factory=list)
     created_at: str = "not_recorded"
 
     def __post_init__(self) -> None:
@@ -206,6 +207,7 @@ class InspectionSnapshot:
         object.__setattr__(self, "phase", phase)
         object.__setattr__(self, "decision", decision)
         object.__setattr__(self, "reason_codes", [str(code).strip() for code in self.reason_codes if str(code).strip()])
+        object.__setattr__(self, "phase_results", _coerce_phase_results(self.phase_results))
         object.__setattr__(self, "created_at", _require_non_empty(self.created_at, "created_at"))
 
     @classmethod
@@ -236,6 +238,7 @@ class InspectionSnapshot:
             "phase": self.phase,
             "decision": self.decision,
             "reason_codes": self.reason_codes,
+            "phase_results": [dict(phase_result) for phase_result in self.phase_results],
             "measurements": self.measurements.to_payload(),
             "observations": [observation.to_payload() for observation in self.observations],
             "created_at": self.created_at,
@@ -257,6 +260,7 @@ class InspectionSnapshot:
             phase=payload.get("phase", ""),
             decision=payload.get("decision", ""),
             reason_codes=list(payload.get("reason_codes", [])),
+            phase_results=list(payload.get("phase_results", [])),
             measurements=InspectionMeasurements.from_payload(payload.get("measurements", {})),
             observations=[
                 DetectorObservation.from_payload(observation)
@@ -264,3 +268,14 @@ class InspectionSnapshot:
             ],
             created_at=payload.get("created_at", ""),
         )
+
+
+def _coerce_phase_results(values: Any) -> list[dict[str, Any]]:
+    if not isinstance(values, list):
+        raise ValidationError("phase_results must be a list")
+    normalized: list[dict[str, Any]] = []
+    for value in values:
+        if not isinstance(value, dict):
+            raise ValidationError("phase_results entries must be objects")
+        normalized.append(dict(value))
+    return normalized

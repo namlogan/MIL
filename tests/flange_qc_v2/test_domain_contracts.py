@@ -31,6 +31,7 @@ class DomainPayloadTests(unittest.TestCase):
         self.assertEqual(payload["phase"], "BOOTSTRAP")
         self.assertEqual(payload["product"]["code"], "UNKNOWN")
         self.assertEqual(payload["measurements"]["length_points"], [])
+        self.assertEqual(payload["phase_results"], [])
         self.assertIn("product_specs_unapproved", payload["reason_codes"])
 
     def test_detector_observation_rejects_bbox_values_outside_unit_interval(self) -> None:
@@ -79,7 +80,12 @@ class WebSocketContractSchemaTests(unittest.TestCase):
         self.assertEqual(schema["title"], "FLANGE QC V2 WebSocket Inspection Snapshot")
         self.assertIn("event_type", schema["required"])
         self.assertIn("decision", schema["required"])
+        self.assertIn("phase_results", schema["required"])
         self.assertEqual(properties["decision"]["enum"], ["PASS", "NG", "BLOCKED", "NOT_EVALUATED", "ASSIST"])
+        phase_result = properties["phase_results"]["items"]
+        self.assertIn("phase", phase_result["required"])
+        self.assertIn("rule_results", phase_result["required"])
+        self.assertIn("authority_blockers", phase_result["required"])
         self.assertEqual(observation["bbox"]["items"]["minimum"], 0)
         self.assertEqual(observation["bbox"]["items"]["maximum"], 1)
 

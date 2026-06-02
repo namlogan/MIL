@@ -37,14 +37,35 @@ class ReplayFrameSourceTests(unittest.TestCase):
 
         self.assertEqual(result.replay_id, "fqv2-phase2-synthetic-001")
         self.assertEqual(result.frame_count, 1)
+        self.assertEqual(result.decision.phase, "FINAL")
         self.assertEqual(result.decision.decision, "BLOCKED")
         self.assertEqual(
             result.decision.reason_codes,
-            ("PRODUCT_SPEC_APPROVAL_MISSING", "CALIBRATION_MISSING"),
+            (
+                "PRODUCT_SPEC_APPROVAL_MISSING",
+                "CALIBRATION_MISSING",
+                "MODEL_REVIEW_REQUIRED",
+                "RULE_POST_MVP_DISABLED",
+            ),
         )
         self.assertFalse(result.decision.production_authority)
+        self.assertEqual(
+            tuple(phase_result.phase for phase_result in result.phase_results),
+            ("PHASE_1", "PHASE_2", "PHASE_3", "PHASE_4"),
+        )
         self.assertEqual(payload["mode"], "no_camera_replay")
-        self.assertEqual(payload["decision"]["phase"], "PHASE_2")
+        self.assertEqual(payload["decision"]["phase"], "FINAL")
+        self.assertEqual(payload["phase_results"][0]["phase"], "PHASE_1")
+        self.assertEqual(
+            payload["phase_results"][0]["reason_codes"],
+            ["PRODUCT_SPEC_APPROVAL_MISSING", "CALIBRATION_MISSING"],
+        )
+        self.assertEqual(payload["phase_results"][2]["decision"], "ASSIST")
+        self.assertEqual(payload["phase_results"][3]["decision"], "ASSIST")
+        self.assertEqual(
+            payload["phase_results"][2]["rule_results"][0]["rule_id"],
+            "M1-SOP-6.4-PUNCH-MARK-001",
+        )
         self.assertEqual(payload["frames"][0]["frame_id"], "frame-001")
 
     def test_replay_manifest_without_frames_is_rejected_explicitly(self) -> None:
