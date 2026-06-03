@@ -7,6 +7,7 @@
 | Product spec | Product group, length/width tolerance, SOP thresholds | QC/domain owner | Versioned JSON config |
 | Calibration | Camera/scale/geometry readiness evidence | Engineering/operator | JSON config and audit DB |
 | Frame source | Replay or camera frame metadata | App runtime | Audit DB reference |
+| Inspection intake | Sanitized camera/replay pipeline payload for one inspection | Camera/model pipeline -> app runtime | Transient plus audit DB |
 | MLOps dataset manifest | Sanitized dataset snapshot metadata, labels, splits, privacy flags | MLOps boundary | JSON contract |
 | MLOps evaluation report | Offline metrics, slice metrics, latency evidence, promotion state | MLOps boundary | JSON contract |
 | Model artifact manifest | Versioned metadata for detector artifact integration | App/MLOps boundary | JSON contract |
@@ -181,6 +182,31 @@ safe fallback evaluators. Replay output includes ordered `phase_results` for
 `PHASE_1` through `PHASE_4` and a top-level `FINAL` aggregate decision for HMI
 scanability. The aggregate remains fail-closed while product spec and
 calibration authority remain missing.
+
+Runtime inspection intake lives in:
+
+```text
+apps/flange_qc_v2/inspection_intake.py
+apps/flange_qc_v2/asgi.py
+contracts/flange_qc_v2/events/inspection_intake.schema.json
+```
+
+`POST /inspection/intake` accepts a production-shaped but sanitized
+`inspection.intake.v1` payload from an upstream camera/replay/model pipeline:
+product code, size group, frame metadata, exactly one of direct measurements or
+boundary corners, and optional detector observations. The endpoint reads product
+specs and calibration only from env/default app configuration; request bodies
+may not supply product spec, calibration, artifact, dataset, model, weights, or
+manifest paths. Boundary-corner payloads use the same calibrated geometry path
+as replay, direct measurements use the same measurement contract, and both paths
+run Phase 1, Phase 2, Phase 3, and Phase 4 through the existing SOP engine.
+When `FLANGE_QC_V2_AUDIT_DB_PATH` is configured, the endpoint initializes the
+SQLite audit store and records the inspection idempotently. This endpoint is the
+pre-camera runtime seam: once hardware and model services provide real sanitized
+metadata, the app can consume it without changing SOP logic. It still returns
+`production_authority=false` and remains blocked from production release until
+product spec, QC/SOP tolerance, model, hardware, audit retention, and release
+gates pass.
 
 Bootstrap HMI stream payload generation lives in:
 

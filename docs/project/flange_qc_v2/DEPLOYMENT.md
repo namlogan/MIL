@@ -47,9 +47,11 @@ Potential secret references:
 3. Build app artifact.
 4. Deploy to staging or shadow-mode environment.
 5. Run health and replay smoke.
-6. Confirm audit DB writes and HMI/WebSocket output.
-7. Attach release and rollback evidence.
-8. Request human release approval.
+6. Run a sanitized `/inspection/intake` smoke payload from the target camera or
+   replay pipeline contract, without request-supplied config/model/data paths.
+7. Confirm audit DB writes and HMI/WebSocket output.
+8. Attach release and rollback evidence.
+9. Request human release approval.
 
 The scaffold validator does not execute any deploy step. Staging or production
 deployment requires a separate release issue, release evidence, smoke evidence,
@@ -73,6 +75,7 @@ Minimum signals:
 - Inspection decision counts by state and reason code.
 - Audit DB write success/failure.
 - Replay smoke result.
+- Runtime inspection intake smoke result.
 - Calibration state.
 - Camera/model availability.
 - Operator feedback volume and unresolved corrections.

@@ -1,0 +1,82 @@
+{
+  "task_id": "FQV2-053",
+  "github_issue": "https://github.com/namlogan/MIL/issues/163",
+  "branch": "agent/163-inspection-intake",
+  "title": "Add production-shaped inspection intake endpoint",
+  "status": "definition_of_ready",
+  "user_business_goal": "Make the app consume real camera-pipeline metadata once camera/model/dataset artifacts arrive by adding a sanitized runtime inspection intake path that reuses existing SOP logic and audit persistence without granting production authority.",
+  "allowed_files": [
+    "apps/flange_qc_v2/**",
+    "contracts/flange_qc_v2/events/**",
+    "tests/flange_qc_v2/**",
+    "docs/project/flange_qc_v2/**",
+    ".ai-factory/gates/flange_qc_v2_fqv2_053_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_053_handoff_2026-06-03.md"
+  ],
+  "out_of_scope": [
+    "live camera SDK loading or capture",
+    "model weights, TensorRT engines, ONNX/PyTorch runtime loading, training code, raw datasets, raw factory images, or notebooks",
+    "product spec approval, QC/SOP tolerance approval, model promotion approval, production PASS/NG authority, production auto-reject, production release/deploy",
+    "secrets, customer data, destructive migrations, billing, legal/compliance behavior, or security boundary changes",
+    "Windmill credential/tunnel/runtime changes",
+    "Memory0 approved record writes"
+  ],
+  "acceptance_criteria": [
+    "Add a runtime inspection intake contract and builder for a single inspection payload with product code, size group, frame metadata, either provided measurements or boundary corners, and optional sanitized detector observations.",
+    "Add POST /inspection/intake that reads product specs and calibration only from env/default repo paths, never request-supplied paths.",
+    "The endpoint evaluates Phase 1, Phase 2, Phase 3, and Phase 4 using existing app logic and returns an inspection.snapshot payload compatible with HMI/audit contracts.",
+    "If FLANGE_QC_V2_AUDIT_DB_PATH is configured, the endpoint initializes audit storage and persists the inspection idempotently.",
+    "The endpoint rejects request-supplied model_path, dataset_path, weights_path, artifact_intake_dir, product_specs_path, calibration_path, and manifest_path.",
+    "Boundary-corner payloads derive width/length/diagonal measurements through calibration; direct measurements still work.",
+    "Unknown products, missing/pending calibration, incomplete geometry, or invalid observations fail closed with explicit errors or BLOCKED decisions.",
+    "Response remains production_authority=false; model observations produce review-only ASSIST, not production PASS or NG.",
+    "Focused, product, and full repository checks pass."
+  ],
+  "required_checks": [
+    "python3 -m unittest tests.flange_qc_v2.test_inspection_intake -v",
+    "python3 -m unittest tests.flange_qc_v2.test_hmi_stream -v",
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 -m compileall -q apps/flange_qc_v2 tests/flange_qc_v2",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m unittest discover -s tests -v",
+    "python3 -m json.tool .ai-factory/gates/flange_qc_v2_fqv2_053_dor.json",
+    "git diff --check"
+  ],
+  "memory_preflight": {
+    "query": "Flange QC v2 runtime inspection intake, camera-pipeline handoff, boundary/corners calibration, parallel QC evidence, audit persistence.",
+    "retrieved_decisions": [
+      "Existing engine handles Phase 1/2 deterministic geometry and Phase 3/4 review-only fallbacks.",
+      "Production authority remains blocked until QC/product/model/hardware/release gates.",
+      "Raw media, model paths, dataset paths, and calibration/product-spec paths must not be request-supplied."
+    ],
+    "retrieved_lessons": [
+      "Fail closed.",
+      "Keep request payload sanitized.",
+      "Derive measurements from boundary plus calibration before SOP evaluation.",
+      "Persist audit evidence idempotently.",
+      "Keep Windmill outside the real-time PASS/NG runtime path."
+    ],
+    "restricted_areas": [
+      "live camera SDK",
+      "model weights or inference runtime",
+      "raw media or customer data",
+      "secrets",
+      "destructive migrations",
+      "production deploy/release",
+      "product spec approval",
+      "QC/SOP tolerance approval",
+      "model promotion"
+    ],
+    "conflicts_found": "ASGI exposed only replay snapshot generation; runtime SOP logic existed but did not yet have a production-shaped sanitized intake endpoint.",
+    "sources_to_verify": [
+      "AGENTS.md",
+      "docs/project/flange_qc_v2/DATA_MODEL.md",
+      "docs/project/flange_qc_v2/USER_FLOWS.md",
+      "apps/flange_qc_v2/asgi.py",
+      "apps/flange_qc_v2/replay.py",
+      "apps/flange_qc_v2/decision_engine.py",
+      "apps/flange_qc_v2/audit.py"
+    ]
+  },
+  "rollback_note": "Revert the FQV2-053 PR to remove the intake endpoint, contract/builder, tests, docs, and gate evidence. No production data, secrets, model artifacts, camera state, migrations, or release state is changed."
+}

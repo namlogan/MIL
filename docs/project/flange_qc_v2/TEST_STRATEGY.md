@@ -62,6 +62,13 @@
   product spec, and calibration paths from env-only configuration, including the
   boundary-derived measurement fixture, while ignoring request-supplied path
   query strings.
+- Runtime inspection intake tests validate that `POST /inspection/intake`
+  accepts sanitized `inspection.intake.v1` payloads with direct measurements or
+  calibrated boundary corners, runs existing Phase 1/2/3/4 SOP evaluation,
+  returns an `inspection.snapshot`, persists audit evidence idempotently when
+  `FLANGE_QC_V2_AUDIT_DB_PATH` is configured, and rejects request-supplied
+  product spec, calibration, artifact, dataset, model, manifest, or weights
+  paths.
 - Domain, HMI stream, and HMI screen tests validate measurement provenance:
   snapshot measurements expose `measurement_source` and sanitized
   `measurement_evidence`, and the HMI renders that source/evidence without

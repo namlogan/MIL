@@ -34,6 +34,35 @@
 10. WebSocket pushes HMI payload to the UI.
 11. QC feedback can attach corrections or notes to the inspection evidence.
 
+## Critical Path: Runtime Inspection Intake
+
+1. Camera/replay/model pipeline prepares one sanitized `inspection.intake.v1`
+   payload with product code, size group, frame metadata, exactly one of direct
+   measurements or boundary corners, and optional detector observations.
+2. The pipeline posts the payload to `POST /inspection/intake`. The request does
+   not include product spec paths, calibration paths, artifact intake paths,
+   dataset paths, model paths, weights paths, manifest paths, raw media, or
+   credentials.
+3. The app loads product specs and calibration from env/default app
+   configuration only: `FLANGE_QC_V2_PRODUCT_SPECS_PATH` and
+   `FLANGE_QC_V2_CALIBRATION_PATH`.
+4. If direct measurements are present, the app validates exactly 3 length
+   points, 3 width points, and 2 diagonals. If boundary corners are present, the
+   app derives those same measurements through calibration scale and records
+   sanitized measurement provenance.
+5. The existing SOP engine evaluates Phase 1, Phase 2, Phase 3, and Phase 4,
+   then returns an `inspection.snapshot` payload with a top-level `FINAL`
+   decision and ordered `phase_results`.
+6. Sanitized detector observations can make Phase 3 `ASSIST` with
+   `MODEL_REVIEW_REQUIRED`; detector observations still never emit production
+   `PASS` or `NG`.
+7. If `FLANGE_QC_V2_AUDIT_DB_PATH` is configured, the app initializes SQLite
+   audit storage and records the inspection idempotently.
+8. The response remains parallel-QC/review-only with
+   `production_authority=false`. Production release, live camera authority,
+   product spec approval, QC/SOP tolerance approval, model promotion, and
+   production auto-reject remain outside this flow.
+
 ## Critical Path: No-Camera HMI Feedback Loop
 
 1. Operator opens `/hmi` while camera hardware is pending.
@@ -170,6 +199,7 @@
 
 - HTTP health endpoint.
 - HTTP replay inspection API at `/inspection/replay`.
+- HTTP runtime inspection intake API at `/inspection/intake`.
 - HTTP QC feedback validation endpoint at `/feedback`.
 - HTTP artifact intake readiness endpoint at `/artifact-intake/status`.
 - HTTP shadow detector metadata endpoint at `/detector/shadow/status`.
@@ -183,6 +213,10 @@
 ## Acceptance Scenarios
 
 - Replay smoke creates an inspection record and WebSocket-compatible payload.
+- Runtime inspection intake accepts sanitized direct measurements or calibrated
+  boundary corners, runs the existing SOP engine, returns an
+  `inspection.snapshot`, persists audit evidence when configured, and rejects
+  request-supplied config/model/data paths.
 - Unknown product cannot PASS.
 - Missing calibration cannot PASS.
 - Diagonal deviation above 0.5 inch produces phase 2 NG.
