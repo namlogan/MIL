@@ -58,6 +58,10 @@
 - Replay and HMI snapshot tests validate ordered SOP `phase_results`, top-level
   `FINAL` fail-closed aggregation, and audit persistence of the full snapshot
   payload.
+- HMI stream endpoint tests validate that `/inspection/replay` can read replay,
+  product spec, and calibration paths from env-only configuration, including the
+  boundary-derived measurement fixture, while ignoring request-supplied path
+  query strings.
 - HMI screen tests and browser evidence validate the operator-facing
   phase-results drilldown renders ordered phase cards, rule ids, compact
   evidence summaries, authority blockers, production-authority state, and a

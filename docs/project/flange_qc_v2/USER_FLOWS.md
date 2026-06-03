@@ -10,7 +10,10 @@
 ## Critical Path: Replay Inspection
 
 1. Operator or CI starts app in replay mode.
-2. App loads runtime config, product specs, calibration state, and detector adapter.
+2. App loads runtime config, product specs, calibration state, and detector
+   adapter. `/inspection/replay` may read optional env-only paths:
+   `FLANGE_QC_V2_REPLAY_MANIFEST_PATH`, `FLANGE_QC_V2_PRODUCT_SPECS_PATH`, and
+   `FLANGE_QC_V2_CALIBRATION_PATH`; request-supplied paths are ignored.
 3. Replay source provides frames.
 4. Vision preprocessing and geometry measurement produce measurements. In
    no-camera shadow replay, a sanitized frame may provide boundary corners; the
