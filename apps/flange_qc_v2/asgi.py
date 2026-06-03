@@ -18,6 +18,7 @@ from apps.flange_qc_v2.domain import ValidationError
 from apps.flange_qc_v2.feedback import QcFeedback
 from apps.flange_qc_v2.health import build_health_snapshot
 from apps.flange_qc_v2.hmi_stream import build_replay_inspection_snapshot
+from apps.flange_qc_v2.inspection_intake import build_inspection_snapshot_from_intake
 
 Scope = dict[str, Any]
 Receive = Callable[[], Awaitable[dict[str, Any]]]
@@ -27,6 +28,10 @@ STATIC_DIR = Path(__file__).resolve().parent / "static"
 HMI_SCREEN = STATIC_DIR / "hmi.html"
 ARTIFACT_INTAKE_ENV = "FLANGE_QC_V2_ARTIFACT_INTAKE_DIR"
 LABELING_REVIEW_PACK_ENV = "FLANGE_QC_V2_LABELING_REVIEW_PACK_PATH"
+PRODUCT_SPECS_ENV = "FLANGE_QC_V2_PRODUCT_SPECS_PATH"
+CALIBRATION_ENV = "FLANGE_QC_V2_CALIBRATION_PATH"
+DEFAULT_PRODUCT_SPECS = REPO_ROOT / "configs/flange_qc_v2/product_specs.bootstrap.json"
+DEFAULT_CALIBRATION = REPO_ROOT / "configs/flange_qc_v2/camera_calibration.synthetic.example.json"
 
 
 async def app(scope: Scope, receive: Receive, send: Send) -> None:
@@ -56,6 +61,28 @@ async def _handle_http(scope: Scope, receive: Receive, send: Send) -> None:
             audit_store.initialize()
             audit_store.ensure_inspection(snapshot)
         await _send_json(send, 200, snapshot.to_payload())
+        return
+    if method == "POST" and path == "/inspection/intake":
+        try:
+            payload = await _read_json_body(receive)
+            snapshot = build_inspection_snapshot_from_intake(
+                payload,
+                product_specs_path=_path_from_env(PRODUCT_SPECS_ENV, DEFAULT_PRODUCT_SPECS),
+                calibration_path=_path_from_env(CALIBRATION_ENV, DEFAULT_CALIBRATION),
+            )
+            audit_store = _audit_store_from_env()
+            response_payload = snapshot.to_payload()
+            if audit_store is not None:
+                audit_store.initialize()
+                audit_store.ensure_inspection(snapshot)
+                response_payload["audit"] = {
+                    "persisted": True,
+                    "inspection_id": snapshot.inspection_id,
+                }
+        except (OSError, ValueError, ValidationError, json.JSONDecodeError) as exc:
+            await _send_json(send, 400, {"detail": str(exc)})
+            return
+        await _send_json(send, 200, response_payload)
         return
     if method == "GET" and path == "/artifact-intake/status":
         await _send_json(send, 200, _artifact_intake_status_from_env())
@@ -176,6 +203,11 @@ def _audit_store_from_env() -> AuditStore | None:
     if not raw_path:
         return None
     return AuditStore(raw_path)
+
+
+def _path_from_env(env_name: str, default_path: Path) -> str | Path:
+    configured = os.environ.get(env_name, "").strip()
+    return configured or default_path
 
 
 def _artifact_intake_status_from_env() -> dict[str, Any]:
