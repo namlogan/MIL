@@ -16,7 +16,7 @@
    `FLANGE_QC_V2_CALIBRATION_PATH`; request-supplied paths are ignored.
 3. Replay source provides frames.
 4. Vision preprocessing and geometry measurement produce measurements. In
-   no-camera shadow replay, a sanitized frame may provide boundary corners; the
+   no-camera parallel-QC replay, a sanitized frame may provide boundary corners; the
    app uses calibration scale to derive length, width, and diagonal measurements
    before running the same SOP rules.
 5. App preserves measurement provenance in the inspection snapshot:
@@ -56,16 +56,18 @@
    well draws a red suspected-region overlay. The overlay is assistive only and
    never grants production PASS/NG authority.
 6. For red alerts, QC can mark `Alert correct` or `False alarm`; the HMI writes
-   those buttons through the existing `/feedback` shadow endpoint as
+   those buttons through the existing `/feedback` parallel-QC evidence endpoint as
    `CONFIRM_BLOCKED` or `MARK_FALSE_POSITIVE`.
 7. Operator inspects the HMI SOP phase-results drilldown to see each phase
    decision, blockers, production-authority state, rule ids, and compact rule
    evidence without opening raw JSON.
 8. HMI shows detector bridge status from `/detector/shadow/status`, including
    ready state, adapter, model reference, labels, approval status, and remaining
-   authority blockers when metadata is available.
+   authority blockers when metadata is available. The route name remains an
+   internal compatibility contract; the HMI presents it as Parallel QC /
+   Review-only model assist.
 9. HMI shows a compact artifact readiness support panel from
-   `/artifact-readiness/status`, including shadow model, live camera, QC
+   `/artifact-readiness/status`, including model assist, live camera, QC
    feedback labeling, production release blocker, and recommended next actions.
    This panel is outside the primary QC tablet viewport so the green/red/amber
    operator signal remains the main QC workflow.
@@ -80,7 +82,7 @@
    inspection.
 14. HMI submits the feedback payload to `/feedback` with the current inspection
    ID and shadow decision.
-15. The feedback contract returns shadow evidence with
+15. The feedback contract returns parallel-QC evidence with
    `production_authority=false` and `PRODUCTION_APPROVAL_REQUIRED`.
 16. When audit persistence is configured, `/feedback` stores the feedback in
    `qc_feedback` and returns audit persistence evidence for the HMI status.
@@ -95,7 +97,8 @@
 2. Operator sets `FLANGE_QC_V2_ARTIFACT_INTAKE_DIR` to that directory before
    starting the app.
 3. HMI calls `/artifact-intake/status` and displays configured state, shadow
-   model readiness, live camera readiness, next task, warnings/errors, and
+   model-readiness compatibility flag as Model Assist, live camera readiness,
+   next task, warnings/errors, and
    artifact names/summaries.
 4. Engineering/operator can call `/artifact-readiness/status`, and HMI can
    display it as a compact support panel, to see the combined readiness report
@@ -111,7 +114,7 @@
 7. If the env var is missing or the bundle is invalid, the HMI stays in a safe
    repair/configuration state and no production authority is granted.
 
-## Critical Path: Shadow Detector Metadata Bridge
+## Critical Path: Parallel-QC Detector Metadata Bridge
 
 1. Operator keeps `FLANGE_QC_V2_ARTIFACT_INTAKE_DIR` pointed at a validated
    metadata-only intake bundle.
@@ -122,7 +125,7 @@
 4. If `ready.shadow_model_integration_issue=true`, the endpoint loads only
    `model_artifact_manifest.json` and returns the `manifest-detector` adapter id,
    model reference, artifact version, labels, evaluation report reference,
-   approval status, shadow mode, production-authority blockers, and
+   approval status, parallel-QC/review-only mode, production-authority blockers, and
    `next_task=shadow_observation_review`.
 5. HMI calls this endpoint and renders the detector bridge status without
    opening raw JSON or changing decision authority.
@@ -144,9 +147,9 @@
    spec approval, QC/SOP tolerance approval, and production release remain
    outside this flow.
 
-## Critical Path: Production-Like Shadow Mode
+## Critical Path: Parallel-QC Production Trial
 
-1. Owner approves shadow-mode runbook and rollback plan.
+1. Owner approves parallel-QC runbook and rollback plan.
 2. App receives replay or live-camera frames in non-authoritative mode.
 3. Deterministic rules may produce NG/BLOCKED, but model-dependent rules remain
    advisory unless model promotion is approved.
@@ -191,12 +194,12 @@
 - HMI renders artifact readiness from `/artifact-readiness/status` as a compact
   support panel outside the primary QC tablet viewport.
 - HMI feedback submits the current inspection ID to `/feedback` and receives
-  shadow-only authority blockers.
-- Shadow detector status returns a safe unconfigured state without env setup and
+  parallel-QC/review-only authority blockers.
+- Parallel-QC detector status returns a safe unconfigured state without env setup and
   returns manifest metadata from the template bundle when intake is ready.
-- Shadow detector observation dry-run returns `detector.result.v1` from sanitized
+- Parallel-QC detector observation dry-run returns `detector.result.v1` from sanitized
   request/observation metadata and rejects request-supplied paths or model refs.
-- Shadow detector observation request validation accepts the checked-in sample
+- Parallel-QC detector observation request validation accepts the checked-in sample
   payload and rejects raw-media source URIs, request-supplied artifact paths,
   model refs, evidence refs, malformed bbox/confidence, and missing files.
 - Replay/HMI snapshots keep observations empty without ready intake and attach

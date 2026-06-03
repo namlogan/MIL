@@ -1,0 +1,85 @@
+{
+  "task_id": "FQV2-052",
+  "github_issue": "https://github.com/namlogan/MIL/issues/161",
+  "branch": "agent/161-parallel-qc-terminology",
+  "title": "Align shadow terminology with parallel QC semantics",
+  "status": "definition_of_ready",
+  "user_business_goal": "Clarify that shadow is the operating lane where the app runs in parallel with real QC, not a fake application mode. QC-facing HMI text and operator-visible health/status should describe the product as real review-only / parallel QC evidence until camera, model, SOP, and release gates approve production authority.",
+  "allowed_files": [
+    "apps/flange_qc_v2/static/hmi.html",
+    "apps/flange_qc_v2/health.py",
+    "apps/flange_qc_v2/domain.py",
+    "tests/flange_qc_v2/test_hmi_screen.py",
+    "tests/flange_qc_v2/test_health.py",
+    "tests/flange_qc_v2/test_domain_contracts.py",
+    "docs/project/flange_qc_v2/DATA_MODEL.md",
+    "docs/project/flange_qc_v2/USER_FLOWS.md",
+    "docs/project/flange_qc_v2/TEST_STRATEGY.md",
+    ".ai-factory/gates/flange_qc_v2_fqv2_052_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_052_handoff_2026-06-03.md"
+  ],
+  "out_of_scope": [
+    "renaming existing endpoint paths, schema fields, audit fields, historical queue records, or contract versions",
+    "live camera capture, camera SDK loading, camera credentials, GPU/hardware validation, or hardware readiness approval",
+    "raw media, raw datasets, customer/factory data, notebooks, model weights, TensorRT engines, model binaries, model deserialization, or inference runtime",
+    "request-supplied file paths for replay/spec/calibration/model selection",
+    "Windmill credential/tunnel/runtime changes",
+    "production deploy/release, secrets, tokens, provider credentials, destructive migrations, production data migration, billing, legal/compliance behavior, or security boundary change",
+    "product spec approval, QC/SOP tolerance approval, model promotion approval, production PASS/NG authority, or production auto-reject behavior",
+    "Memory0 approved record writes"
+  ],
+  "acceptance_criteria": [
+    "HMI visible/operator-facing text no longer labels the application lane as Shadow Model or Detector shadow status.",
+    "HMI uses Parallel QC, Model Assist, and Review-only wording for artifact readiness and detector bridge status while preserving existing internal IDs/endpoints/contracts.",
+    "HMI maps internal task/action names such as shadow_observation_review and submit_shadow_observation_payload into operator-readable parallel-QC labels.",
+    "Health/domain bootstrap state names distinguish implemented parallel-QC SOP logic from production authority and avoid implying a fake or app-only shadow product.",
+    "Documentation explicitly defines shadow as parallel QC operation beside the human QC process, not an application substitute or production approval.",
+    "Existing detector, feedback, artifact, replay, HMI, product CI, and full repo checks pass."
+  ],
+  "required_checks": [
+    "python3 -m unittest tests.flange_qc_v2.test_hmi_screen tests.flange_qc_v2.test_health tests.flange_qc_v2.test_domain_contracts -v",
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 -m compileall -q apps/flange_qc_v2 tests/flange_qc_v2",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m unittest discover -s tests -v",
+    "python3 -m json.tool .ai-factory/gates/flange_qc_v2_fqv2_052_dor.json",
+    "git diff --check",
+    "Browser smoke: open /hmi locally and confirm QC-facing text shows Parallel QC / Model Assist / Review-only without raw shadow task labels."
+  ],
+  "memory_preflight": {
+    "query": "Flange QC v2 shadow terminology, parallel QC operating lane, HMI operator wording, health state authority.",
+    "retrieved_decisions": [
+      "Shadow is an operating lane for running beside human QC and collecting evidence.",
+      "App output remains review-only without production authority until product spec, QC/SOP, model, hardware, and release gates pass.",
+      "Internal contract fields and endpoints may retain shadow names for compatibility."
+    ],
+    "retrieved_lessons": [
+      "QC-facing tablet text should not expose internal lane names when simpler operational wording exists.",
+      "Changing visible labels should preserve existing contracts, endpoint paths, audit fields, and automation wiring."
+    ],
+    "restricted_areas": [
+      "secrets",
+      "raw media/data",
+      "model binaries/deserialization/inference",
+      "live camera/hardware",
+      "destructive migrations",
+      "production deploy/release",
+      "request-supplied file paths",
+      "product spec approval",
+      "QC/SOP tolerance approval",
+      "model promotion",
+      "production PASS/NG authority"
+    ],
+    "conflicts_found": "Operator-visible HMI labels and health state strings used shadow wording that could imply an app mode instead of a parallel-QC operating lane.",
+    "sources_to_verify": [
+      "AGENTS.md",
+      "apps/flange_qc_v2/static/hmi.html",
+      "apps/flange_qc_v2/health.py",
+      "apps/flange_qc_v2/domain.py",
+      "docs/project/flange_qc_v2/DATA_MODEL.md",
+      "docs/project/flange_qc_v2/USER_FLOWS.md",
+      "tests/flange_qc_v2/test_hmi_screen.py"
+    ]
+  },
+  "rollback_note": "Revert the FQV2-052 PR to restore prior HMI labels, health state strings, tests, and docs. No data, secrets, deployment, hardware, model, migration, or release state is changed."
+}

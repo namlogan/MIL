@@ -916,9 +916,9 @@
           <h2>Artifact Intake</h2>
           <div id="artifact-intake-status" class="feedback-status" data-state="idle">FLANGE_QC_V2_ARTIFACT_INTAKE_DIR not configured</div>
           <div class="detail-row"><span class="label">Configured</span><span id="artifact-configured" class="value">false</span></div>
-          <div class="detail-row"><span class="label">Shadow Model</span><span id="artifact-shadow-ready" class="value">false</span></div>
+          <div class="detail-row"><span class="label">Model Assist</span><span id="artifact-shadow-ready" class="value">false</span></div>
           <div class="detail-row"><span class="label">Live Camera</span><span id="artifact-camera-ready" class="value">false</span></div>
-          <div class="detail-row"><span class="label">Next Task</span><span id="artifact-next-task" class="value">configure_artifact_intake</span></div>
+          <div class="detail-row"><span class="label">Next Task</span><span id="artifact-next-task" class="value">configure artifact intake</span></div>
         </div>
 
         <div class="panel">
@@ -936,7 +936,7 @@
         <div class="panel">
           <h2>Artifact Readiness</h2>
           <div id="artifact-readiness-status" class="feedback-status" data-state="idle">artifact_readiness_report.v1 pending</div>
-          <div class="detail-row"><span class="label">Shadow Model</span><span id="artifact-readiness-shadow-model" class="value">blocked</span></div>
+          <div class="detail-row"><span class="label">Model Assist</span><span id="artifact-readiness-shadow-model" class="value">blocked</span></div>
           <div class="detail-row"><span class="label">Live Camera</span><span id="artifact-readiness-live-camera" class="value">blocked</span></div>
           <div class="detail-row"><span class="label">QC Feedback</span><span id="artifact-readiness-qc-feedback" class="value">blocked</span></div>
           <div class="detail-row"><span class="label">Production</span><span id="artifact-readiness-production-release" class="value">blocked</span></div>
@@ -946,15 +946,16 @@
           <h2>Readiness Actions</h2>
           <div class="detail-row"><span class="label">Optional Pack</span><span class="value">FLANGE_QC_V2_LABELING_REVIEW_PACK_PATH</span></div>
           <ul id="artifact-readiness-actions" class="list">
-            <li>configure_artifact_intake</li>
+            <li>configure artifact intake</li>
           </ul>
         </div>
       </section>
 
-      <section class="grid" aria-label="Detector shadow status">
+      <section class="grid" aria-label="Detector parallel QC status">
         <div class="panel">
           <h2>Detector Bridge</h2>
           <div id="detector-shadow-status" class="feedback-status" data-state="idle">FLANGE_QC_V2_ARTIFACT_INTAKE_DIR not configured</div>
+          <div class="detail-row"><span class="label">Lane</span><span class="value">Parallel QC / Review-only</span></div>
           <div class="detail-row"><span class="label">Ready</span><span id="detector-shadow-ready" class="value">false</span></div>
           <div class="detail-row"><span class="label">Adapter</span><span id="detector-shadow-adapter" class="value">manifest-detector pending</span></div>
           <div class="detail-row"><span class="label">Approval</span><span id="detector-shadow-approval-status" class="value">none</span></div>
@@ -1144,8 +1145,16 @@
         const evidence = measurements && measurements.measurement_evidence
           ? measurements.measurement_evidence
           : {};
-        fields.measurementSource.textContent = source;
+        fields.measurementSource.textContent = formatMeasurementSource(source);
         fields.measurementEvidence.textContent = summarizeEvidence(evidence);
+      }
+
+      function formatMeasurementSource(source) {
+        const labels = {
+          provided_measurements: "provided measurements",
+          boundary_corners_calibrated_shadow: "boundary corners + calibration (parallel QC)"
+        };
+        return labels[source] || String(source).split("_").join(" ");
       }
 
       function renderQcTabletViewport(payload) {
@@ -1510,7 +1519,7 @@
         fields.artifactShadowReady.textContent = String(Boolean(ready.shadow_model_integration_issue));
         fields.artifactCameraReady.textContent = String(Boolean(ready.live_camera_implementation_issue));
         fields.artifactNextTask.textContent = payload.next_issue && payload.next_issue.recommended_task
-          ? payload.next_issue.recommended_task
+          ? formatTaskLabel(payload.next_issue.recommended_task)
           : "none";
         renderArtifactIntakeArtifacts(payload.artifacts);
       }
@@ -1522,10 +1531,10 @@
           return "FLANGE_QC_V2_ARTIFACT_INTAKE_DIR not configured";
         }
         if (payload.ok && warnings.length) {
-          return `valid with warning: ${warnings[0]}`;
+          return `parallel QC metadata warning: ${warnings[0]}`;
         }
         if (payload.ok) {
-          return "valid artifact intake metadata";
+          return "parallel QC artifact metadata valid";
         }
         return errors.length ? `needs repair: ${errors[0]}` : "artifact intake needs repair";
       }
@@ -1583,7 +1592,7 @@
         fields.artifactReadinessLiveCamera.textContent = summarizeReadinessLane(liveCamera);
         fields.artifactReadinessQcFeedback.textContent = qcFeedback.ready_for_labeling_review
           ? `ready: ${qcFeedback.source_record_count || 0} feedback records`
-          : `blocked: ${qcFeedback.recommended_task || "collect_qc_feedback"}`;
+          : `blocked: ${formatTaskLabel(qcFeedback.recommended_task || "collect_qc_feedback")}`;
         fields.artifactReadinessProductionRelease.textContent = summarizeReadinessLane(productionRelease);
         renderArtifactReadinessActions(payload.recommended_next_actions);
       }
@@ -1599,7 +1608,7 @@
         if (warnings.length) {
           return `artifact readiness warning: ${warnings[0]}`;
         }
-        return "artifact readiness metadata loaded";
+        return "parallel QC readiness metadata loaded";
       }
 
       function summarizeReadinessLane(lane) {
@@ -1609,7 +1618,11 @@
         const ready = Boolean(lane.ready || lane.ok);
         const state = lane.state || (ready ? "ready" : "blocked");
         const task = lane.recommended_task || lane.reason || "";
-        return task ? `${state}: ${task}` : state;
+        const stateLabel = formatReadinessState(state);
+        if (state === "ready_for_shadow_observation_review" && task === "shadow_observation_review") {
+          return stateLabel;
+        }
+        return task ? `${stateLabel}: ${formatTaskLabel(task)}` : stateLabel;
       }
 
       function renderArtifactReadinessActions(actions) {
@@ -1617,9 +1630,36 @@
         fields.artifactReadinessActions.innerHTML = "";
         items.forEach((action) => {
           const item = document.createElement("li");
-          item.textContent = action;
+          item.textContent = formatActionLabel(action);
           fields.artifactReadinessActions.appendChild(item);
         });
+      }
+
+      function formatReadinessState(state) {
+        const labels = {
+          ready_for_shadow_observation_review: "ready for parallel QC observation review"
+        };
+        return labels[state] || String(state).split("_").join(" ");
+      }
+
+      function formatTaskLabel(task) {
+        const labels = {
+          configure_artifact_intake: "configure artifact intake",
+          fix_artifact_intake: "fix artifact intake",
+          shadow_observation_review: "parallel QC observation review",
+          collect_qc_feedback: "collect QC feedback",
+          collect_more_qc_feedback: "collect more QC feedback",
+          schedule_camera_hardware_readiness: "schedule camera hardware readiness",
+          keep_production_release_blocked: "keep production release blocked"
+        };
+        return labels[task] || String(task).split("_").join(" ");
+      }
+
+      function formatActionLabel(action) {
+        const labels = {
+          submit_shadow_observation_payload: "submit observation evidence"
+        };
+        return labels[action] || formatTaskLabel(action);
       }
 
       function renderDetectorShadowStatus(payload) {
@@ -1640,7 +1680,7 @@
           return "FLANGE_QC_V2_ARTIFACT_INTAKE_DIR not configured";
         }
         if (payload.ready) {
-          return `ready: ${payload.adapter_id || "manifest-detector"}`;
+          return `Review-only ready: ${payload.adapter_id || "manifest-detector"}`;
         }
         return errors.length ? `needs repair: ${errors[0]}` : "detector bridge not ready";
       }
@@ -1766,14 +1806,14 @@
           });
           const payload = await response.json();
           if (!response.ok) {
-            throw new Error(payload.detail || `detector shadow ${response.status}`);
+            throw new Error(payload.detail || `detector bridge ${response.status}`);
           }
           renderDetectorShadowStatus(payload);
         } catch (error) {
           renderDetectorShadowStatus({
             configured: false,
             ready: false,
-            errors: [`detector shadow error: ${error.message}`],
+            errors: [`detector bridge error: ${error.message}`],
             labels: [],
             authority_blockers: ["MODEL_APPROVAL_REQUIRED", "PRODUCTION_APPROVAL_REQUIRED"]
           });

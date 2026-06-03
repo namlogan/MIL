@@ -27,11 +27,11 @@
   points, 3 width points, and 2 diagonals consumed by product tolerance logic.
   Missing calibration scale fails closed, and derived evidence remains
   `production_authority=false`.
-- Phase 1 length/width shadow evaluation blocks before product spec,
+- Phase 1 length/width parallel-QC evaluation blocks before product spec,
   calibration, and geometry evidence are complete; otherwise it emits rule-level
   evidence with `all_points_must_pass_bootstrap`, bounds, min/max/average, and
   out-of-tolerance point indexes.
-- Length or width points outside product tolerance return shadow `NG` with
+- Length or width points outside product tolerance return parallel-QC `NG` with
   `LENGTH_OUT_OF_TOLERANCE` and/or `WIDTH_OUT_OF_TOLERANCE`; production
   authority remains false until QC/SOP tolerance approval.
 - Diagonal deviation greater than 0.5 inch returns NG in phase 2.
@@ -41,7 +41,7 @@
   rules return `ASSIST`, and fallback aggregation never maps disabled or review
   states to `PASS`.
 - Health endpoint tests validate that the SOP decision engine is reported as
-  `shadow_implemented_requires_qc_sop_approval`, not `not_implemented`, while
+  `parallel_qc_implemented_requires_qc_sop_approval`, not `not_implemented`, while
   `decision_authority=none` and QC/SOP approval blockers remain present.
 - Detector returns observations only.
 - Missing model produces `NOT_EVALUATED`, `ASSIST`, or `BLOCKED` for model-dependent rules.
@@ -65,7 +65,7 @@
 - Domain, HMI stream, and HMI screen tests validate measurement provenance:
   snapshot measurements expose `measurement_source` and sanitized
   `measurement_evidence`, and the HMI renders that source/evidence without
-  changing shadow-only production authority.
+  changing parallel-QC review-only production authority.
 - HMI screen tests and browser evidence validate the operator-facing
   phase-results drilldown renders ordered phase cards, rule ids, compact
   evidence summaries, authority blockers, production-authority state, and a
@@ -79,18 +79,22 @@
 - HMI screen tests and browser evidence validate the signal-first QC tablet
   viewport: measurement strip, green/red/amber operator states, suspected-region
   bbox overlay well, and alarm-correct/false-alarm bindings to the existing
-  shadow feedback endpoint.
+  parallel-QC feedback endpoint.
 - HMI screen tests and browser evidence validate that the QC tablet top strip
   separates product number, measurement SOP scope, and stitch SOP scope. Browser
   evidence should include the common case where the overall banner is red
   `CHECK`, measurement is green `OK`, and stitch is red `CHECK`.
+- HMI screen tests and browser evidence validate that operator-visible readiness
+  text uses `Parallel QC`, `Model Assist`, and `Review-only` wording, while
+  internal compatibility fields and `/detector/shadow/*` endpoints remain
+  unchanged.
 - Artifact intake endpoint tests validate safe unconfigured state and configured
   template readiness from `FLANGE_QC_V2_ARTIFACT_INTAKE_DIR`; configured intake
   keeps `ready.shadow_model_integration_issue=true` for compatibility while
   returning `next_issue.recommended_task=shadow_observation_review` and
   `submit_shadow_observation_payload`. HMI screen tests and browser evidence
   validate the metadata-only readiness panel.
-- Shadow detector bridge tests validate that `/detector/shadow/status` reads
+- Parallel-QC detector bridge tests validate that `/detector/shadow/status` reads
   only `FLANGE_QC_V2_ARTIFACT_INTAKE_DIR`, reports safe unconfigured state, and
   returns manifest metadata only after artifact intake is ready. Ready status
   must expose `ready_for_shadow_observation_review`,
@@ -98,14 +102,14 @@
   `submit_shadow_observation_payload`. Adapter tests prove
   `ManifestDetectorAdapter` remains review-only and cannot emit production
   PASS/NG authority.
-- Shadow detector observation dry-run tests validate that
+- Parallel-QC detector observation dry-run tests validate that
   `/detector/shadow/observations` reads manifest metadata only from
   `FLANGE_QC_V2_ARTIFACT_INTAKE_DIR`, returns `detector.result.v1` for
   sanitized observations, fills model/evidence refs from the manifest, returns
   `NOT_EVALUATED` without observations, and rejects missing intake,
   request-supplied paths, request-supplied model/evidence refs, raw source URIs,
   invalid labels, invalid bbox/confidence, and production authority.
-- Shadow detector observation request contract tests validate
+- Parallel-QC detector observation request contract tests validate
   `shadow_detector_observation_request.v1`, the checked-in sample payload, and
   `scripts/flange_qc_v2/validate_shadow_detector_observations.py`; the validator
   must accept sanitized label/confidence/bbox metadata and reject raw-media
@@ -119,7 +123,7 @@
   invalid observation rejection, safe empty observations without artifact intake,
   and manifest-filled review-only observations when artifact intake is ready.
 - Phase 3 decision-engine, replay, and HMI stream tests validate sanitized
-  detector observations flow into shadow SOP evidence: missing observations
+  detector observations flow into parallel-QC SOP evidence: missing observations
   return `NOT_EVALUATED` with `MODEL_MISSING`, relevant observations return
   `ASSIST` with matched labels/confidence/bbox evidence, and neither path grants
   production authority or emits `PASS`/`NG`.
@@ -142,7 +146,7 @@
   missing intake, and keeps `/artifact-readiness/status` env-only.
 - HMI screen tests and browser evidence validate that artifact readiness renders
   as a compact support panel outside the primary QC tablet viewport, fetches
-  `/artifact-readiness/status`, displays shadow model, live camera, QC feedback,
+  `/artifact-readiness/status`, displays model assist, live camera, QC feedback,
   production release, and recommended next actions, and does not change QC
   pass/fail visual semantics.
 
@@ -172,7 +176,7 @@ template bundle validates, raw media/model/secrets-like files are rejected, and
 dataset/evaluation/model references stay consistent before a shadow model
 integration issue is opened.
 
-Shadow detector metadata bridge tests use the same sanitized artifact intake
+Parallel-QC detector metadata bridge tests use the same sanitized artifact intake
 template and synthetic detector requests. They must not add model weights,
 TensorRT/ONNX/PyTorch runtimes, camera SDKs, live capture, raw media, raw
 datasets, or production model promotion evidence.

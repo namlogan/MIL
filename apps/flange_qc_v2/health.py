@@ -18,7 +18,7 @@ def build_health_snapshot() -> dict[str, Any]:
         "subsystems": deepcopy(SubsystemHealth.bootstrap().to_payload()),
         "model_boundary": {
             "contract_version": MODEL_ARTIFACT_CONTRACT_VERSION,
-            "state": "manifest_ready_shadow_only",
+            "state": "manifest_ready_parallel_qc_only",
             "production_authority": False,
             "approval_required": [
                 "MODEL_APPROVAL_REQUIRED",

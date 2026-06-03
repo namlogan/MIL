@@ -89,7 +89,7 @@ class DomainPayloadTests(unittest.TestCase):
         self.assertEqual(payload["camera"], "unavailable")
         self.assertEqual(payload["model"], "unavailable")
         self.assertEqual(payload["product_specs"], "draft_requires_qc_owner_approval")
-        self.assertEqual(payload["sop_decision_engine"], "shadow_implemented_requires_qc_sop_approval")
+        self.assertEqual(payload["sop_decision_engine"], "parallel_qc_implemented_requires_qc_sop_approval")
 
 
 class WebSocketContractSchemaTests(unittest.TestCase):
