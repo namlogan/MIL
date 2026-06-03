@@ -39,7 +39,7 @@ def asgi_get_json(path: str) -> dict[str, object]:
 
 
 class ArtifactReadinessReportTests(unittest.TestCase):
-    def test_report_marks_shadow_ready_but_keeps_camera_and_production_blocked(self) -> None:
+    def test_report_advances_shadow_lane_to_observation_review_without_production_authority(self) -> None:
         intake_result = validate_artifact_intake(TEMPLATE_DIR, repo_root=REPO_ROOT)
         feedback_pack = self._labeling_review_pack(source_record_count=2)
 
@@ -53,7 +53,8 @@ class ArtifactReadinessReportTests(unittest.TestCase):
         self.assertEqual(report["contract_version"], "artifact_readiness_report.v1")
         self.assertTrue(report["lanes"]["artifact_intake"]["ok"])
         self.assertTrue(report["lanes"]["shadow_model"]["ready"])
-        self.assertEqual(report["lanes"]["shadow_model"]["recommended_task"], "shadow_model_integration")
+        self.assertEqual(report["lanes"]["shadow_model"]["state"], "ready_for_shadow_observation_review")
+        self.assertEqual(report["lanes"]["shadow_model"]["recommended_task"], "shadow_observation_review")
         self.assertFalse(report["lanes"]["live_camera"]["ready"])
         self.assertIn(
             "CAMERA_HARDWARE_APPROVAL_REQUIRED",
@@ -63,7 +64,8 @@ class ArtifactReadinessReportTests(unittest.TestCase):
         self.assertEqual(report["lanes"]["qc_feedback"]["source_record_count"], 2)
         self.assertFalse(report["lanes"]["production_release"]["ready"])
         self.assertFalse(report["production_authority"])
-        self.assertIn("open_shadow_model_integration_issue", report["recommended_next_actions"])
+        self.assertIn("submit_shadow_observation_payload", report["recommended_next_actions"])
+        self.assertNotIn("open_shadow_model_integration_issue", report["recommended_next_actions"])
         self.assertIn("schedule_camera_hardware_readiness", report["recommended_next_actions"])
         self.assertNotIn("payload_json", json.dumps(report))
         self.assertNotIn("records", report["lanes"]["qc_feedback"])
@@ -220,6 +222,8 @@ class ArtifactReadinessReportTests(unittest.TestCase):
         self.assertFalse(body["lanes"]["live_camera"]["ready"])
         self.assertTrue(body["lanes"]["qc_feedback"]["ready_for_labeling_review"])
         self.assertEqual(body["lanes"]["qc_feedback"]["source_record_count"], 3)
+        self.assertIn("submit_shadow_observation_payload", body["recommended_next_actions"])
+        self.assertNotIn("open_shadow_model_integration_issue", body["recommended_next_actions"])
         self.assertFalse(body["production_authority"])
         self.assertNotIn("records", json.dumps(body))
 

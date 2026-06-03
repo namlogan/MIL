@@ -341,8 +341,11 @@ scripts/flange_qc_v2/build_artifact_readiness_report.py
 
 It consumes the artifact intake validation result and an optional QC labeling
 review pack, then emits a metadata-only report with readiness lanes for artifact
-intake, shadow model integration, live camera implementation, QC feedback
-labeling review, and production release. The report records blockers and next
+intake, shadow observation review, live camera implementation, QC feedback
+labeling review, and production release. After the shadow detector metadata
+bridge and request contract are present, a ready shadow lane recommends
+`shadow_observation_review` and `submit_shadow_observation_payload` instead of
+opening another shadow integration issue. The report records blockers and next
 actions, but always returns `production_authority=false` and does not include
 raw feedback rows, raw media, raw datasets, model binaries, credentials, or
 release approval.
@@ -354,7 +357,7 @@ The endpoint does not accept request-supplied paths or change QC/operator
 decision authority.
 The HMI renders this endpoint as a compact artifact readiness support panel
 outside the primary QC tablet viewport. It displays lane summaries for shadow
-model integration, live camera implementation, QC feedback labeling review, the
+observation review, live camera implementation, QC feedback labeling review, the
 production release blocker, and recommended next actions while keeping the main
 green/red/amber QC signal unchanged.
 

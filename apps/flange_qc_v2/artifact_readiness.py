@@ -92,11 +92,11 @@ def _artifact_intake_lane(result: dict[str, Any]) -> dict[str, Any]:
 def _shadow_model_lane(result: dict[str, Any]) -> dict[str, Any]:
     ready = _ready_flag(result, "shadow_model_integration_issue")
     errors = _strings(result.get("errors", []))
-    recommended_task = "shadow_model_integration" if ready else "fix_artifact_intake"
+    recommended_task = "shadow_observation_review" if ready else "fix_artifact_intake"
     blockers = [] if ready else (errors or ["artifact_intake_not_ready"])
     return {
         "ready": ready,
-        "state": "ready_for_shadow_integration" if ready else "blocked",
+        "state": "ready_for_shadow_observation_review" if ready else "blocked",
         "recommended_task": recommended_task,
         "blockers": blockers,
         "authority_blockers": ["MODEL_PROMOTION_APPROVAL_REQUIRED", "PRODUCTION_APPROVAL_REQUIRED"],
@@ -154,7 +154,7 @@ def _recommended_next_actions(
     if not artifact_lane["ok"]:
         actions.append(str(artifact_lane.get("recommended_task") or "fix_artifact_intake"))
     if shadow_lane["ready"]:
-        actions.append("open_shadow_model_integration_issue")
+        actions.append("submit_shadow_observation_payload")
     if not live_camera_lane["ready"]:
         actions.append("schedule_camera_hardware_readiness")
     if qc_feedback_lane["ready_for_labeling_review"]:
