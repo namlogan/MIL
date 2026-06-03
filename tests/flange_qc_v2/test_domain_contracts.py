@@ -62,6 +62,27 @@ class DomainPayloadTests(unittest.TestCase):
                 unit="inch",
             )
 
+    def test_measurements_preserve_shadow_source_and_evidence(self) -> None:
+        measurements = InspectionMeasurements(
+            length_points=[75.0, 75.0, 75.0],
+            width_points=[37.5, 37.5, 37.5],
+            diagonals=[83.852549, 83.852549],
+            unit="inch",
+            measurement_source="boundary_corners_calibrated_shadow",
+            measurement_evidence={
+                "boundary_source": "synthetic_boundary",
+                "calibration_method": "top_down_boundary_corners_shadow_v1",
+            },
+        )
+
+        payload = measurements.to_payload()
+        parsed = InspectionMeasurements.from_payload(payload)
+
+        self.assertEqual(payload["measurement_source"], "boundary_corners_calibrated_shadow")
+        self.assertEqual(payload["measurement_evidence"]["boundary_source"], "synthetic_boundary")
+        self.assertEqual(parsed.measurement_source, "boundary_corners_calibrated_shadow")
+        self.assertEqual(parsed.measurement_evidence["calibration_method"], "top_down_boundary_corners_shadow_v1")
+
     def test_subsystem_health_domain_model_keeps_bootstrap_states_explicit(self) -> None:
         payload = SubsystemHealth.bootstrap().to_payload()
 
@@ -82,6 +103,9 @@ class WebSocketContractSchemaTests(unittest.TestCase):
         self.assertIn("decision", schema["required"])
         self.assertIn("phase_results", schema["required"])
         self.assertEqual(properties["decision"]["enum"], ["PASS", "NG", "BLOCKED", "NOT_EVALUATED", "ASSIST"])
+        self.assertIn("measurement_source", properties["measurements"]["required"])
+        self.assertIn("measurement_evidence", properties["measurements"]["required"])
+        self.assertEqual(properties["measurements"]["properties"]["measurement_evidence"]["type"], "object")
         phase_result = properties["phase_results"]["items"]
         self.assertIn("phase", phase_result["required"])
         self.assertIn("rule_results", phase_result["required"])

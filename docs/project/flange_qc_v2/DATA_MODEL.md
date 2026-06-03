@@ -87,6 +87,14 @@ If those env vars are unset, the app uses the checked-in bootstrap fixtures.
 HTTP query parameters and request bodies never choose replay/spec/calibration
 file paths.
 
+Inspection snapshot measurements include non-authoritative provenance metadata:
+`measurement_source` identifies whether values came from
+`provided_measurements` or `boundary_corners_calibrated_shadow`, and
+`measurement_evidence` carries sanitized boundary/calibration details for HMI
+and QA review. This evidence does not approve product specs, QC/SOP tolerances,
+live camera calibration, model promotion, production PASS/NG authority, or
+production release.
+
 Bootstrap calibration validation lives in:
 
 ```text

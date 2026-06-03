@@ -62,6 +62,10 @@
   product spec, and calibration paths from env-only configuration, including the
   boundary-derived measurement fixture, while ignoring request-supplied path
   query strings.
+- Domain, HMI stream, and HMI screen tests validate measurement provenance:
+  snapshot measurements expose `measurement_source` and sanitized
+  `measurement_evidence`, and the HMI renders that source/evidence without
+  changing shadow-only production authority.
 - HMI screen tests and browser evidence validate the operator-facing
   phase-results drilldown renders ordered phase cards, rule ids, compact
   evidence summaries, authority blockers, production-authority state, and a

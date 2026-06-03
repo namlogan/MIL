@@ -19,12 +19,16 @@
    no-camera shadow replay, a sanitized frame may provide boundary corners; the
    app uses calibration scale to derive length, width, and diagonal measurements
    before running the same SOP rules.
-5. Detector adapter returns observations when available.
-6. SOP rule engine evaluates product, calibration, geometry, and model-dependent rules.
-7. Inspection decision emits PASS, NG, BLOCKED, NOT_EVALUATED, or ASSIST reason codes.
-8. Audit DB stores inspection and rule evidence.
-9. WebSocket pushes HMI payload to the UI.
-10. QC feedback can attach corrections or notes to the inspection evidence.
+5. App preserves measurement provenance in the inspection snapshot:
+   `provided_measurements` for precomputed replay values or
+   `boundary_corners_calibrated_shadow` with sanitized boundary/calibration
+   evidence for boundary-derived values.
+6. Detector adapter returns observations when available.
+7. SOP rule engine evaluates product, calibration, geometry, and model-dependent rules.
+8. Inspection decision emits PASS, NG, BLOCKED, NOT_EVALUATED, or ASSIST reason codes.
+9. Audit DB stores inspection and rule evidence.
+10. WebSocket pushes HMI payload to the UI.
+11. QC feedback can attach corrections or notes to the inspection evidence.
 
 ## Critical Path: No-Camera HMI Feedback Loop
 
