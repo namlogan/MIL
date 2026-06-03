@@ -323,8 +323,8 @@ docs/project/flange_qc_v2/ARTIFACT_INTAKE.md
 
 The intake validator coordinates the dataset manifest, evaluation report, model
 artifact manifest, and camera boundary into one JSON readiness result. It can
-recommend a shadow model integration issue when metadata is consistent, while
-keeping live camera implementation blocked until hardware readiness approval.
+recommend shadow observation review when metadata is consistent, while keeping
+live camera implementation blocked until hardware readiness approval.
 The app exposes this readiness through `GET /artifact-intake/status`, reading
 only `FLANGE_QC_V2_ARTIFACT_INTAKE_DIR`. The HMI renders the endpoint as a
 metadata-only readiness panel with configured state, readiness flags, next task,

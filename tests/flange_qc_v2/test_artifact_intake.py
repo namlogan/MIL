@@ -53,7 +53,8 @@ class ArtifactIntakeTemplateTests(unittest.TestCase):
         )
         self.assertTrue(result["ready"]["shadow_model_integration_issue"])
         self.assertFalse(result["ready"]["live_camera_implementation_issue"])
-        self.assertEqual(result["next_issue"]["recommended_task"], "shadow_model_integration")
+        self.assertEqual(result["next_issue"]["recommended_task"], "shadow_observation_review")
+        self.assertIn("submit_shadow_observation_payload", result["next_issue"]["recommended_next_actions"])
 
     def test_cli_emits_json_validation_result(self) -> None:
         completed = subprocess.run(
@@ -108,7 +109,8 @@ class ArtifactIntakeStatusEndpointTests(unittest.TestCase):
         )
         self.assertTrue(body["ready"]["shadow_model_integration_issue"])
         self.assertFalse(body["ready"]["live_camera_implementation_issue"])
-        self.assertEqual(body["next_issue"]["recommended_task"], "shadow_model_integration")
+        self.assertEqual(body["next_issue"]["recommended_task"], "shadow_observation_review")
+        self.assertIn("submit_shadow_observation_payload", body["next_issue"]["recommended_next_actions"])
         self.assertFalse(body["production_authority"])
 
 
