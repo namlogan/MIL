@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from apps.flange_qc_v2.domain import InspectionSnapshot, ValidationError
-from apps.flange_qc_v2.feedback import QcFeedback
+from apps.flange_qc_v2.feedback import FEEDBACK_EXPORT_CONTRACT_VERSION, QcFeedback
 
 
 @dataclass(frozen=True)
@@ -53,9 +53,6 @@ MIGRATIONS = (
         """,
     ),
 )
-
-
-FEEDBACK_EXPORT_CONTRACT_VERSION = "qc_feedback_export.v1"
 
 
 class AuditStore:
