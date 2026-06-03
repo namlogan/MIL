@@ -1,0 +1,81 @@
+{
+  "task_id": "FQV2-038",
+  "github_issue": "https://github.com/namlogan/MIL/issues/133",
+  "branch": "agent/133-labeling-review-pack",
+  "title": "Generate MLOps labeling review pack from QC feedback export",
+  "status": "definition_of_ready",
+  "user_business_goal": "Turn validated QC feedback export JSONL into a sanitized labeling review pack for no-hardware MLOps/data preparation.",
+  "allowed_files": [
+    "apps/flange_qc_v2/feedback.py",
+    "scripts/flange_qc_v2/**",
+    "tests/flange_qc_v2/**",
+    "docs/project/flange_qc_v2/DATA_MODEL.md",
+    "docs/project/flange_qc_v2/DATASET_MLOPS_HANDOFF.md",
+    "docs/project/flange_qc_v2/TEST_STRATEGY.md",
+    ".ai-factory/gates/flange_qc_v2_fqv2_038_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_038_handoff_2026-06-03.md"
+  ],
+  "out_of_scope": [
+    "raw images, videos, raw datasets, customer/factory data, notebooks, model weights, TensorRT engines, model binaries, or model execution",
+    "live camera capture, camera SDK loading, camera credentials, GPU/hardware validation, or hardware readiness approval",
+    "production deploy/release, secrets, tokens, provider credentials, destructive migrations, production data migration, billing, legal/compliance behavior, or security boundary change",
+    "product spec approval, QC/SOP tolerance approval, model promotion approval, production PASS/NG authority, or production auto-reject behavior",
+    "Memory0 approved record writes",
+    "Windmill runtime secrets/logs or .windmill/runtime/** changes"
+  ],
+  "acceptance_criteria": [
+    "Add an app-level helper that builds a labeling review pack from validated qc_feedback_export.v1 records.",
+    "The pack includes contract version, source record count, product counts, feedback type counts, inspection decision counts, shadow decision counts, detector label counts, and recommended next actions.",
+    "The pack fails closed if input records do not pass the existing QC feedback export validator.",
+    "The pack does not include raw media, raw datasets, full payload dumps, credentials, model weights, model binaries, or production authority.",
+    "Add a CLI under scripts/flange_qc_v2/** that reads a QC feedback export JSONL file and writes the pack JSON to stdout or an output file.",
+    "Empty export JSONL produces a valid pack with zero counts and a collect-more-feedback next action.",
+    "Update MLOps/data-model/test docs for the labeling review pack.",
+    "Existing export, export validation, audit, HMI, replay, detector, and product CI behavior remains valid."
+  ],
+  "required_checks": [
+    "python3 -m unittest tests.flange_qc_v2.test_feedback_export -v",
+    "python3 -m unittest tests.flange_qc_v2.test_feedback -v",
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 -m compileall -q apps/flange_qc_v2 tests/flange_qc_v2 scripts/flange_qc_v2",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m unittest discover -s tests -v",
+    "git diff --check",
+    "python3 -m json.tool .ai-factory/gates/flange_qc_v2_fqv2_038_dor.json"
+  ],
+  "memory_preflight": {
+    "query": "Flange QC v2 MLOps labeling review pack, QC feedback export, FQV2-037 validator, no-camera dataset preparation.",
+    "retrieved_decisions": [
+      "QC feedback export is sanitized metadata only.",
+      "Validator must pass before downstream use.",
+      "MLOps owns raw dataset/model training.",
+      "Feedback cannot grant production authority."
+    ],
+    "retrieved_lessons": [
+      "Convert metadata into reviewable planning artifacts while keeping raw data out of app repo.",
+      "Fail closed on malformed or authority-expanding input."
+    ],
+    "restricted_areas": [
+      "raw media/data",
+      "model weights/binaries/inference",
+      "camera hardware/SDK/credentials",
+      "secrets",
+      "production deploy/release",
+      "destructive migrations",
+      "product spec approval",
+      "QC/SOP tolerance approval",
+      "model promotion",
+      "production PASS/NG authority"
+    ],
+    "conflicts_found": "none",
+    "sources_to_verify": [
+      "AGENTS.md",
+      ".ai-factory/RULES.md",
+      "docs/project/flange_qc_v2/DATASET_MLOPS_HANDOFF.md",
+      "apps/flange_qc_v2/feedback.py",
+      "scripts/flange_qc_v2/validate_qc_feedback_export.py",
+      "tests/flange_qc_v2/test_feedback_export.py"
+    ]
+  },
+  "rollback_note": "Revert the FQV2-038 PR to remove the labeling review pack helper, CLI, tests, docs, and gate evidence. Existing QC feedback export, export validation, audit DB schema, HMI, replay, detector bridge, artifact intake, and feedback endpoint behavior remain valid."
+}

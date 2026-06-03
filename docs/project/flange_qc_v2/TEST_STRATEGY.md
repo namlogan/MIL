@@ -90,6 +90,9 @@
   schema, successful JSONL validation, empty-file validation, and fail-closed
   rejection of full payload dumps, `production_authority=true`, raw-media-like
   references, malformed bbox values, missing fields, and missing input files.
+- QC feedback labeling review pack tests validate aggregate counts, empty-pack
+  next actions, fail-closed invalid input, CLI JSON output, and absence of raw
+  payload dumps or production authority.
 
 ## Fixtures And Test Data
 
@@ -132,6 +135,9 @@ metadata only. JSONL records must not include raw media, raw datasets, full
 payload dumps, model weights, notebooks, credentials, or production authority.
 The JSONL validator must run before any exported feedback is used for MLOps
 labeling review.
+The labeling review pack must stay aggregate-only and must not include raw media,
+raw datasets, full feedback rows, model weights, notebooks, credentials, or
+production authority.
 
 ## Agent Verification Rules
 

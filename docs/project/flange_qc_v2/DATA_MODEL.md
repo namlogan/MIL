@@ -237,6 +237,12 @@ datasets, full inspection payload JSON, model binaries, credentials, or
 production authority. The validator accepts empty JSONL files, validates each
 record against `qc_feedback_export.v1`, rejects extra payload dump fields,
 rejects raw-media-like references, and requires `production_authority=false`.
+The labeling review pack builder consumes validated export rows and emits only
+aggregate planning metadata: source record count, product counts, feedback type
+counts, inspection/shadow decision counts, detector label counts, recommended
+next actions, `production_authority=false`, and authority blockers. The pack
+does not include individual feedback rows, raw media, raw datasets, model
+binaries, credentials, or production authority.
 
 Bootstrap image quality evidence lives in:
 

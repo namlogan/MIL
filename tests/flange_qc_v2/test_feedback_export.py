@@ -7,8 +7,9 @@ from pathlib import Path
 
 from apps.flange_qc_v2.audit import AuditStore, FEEDBACK_EXPORT_CONTRACT_VERSION
 from apps.flange_qc_v2.domain import BoundingBox, DetectorObservation, InspectionSnapshot
-from apps.flange_qc_v2.feedback import QcFeedback
+from apps.flange_qc_v2.feedback import QcFeedback, build_labeling_review_pack
 from scripts.flange_qc_v2.export_qc_feedback import main as export_main
+from scripts.flange_qc_v2.build_labeling_review_pack import main as pack_main
 from scripts.flange_qc_v2.validate_qc_feedback_export import main as validate_main
 
 
@@ -203,6 +204,116 @@ class QcFeedbackExportValidationTests(unittest.TestCase):
             "observations": [
                 {
                     "label": "punch_mark",
+                    "confidence": 0.87,
+                    "bbox": [0.42, 0.22, 0.12, 0.05],
+                    "model_ref": "registry://flange-qc-v2/shadow-detector@candidate",
+                    "evidence_ref": "eval://flange-qc-v2/shadow-eval-001",
+                }
+            ],
+        }
+
+
+class QcFeedbackLabelingReviewPackTests(unittest.TestCase):
+    def test_build_labeling_review_pack_summarizes_valid_feedback_records(self) -> None:
+        false_positive = self._valid_record(
+            feedback_id="fb-pack-001",
+            product_code="611",
+            feedback_type="MARK_FALSE_POSITIVE",
+            inspection_decision="NG",
+            shadow_decision="NG",
+            label="punch_mark",
+        )
+        confirmed_alert = self._valid_record(
+            feedback_id="fb-pack-002",
+            product_code="445",
+            feedback_type="CONFIRM_BLOCKED",
+            inspection_decision="NG",
+            shadow_decision="NG",
+            label="broken_stitch",
+        )
+
+        pack = build_labeling_review_pack([false_positive, confirmed_alert])
+
+        self.assertEqual(pack["contract_version"], "qc_feedback_labeling_review_pack.v1")
+        self.assertEqual(pack["source_contract_version"], FEEDBACK_EXPORT_CONTRACT_VERSION)
+        self.assertEqual(pack["source_record_count"], 2)
+        self.assertEqual(pack["product_counts"], {"445": 1, "611": 1})
+        self.assertEqual(pack["feedback_type_counts"], {"CONFIRM_BLOCKED": 1, "MARK_FALSE_POSITIVE": 1})
+        self.assertEqual(pack["detector_label_counts"], {"broken_stitch": 1, "punch_mark": 1})
+        self.assertFalse(pack["production_authority"])
+        self.assertEqual(pack["authority_blockers"], ["PRODUCTION_APPROVAL_REQUIRED"])
+        self.assertIn("review_false_positive_alerts", pack["recommended_next_actions"])
+        self.assertNotIn("payload_json", json.dumps(pack))
+
+    def test_empty_labeling_review_pack_is_valid_and_requests_more_feedback(self) -> None:
+        pack = build_labeling_review_pack([])
+
+        self.assertEqual(pack["source_record_count"], 0)
+        self.assertEqual(pack["product_counts"], {})
+        self.assertEqual(pack["detector_label_counts"], {})
+        self.assertIn("collect_more_qc_feedback", pack["recommended_next_actions"])
+
+    def test_labeling_review_pack_rejects_invalid_feedback_export_records(self) -> None:
+        invalid_record = self._valid_record(feedback_id="fb-pack-invalid")
+        invalid_record["production_authority"] = True
+
+        with self.assertRaisesRegex(ValueError, "feedback export validation failed"):
+            build_labeling_review_pack([invalid_record])
+
+    def test_pack_cli_reads_jsonl_and_writes_summary_json(self) -> None:
+        record = self._valid_record(feedback_id="fb-pack-cli")
+        with tempfile.TemporaryDirectory() as tmpdir:
+            input_path = Path(tmpdir) / "feedback.jsonl"
+            output_path = Path(tmpdir) / "pack.json"
+            input_path.write_text(json.dumps(record, sort_keys=True) + "\n", encoding="utf-8")
+
+            exit_code = pack_main(
+                [
+                    "--input",
+                    str(input_path),
+                    "--output",
+                    str(output_path),
+                ]
+            )
+
+            pack = json.loads(output_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(pack["source_record_count"], 1)
+        self.assertEqual(pack["feedback_type_counts"], {"MARK_FALSE_POSITIVE": 1})
+
+    def _valid_record(
+        self,
+        *,
+        feedback_id: str,
+        product_code: str = "611",
+        feedback_type: str = "MARK_FALSE_POSITIVE",
+        inspection_decision: str = "NG",
+        shadow_decision: str = "NG",
+        label: str = "punch_mark",
+    ) -> dict[str, object]:
+        return {
+            "contract_version": FEEDBACK_EXPORT_CONTRACT_VERSION,
+            "audit_feedback_id": 1,
+            "feedback_id": feedback_id,
+            "inspection_id": f"insp-{feedback_id}",
+            "product": {
+                "code": product_code,
+                "spec_version": "bootstrap_replay",
+            },
+            "inspection_decision": inspection_decision,
+            "inspection_created_at": "2026-06-03T00:00:00Z",
+            "feedback_type": feedback_type,
+            "reviewer_id": "qc-reviewer-1",
+            "note": "QC reviewed the detector alert.",
+            "shadow_decision": shadow_decision,
+            "source_ref": "https://github.com/namlogan/MIL/issues/133",
+            "feedback_created_at": "2026-06-03T00:01:00Z",
+            "production_authority": False,
+            "authority_blockers": ["PRODUCTION_APPROVAL_REQUIRED"],
+            "observations": [
+                {
+                    "label": label,
                     "confidence": 0.87,
                     "bbox": [0.42, 0.22, 0.12, 0.05],
                     "model_ref": "registry://flange-qc-v2/shadow-detector@candidate",
