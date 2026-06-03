@@ -152,7 +152,7 @@ def _recommended_next_actions(
 ) -> list[str]:
     actions: list[str] = []
     if not artifact_lane["ok"]:
-        actions.append("fix_artifact_intake")
+        actions.append(str(artifact_lane.get("recommended_task") or "fix_artifact_intake"))
     if shadow_lane["ready"]:
         actions.append("open_shadow_model_integration_issue")
     if not live_camera_lane["ready"]:

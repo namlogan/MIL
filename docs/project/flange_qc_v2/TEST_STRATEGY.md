@@ -95,8 +95,8 @@
   payload dumps or production authority.
 - Artifact readiness report tests validate shadow-ready template intake,
   live-camera and production-release blockers, optional labeling review pack
-  handling, malformed pack rejection, CLI output, and fail-closed missing
-  intake behavior.
+  handling, malformed pack rejection, CLI output, fail-closed missing intake
+  behavior, and `/artifact-readiness/status` env-only HTTP status behavior.
 
 ## Fixtures And Test Data
 

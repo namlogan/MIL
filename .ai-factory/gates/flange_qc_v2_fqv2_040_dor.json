@@ -1,0 +1,82 @@
+{
+  "task_id": "FQV2-040",
+  "github_issue": "https://github.com/namlogan/MIL/issues/137",
+  "branch": "agent/137-artifact-readiness-endpoint",
+  "title": "Expose artifact readiness report through app status endpoint",
+  "status": "definition_of_ready",
+  "user_business_goal": "Let the app expose the dataset/model/camera/QC feedback readiness report over a safe HTTP status endpoint so the next implementation loop can inspect readiness without running a separate CLI.",
+  "allowed_files": [
+    "apps/flange_qc_v2/asgi.py",
+    "apps/flange_qc_v2/artifact_readiness.py",
+    "tests/flange_qc_v2/**",
+    "docs/project/flange_qc_v2/USER_FLOWS.md",
+    "docs/project/flange_qc_v2/DATA_MODEL.md",
+    "docs/project/flange_qc_v2/TEST_STRATEGY.md",
+    ".ai-factory/gates/flange_qc_v2_fqv2_040_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_040_handoff_2026-06-03.md"
+  ],
+  "out_of_scope": [
+    "raw images, videos, raw datasets, customer/factory data, notebooks, model weights, TensorRT engines, model binaries, or model execution",
+    "live camera capture, camera SDK loading, camera credentials, GPU/hardware validation, or hardware readiness approval",
+    "HMI visual redesign or QC tablet layout changes",
+    "production deploy/release, secrets, tokens, provider credentials, destructive migrations, production data migration, billing, legal/compliance behavior, or security boundary change",
+    "product spec approval, QC/SOP tolerance approval, model promotion approval, production PASS/NG authority, or production auto-reject behavior",
+    "Memory0 approved record writes",
+    "Windmill runtime secrets/logs or .windmill/runtime/** changes"
+  ],
+  "acceptance_criteria": [
+    "Add GET /artifact-readiness/status to the Flange QC v2 ASGI app.",
+    "When no artifact intake env is configured, the endpoint returns HTTP 200 with configured=false, safe blocked readiness lanes, actionable next task, and production_authority=false.",
+    "When FLANGE_QC_V2_ARTIFACT_INTAKE_DIR is configured, the endpoint validates the intake directory and returns artifact_readiness_report.v1 metadata.",
+    "Optionally read a labeling review pack from FLANGE_QC_V2_LABELING_REVIEW_PACK_PATH if configured; missing optional pack should be reported as a warning/blocker without exposing raw rows.",
+    "Invalid or malformed labeling review pack input fails closed and keeps production authority false.",
+    "The endpoint must not accept request-supplied paths, load model binaries, connect to camera hardware, import camera SDKs, expose secrets, read raw media, or grant production PASS/NG authority.",
+    "Update docs/tests/DoR/QA handoff evidence.",
+    "Existing artifact intake status, detector status, HMI, feedback export, readiness CLI, and product CI behavior remains valid."
+  ],
+  "required_checks": [
+    "python3 -m unittest tests.flange_qc_v2.test_artifact_readiness -v",
+    "python3 -m unittest tests.flange_qc_v2.test_artifact_intake -v",
+    "python3 -m unittest tests.flange_qc_v2.test_detector_adapter -v",
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 -m compileall -q apps/flange_qc_v2 tests/flange_qc_v2 scripts/flange_qc_v2",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m unittest discover -s tests -v",
+    "git diff --check",
+    "python3 -m json.tool .ai-factory/gates/flange_qc_v2_fqv2_040_dor.json"
+  ],
+  "memory_preflight": {
+    "query": "Flange QC v2 artifact readiness endpoint, artifact intake env, labeling review pack env, no hardware.",
+    "retrieved_decisions": [
+      "Readiness report is metadata-only.",
+      "Artifact intake endpoint reads env only.",
+      "QC feedback pack is aggregate-only.",
+      "Production authority remains false."
+    ],
+    "retrieved_lessons": [
+      "Keep operator/QC UI minimal and expose readiness through status endpoints.",
+      "Fail closed on malformed optional metadata."
+    ],
+    "restricted_areas": [
+      "raw media/data",
+      "model weights/binaries/inference",
+      "camera hardware/SDK/credentials",
+      "secrets",
+      "production deploy/release",
+      "destructive migrations",
+      "product spec approval",
+      "QC/SOP tolerance approval",
+      "model promotion",
+      "production PASS/NG authority"
+    ],
+    "conflicts_found": "none",
+    "sources_to_verify": [
+      "AGENTS.md",
+      ".ai-factory/RULES.md",
+      "apps/flange_qc_v2/asgi.py",
+      "apps/flange_qc_v2/artifact_readiness.py",
+      "tests/flange_qc_v2/test_artifact_readiness.py"
+    ]
+  },
+  "rollback_note": "Revert the FQV2-040 PR to remove the artifact readiness HTTP endpoint, endpoint tests, docs, and gate evidence. Existing artifact intake endpoint, detector bridge, HMI, readiness CLI, feedback export, and product CI behavior remain valid."
+}

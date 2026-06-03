@@ -346,6 +346,12 @@ labeling review, and production release. The report records blockers and next
 actions, but always returns `production_authority=false` and does not include
 raw feedback rows, raw media, raw datasets, model binaries, credentials, or
 release approval.
+The app exposes this report through `GET /artifact-readiness/status`. The
+endpoint reads only `FLANGE_QC_V2_ARTIFACT_INTAKE_DIR` and optional
+`FLANGE_QC_V2_LABELING_REVIEW_PACK_PATH`; missing or malformed optional pack
+metadata is reported as a warning and the QC feedback lane remains blocked.
+The endpoint does not accept request-supplied paths or change QC/operator
+decision authority.
 
 The shadow detector metadata bridge uses the same env-var-bound artifact intake
 source. `GET /detector/shadow/status` returns a detector-focused readiness
