@@ -6,6 +6,23 @@ First usable release: a replay-driven, no-camera QC app baseline that proves the
 inspection API, deterministic SOP rule engine, audit DB, WebSocket payloads, and
 minimal HMI can run outside an agent session.
 
+## Workstream Status
+
+The replay-driven, no-camera demo-only workstream is frozen as of 2026-06-03.
+It remains a regression baseline and rollback path, but it is no longer the
+active implementation lane for new work. The active lane is
+`machine_vision` real-runtime SOP, tracked in:
+
+```text
+.ai-factory/workstreams/flange_qc_v2_machine_vision.json
+docs/project/flange_qc_v2/WORKSTREAM_STATUS.md
+```
+
+New implementation work must prioritize camera hardware/readiness evidence,
+calibration evidence, runtime geometry measurement evidence, product specs and
+tolerance approval package, and the full SOP rule gate before advanced model
+defect work.
+
 ## Must Have
 
 - FastAPI health endpoint and inspection API.
@@ -32,6 +49,8 @@ minimal HMI can run outside an agent session.
 ## Later
 
 - Production model training and model promotion pipeline.
+- Advanced model defect work after the `machine_vision` camera, calibration,
+  geometry, product specs, and full SOP rule gates are recorded.
 - MLOps platform implementation.
 - Production auto-reject.
 - ERP/MES integration.

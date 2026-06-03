@@ -7,6 +7,17 @@ package into a GitHub issue only after project identity, source refs, allowed
 files, required checks, restricted-change status, rollback note, and memory
 preflight are complete.
 
+The demo-only V2 workstream is frozen. New work must use the `machine_vision`
+real-runtime SOP workstream unless it is a regression fix, evidence correction,
+security or policy repair, or owner-approved emergency unblock.
+
+Active workstream source:
+
+```text
+.ai-factory/workstreams/flange_qc_v2_machine_vision.json
+docs/project/flange_qc_v2/WORKSTREAM_STATUS.md
+```
+
 ## Defaults
 
 | Field | Value |
@@ -18,6 +29,8 @@ preflight are complete.
 | Required handoff | files changed, rules applied, tests run, risks, rollback, memory candidate or not-applicable |
 
 ## Packages
+
+### Frozen Demo Baseline Packages
 
 | ID | Title | Allowed paths | Required checks | Rollback |
 |---|---|---|---|---|
@@ -39,6 +52,20 @@ preflight are complete.
 | V2-016 | Jetson/RTX app deployment scaffold | `deploy/**`, `docs/project/flange_qc_v2/DEPLOYMENT.md` | deploy plan validation, no secrets scan | Revert deploy scaffold |
 | V2-017 | Release, rollback, and shadow readiness report | `docs/project/flange_qc_v2/**`, `docs/release/**` | release gate, rollback checklist | Revert release docs |
 | V2-018 | Memory0/Windmill SDLC hooks validation | `.windmill/**`, `.ai-factory/**`, `docs/project/flange_qc_v2/**` | Delivery OS, Windmill validator, memory contract | Revert hook changes |
+
+### Active `machine_vision` Real-Runtime SOP Packages
+
+| Priority | ID | Title | Must precede | Dispatch status |
+|---|---|---|---|---|
+| 1 | MV-001 | Camera hardware/readiness evidence | all live capture, calibration, model defect work | Wait for camera/site evidence |
+| 2 | MV-002 | Calibration evidence | runtime geometry and product authority work | Blocked by MV-001 |
+| 3 | MV-003 | Runtime geometry measurement evidence | product approval package and full rule gate | Blocked by MV-002 |
+| 4 | MV-004 | Product specs and tolerance approval package | full SOP authority and production-bound decisions | Blocked by MV-003 and human approval |
+| 5 | MV-005 | Full SOP rule gate | model defect authority and production release | Blocked by MV-004 and QC/SOP approval |
+| 6 | MV-006 | Advanced model defect work | none; intentionally last | Blocked until MV-001 through MV-005 pass |
+
+Advanced model defect work must not become agent-runnable until the prior
+`machine_vision` gates are recorded in the issue, handoff, and gate evidence.
 
 ## Dispatch Constraint
 
