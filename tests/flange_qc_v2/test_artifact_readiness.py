@@ -9,8 +9,8 @@ from pathlib import Path
 
 from apps.flange_qc_v2.artifact_intake import validate_artifact_intake
 from apps.flange_qc_v2.artifact_readiness import build_artifact_readiness_report
+from apps.flange_qc_v2.audit import FEEDBACK_EXPORT_CONTRACT_VERSION
 from tests.flange_qc_v2.test_artifact_intake import TEMPLATE_DIR
-from tests.flange_qc_v2.test_feedback_export import QcFeedbackLabelingReviewPackTests
 
 from scripts.flange_qc_v2.build_artifact_readiness_report import main as readiness_main
 
@@ -151,11 +151,9 @@ class ArtifactReadinessReportTests(unittest.TestCase):
         self.assertFalse(report["production_authority"])
 
     def _labeling_review_pack(self, *, source_record_count: int) -> dict[str, object]:
-        test_case = QcFeedbackLabelingReviewPackTests()
-        record = test_case._valid_record(feedback_id="fb-readiness-pack")
         pack = {
             "contract_version": "qc_feedback_labeling_review_pack.v1",
-            "source_contract_version": record["contract_version"],
+            "source_contract_version": FEEDBACK_EXPORT_CONTRACT_VERSION,
             "source_record_count": source_record_count,
             "product_counts": {"611": source_record_count},
             "feedback_type_counts": {"MARK_FALSE_POSITIVE": source_record_count},
