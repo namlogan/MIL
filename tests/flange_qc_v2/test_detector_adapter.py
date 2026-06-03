@@ -63,6 +63,28 @@ def asgi_get_json(path: str) -> dict:
     }
 
 
+def asgi_post_json(path: str, payload: dict) -> dict:
+    messages = []
+    raw_body = json.dumps(payload).encode("utf-8")
+    body_sent = False
+
+    async def receive():
+        nonlocal body_sent
+        if body_sent:
+            return {"type": "http.disconnect"}
+        body_sent = True
+        return {"type": "http.request", "body": raw_body, "more_body": False}
+
+    async def send(message):
+        messages.append(message)
+
+    asyncio.run(app({"type": "http", "method": "POST", "path": path}, receive, send))
+    return {
+        "status": messages[0]["status"],
+        "body": json.loads(messages[1]["body"].decode("utf-8")),
+    }
+
+
 class DetectorAdapterSchemaTests(unittest.TestCase):
     def test_detector_result_schema_keeps_observations_non_authoritative(self) -> None:
         schema = json.loads(DETECTOR_SCHEMA.read_text(encoding="utf-8"))
@@ -258,6 +280,144 @@ class ShadowDetectorBridgeTests(unittest.TestCase):
         self.assertEqual(body["next_issue"]["recommended_task"], "configure_artifact_intake")
         self.assertFalse(body["production_authority"])
         self.assertEqual(body["authority_blockers"], ["MODEL_APPROVAL_REQUIRED", "PRODUCTION_APPROVAL_REQUIRED"])
+
+    def test_shadow_detector_observations_endpoint_uses_env_manifest_for_review_only_result(self) -> None:
+        previous = os.environ.get("FLANGE_QC_V2_ARTIFACT_INTAKE_DIR")
+        os.environ["FLANGE_QC_V2_ARTIFACT_INTAKE_DIR"] = str(TEMPLATE_DIR)
+        try:
+            response = asgi_post_json(
+                "/detector/shadow/observations",
+                {
+                    "request": detector_request_payload(),
+                    "observations": [
+                        {
+                            "label": "punch_mark",
+                            "confidence": 0.82,
+                            "bbox": [0.2, 0.3, 0.1, 0.1],
+                        }
+                    ],
+                },
+            )
+        finally:
+            if previous is None:
+                os.environ.pop("FLANGE_QC_V2_ARTIFACT_INTAKE_DIR", None)
+            else:
+                os.environ["FLANGE_QC_V2_ARTIFACT_INTAKE_DIR"] = previous
+
+        body = response["body"]
+        self.assertEqual(response["status"], 200)
+        self.assertEqual(body["contract_version"], "detector.result.v1")
+        self.assertEqual(body["adapter_id"], "manifest-detector")
+        self.assertEqual(body["decision"], "ASSIST")
+        self.assertEqual(body["reason_codes"], ["MODEL_REVIEW_REQUIRED"])
+        self.assertEqual(body["request"]["frame_id"], "frame-detector-001")
+        self.assertEqual(body["observations"][0]["label"], "punch_mark")
+        self.assertEqual(body["observations"][0]["model_ref"], "registry://flange-qc-v2/detector/punch-mark/2026-06-02")
+        self.assertEqual(body["observations"][0]["evidence_ref"], "templates/flange_qc_v2/artifact_intake/evaluation_report.json")
+        self.assertFalse(body["production_authority"])
+        self.assertTrue(body["shadow_mode"])
+        self.assertEqual(body["authority_blockers"], ["MODEL_APPROVAL_REQUIRED", "PRODUCTION_APPROVAL_REQUIRED"])
+
+    def test_shadow_detector_observations_endpoint_returns_not_evaluated_without_observations(self) -> None:
+        previous = os.environ.get("FLANGE_QC_V2_ARTIFACT_INTAKE_DIR")
+        os.environ["FLANGE_QC_V2_ARTIFACT_INTAKE_DIR"] = str(TEMPLATE_DIR)
+        try:
+            response = asgi_post_json(
+                "/detector/shadow/observations",
+                {
+                    "request": detector_request_payload(),
+                    "observations": [],
+                },
+            )
+        finally:
+            if previous is None:
+                os.environ.pop("FLANGE_QC_V2_ARTIFACT_INTAKE_DIR", None)
+            else:
+                os.environ["FLANGE_QC_V2_ARTIFACT_INTAKE_DIR"] = previous
+
+        body = response["body"]
+        self.assertEqual(response["status"], 200)
+        self.assertEqual(body["decision"], "NOT_EVALUATED")
+        self.assertEqual(body["reason_codes"], ["MODEL_MISSING"])
+        self.assertEqual(body["observations"], [])
+        self.assertFalse(body["production_authority"])
+
+    def test_shadow_detector_observations_endpoint_fails_closed_without_artifact_intake_env(self) -> None:
+        previous = os.environ.pop("FLANGE_QC_V2_ARTIFACT_INTAKE_DIR", None)
+        try:
+            response = asgi_post_json(
+                "/detector/shadow/observations",
+                {
+                    "request": detector_request_payload(),
+                    "observations": [
+                        {
+                            "label": "punch_mark",
+                            "confidence": 0.82,
+                            "bbox": [0.2, 0.3, 0.1, 0.1],
+                        }
+                    ],
+                },
+            )
+        finally:
+            if previous is not None:
+                os.environ["FLANGE_QC_V2_ARTIFACT_INTAKE_DIR"] = previous
+
+        self.assertEqual(response["status"], 400)
+        self.assertIn("FLANGE_QC_V2_ARTIFACT_INTAKE_DIR is not configured", response["body"]["detail"])
+
+    def test_shadow_detector_observations_endpoint_rejects_request_supplied_paths(self) -> None:
+        previous = os.environ.get("FLANGE_QC_V2_ARTIFACT_INTAKE_DIR")
+        os.environ["FLANGE_QC_V2_ARTIFACT_INTAKE_DIR"] = str(TEMPLATE_DIR)
+        try:
+            response = asgi_post_json(
+                "/detector/shadow/observations",
+                {
+                    "artifact_intake_dir": "/tmp/unsafe",
+                    "request": detector_request_payload(),
+                    "observations": [
+                        {
+                            "label": "punch_mark",
+                            "confidence": 0.82,
+                            "bbox": [0.2, 0.3, 0.1, 0.1],
+                        }
+                    ],
+                },
+            )
+        finally:
+            if previous is None:
+                os.environ.pop("FLANGE_QC_V2_ARTIFACT_INTAKE_DIR", None)
+            else:
+                os.environ["FLANGE_QC_V2_ARTIFACT_INTAKE_DIR"] = previous
+
+        self.assertEqual(response["status"], 400)
+        self.assertIn("artifact_intake_dir", response["body"]["detail"])
+
+    def test_shadow_detector_observations_endpoint_rejects_request_supplied_model_refs(self) -> None:
+        previous = os.environ.get("FLANGE_QC_V2_ARTIFACT_INTAKE_DIR")
+        os.environ["FLANGE_QC_V2_ARTIFACT_INTAKE_DIR"] = str(TEMPLATE_DIR)
+        try:
+            response = asgi_post_json(
+                "/detector/shadow/observations",
+                {
+                    "request": detector_request_payload(),
+                    "observations": [
+                        {
+                            "label": "punch_mark",
+                            "confidence": 0.82,
+                            "bbox": [0.2, 0.3, 0.1, 0.1],
+                            "model_ref": "registry://unsafe/request-supplied",
+                        }
+                    ],
+                },
+            )
+        finally:
+            if previous is None:
+                os.environ.pop("FLANGE_QC_V2_ARTIFACT_INTAKE_DIR", None)
+            else:
+                os.environ["FLANGE_QC_V2_ARTIFACT_INTAKE_DIR"] = previous
+
+        self.assertEqual(response["status"], 400)
+        self.assertIn("model_ref", response["body"]["detail"])
 
 
 if __name__ == "__main__":

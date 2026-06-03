@@ -1,0 +1,84 @@
+{
+  "task_id": "FQV2-042",
+  "github_issue": "https://github.com/namlogan/MIL/issues/141",
+  "branch": "agent/141-shadow-detector-observations",
+  "title": "Accept shadow detector observation dry-run payloads",
+  "status": "definition_of_ready",
+  "user_business_goal": "Let MLOps/engineering validate review-only detector observation metadata against the current shadow model manifest from the artifact intake bundle, without running inference, reading raw media, or granting production authority.",
+  "allowed_files": [
+    "apps/flange_qc_v2/asgi.py",
+    "apps/flange_qc_v2/detector.py",
+    "tests/flange_qc_v2/test_detector_adapter.py",
+    "docs/project/flange_qc_v2/USER_FLOWS.md",
+    "docs/project/flange_qc_v2/DATA_MODEL.md",
+    "docs/project/flange_qc_v2/MLOPS_BOUNDARY.md",
+    "docs/project/flange_qc_v2/TEST_STRATEGY.md",
+    ".ai-factory/gates/flange_qc_v2_fqv2_042_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_042_handoff_2026-06-03.md"
+  ],
+  "out_of_scope": [
+    "raw images, videos, raw datasets, customer/factory data, notebooks, model weights, TensorRT engines, model binaries, or model execution",
+    "live camera capture, camera SDK loading, camera credentials, GPU/hardware validation, or hardware readiness approval",
+    "request-supplied filesystem paths, model manifests, model refs as authority, dataset paths, or artifact directories",
+    "HMI visual redesign or QC tablet layout changes",
+    "production deploy/release, secrets, tokens, provider credentials, destructive migrations, production data migration, billing, legal/compliance behavior, or security boundary change",
+    "product spec approval, QC/SOP tolerance approval, model promotion approval, production PASS/NG authority, or production auto-reject behavior",
+    "Memory0 approved record writes",
+    "Windmill runtime secrets/logs or .windmill/runtime/** changes"
+  ],
+  "acceptance_criteria": [
+    "Add a metadata-only shadow detector dry-run path to the app.",
+    "The app accepts a request payload containing detector request metadata and sanitized observation metadata.",
+    "The app reads the model manifest only from FLANGE_QC_V2_ARTIFACT_INTAKE_DIR; it must not accept request-supplied manifest, model, dataset, or filesystem paths.",
+    "When artifact intake is ready and observations are valid, the app returns detector.result.v1 with adapter manifest-detector, decision ASSIST, manifest-filled model_ref/evidence_ref, and production_authority=false.",
+    "When no observations are supplied, the app returns NOT_EVALUATED with MODEL_MISSING and production_authority=false.",
+    "Invalid labels, invalid bbox/confidence, raw-media source URIs, missing intake, or invalid intake fail closed.",
+    "Update docs/tests/DoR/QA handoff evidence.",
+    "Existing detector status, replay/HMI observation flow, artifact readiness, feedback, and product CI behavior remains valid."
+  ],
+  "required_checks": [
+    "python3 -m unittest tests.flange_qc_v2.test_detector_adapter -v",
+    "python3 -m unittest tests.flange_qc_v2.test_hmi_stream -v",
+    "python3 -m unittest tests.flange_qc_v2.test_artifact_readiness -v",
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 -m compileall -q apps/flange_qc_v2 tests/flange_qc_v2 scripts/flange_qc_v2",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m unittest discover -s tests -v",
+    "git diff --check",
+    "python3 -m json.tool .ai-factory/gates/flange_qc_v2_fqv2_042_dor.json"
+  ],
+  "memory_preflight": {
+    "query": "Flange QC v2 shadow detector observation integration, manifest detector adapter, artifact intake readiness, no model execution.",
+    "retrieved_decisions": [
+      "MLOps/model training remains external.",
+      "App integrates sanitized metadata through contracts.",
+      "Manifest detector adapter is review-only and production authority remains false."
+    ],
+    "retrieved_lessons": [
+      "Keep model bridge metadata-only and env-bound.",
+      "Request payloads cannot supply filesystem paths, model refs, evidence refs, or authority."
+    ],
+    "restricted_areas": [
+      "raw media/data",
+      "model weights/binaries/inference",
+      "camera hardware/SDK/credentials",
+      "secrets",
+      "production deploy/release",
+      "destructive migrations",
+      "product spec approval",
+      "QC/SOP tolerance approval",
+      "model promotion",
+      "production PASS/NG authority"
+    ],
+    "conflicts_found": "runtime/Windmill daily attention is understood as non-app-code auth/session blocker; this task does not require Windmill secret access.",
+    "sources_to_verify": [
+      "AGENTS.md",
+      ".ai-factory/RULES.md",
+      "apps/flange_qc_v2/detector.py",
+      "apps/flange_qc_v2/asgi.py",
+      "tests/flange_qc_v2/test_detector_adapter.py",
+      "docs/project/flange_qc_v2/MLOPS_BOUNDARY.md"
+    ]
+  },
+  "rollback_note": "Revert the FQV2-042 PR to remove the shadow detector observation dry-run path, tests, docs, and gate evidence. Existing detector status endpoint, replay/HMI observation flow, artifact readiness, feedback, and product CI behavior remain valid."
+}

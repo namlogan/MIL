@@ -76,6 +76,13 @@
   returns manifest metadata only after artifact intake is ready. Adapter tests
   prove `ManifestDetectorAdapter` remains review-only and cannot emit production
   PASS/NG authority.
+- Shadow detector observation dry-run tests validate that
+  `/detector/shadow/observations` reads manifest metadata only from
+  `FLANGE_QC_V2_ARTIFACT_INTAKE_DIR`, returns `detector.result.v1` for
+  sanitized observations, fills model/evidence refs from the manifest, returns
+  `NOT_EVALUATED` without observations, and rejects missing intake,
+  request-supplied paths, request-supplied model/evidence refs, raw source URIs,
+  invalid labels, invalid bbox/confidence, and production authority.
 - HMI screen tests and browser evidence validate that detector bridge status
   renders ready state, adapter, model reference, labels, approval status, and
   authority blockers from `/detector/shadow/status`.

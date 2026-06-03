@@ -14,6 +14,14 @@ CONTRACT_VERSION = "detector.result.v1"
 AUTHORITY_BLOCKERS = ("MODEL_APPROVAL_REQUIRED", "PRODUCTION_APPROVAL_REQUIRED")
 ALLOWED_SOURCE_PREFIXES = ("synthetic://", "replay://")
 SHADOW_DETECTOR_NEXT_TASK = "shadow_detector_observations"
+SHADOW_OBSERVATION_FORBIDDEN_REQUEST_FIELDS = (
+    "artifact_intake_dir",
+    "manifest_path",
+    "model_path",
+    "dataset_path",
+    "weights_path",
+)
+SHADOW_OBSERVATION_FORBIDDEN_OBSERVATION_FIELDS = ("model_ref", "evidence_ref")
 
 
 def _require_field(payload: dict[str, Any], field_name: str) -> Any:
@@ -252,3 +260,35 @@ def build_manifest_detector_from_intake(
         manifest=load_model_artifact_manifest(manifest_path),
         observations=observations,
     )
+
+
+def build_shadow_detector_result_from_payload(
+    payload: Any,
+    *,
+    intake_dir: str,
+    repo_root: str | Path | None = None,
+) -> DetectorResult:
+    if not str(intake_dir).strip():
+        raise ValidationError("FLANGE_QC_V2_ARTIFACT_INTAKE_DIR is not configured")
+    if not isinstance(payload, dict):
+        raise ValidationError("shadow detector payload must be an object")
+    for field_name in SHADOW_OBSERVATION_FORBIDDEN_REQUEST_FIELDS:
+        if field_name in payload:
+            raise ValidationError(f"shadow detector payload must not include {field_name}")
+
+    observations = payload.get("observations", [])
+    if not isinstance(observations, list):
+        raise ValidationError("observations must be a list")
+    for observation in observations:
+        if not isinstance(observation, dict):
+            raise ValidationError("observation must be an object")
+        for field_name in SHADOW_OBSERVATION_FORBIDDEN_OBSERVATION_FIELDS:
+            if field_name in observation:
+                raise ValidationError(f"shadow detector observation must not include {field_name}")
+
+    adapter = build_manifest_detector_from_intake(
+        intake_dir,
+        repo_root=repo_root,
+        observations=observations,
+    )
+    return adapter.detect(DetectorRequest.from_payload(_require_field(payload, "request")))
