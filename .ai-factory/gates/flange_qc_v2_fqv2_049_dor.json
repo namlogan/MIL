@@ -1,0 +1,78 @@
+{
+  "task_id": "FQV2-049",
+  "github_issue": "https://github.com/namlogan/MIL/issues/155",
+  "branch": "agent/155-env-configured-replay-sources",
+  "title": "Allow env-configured replay measurement sources",
+  "status": "definition_of_ready",
+  "user_business_goal": "Let the HMI/replay endpoint run the same shadow inspection flow against configured sanitized replay, product spec, and calibration artifacts so boundary-derived measurement fixtures can be exercised through /inspection/replay without hardcoding the default replay sample.",
+  "allowed_files": [
+    "apps/flange_qc_v2/asgi.py",
+    "apps/flange_qc_v2/hmi_stream.py",
+    "tests/flange_qc_v2/test_hmi_stream.py",
+    "tests/flange_qc_v2/test_hmi_screen.py",
+    "docs/project/flange_qc_v2/DATA_MODEL.md",
+    "docs/project/flange_qc_v2/TEST_STRATEGY.md",
+    "docs/project/flange_qc_v2/USER_FLOWS.md",
+    ".ai-factory/gates/flange_qc_v2_fqv2_049_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_049_handoff_2026-06-03.md"
+  ],
+  "out_of_scope": [
+    "raw media, raw datasets, customer/factory data, notebooks, model weights, TensorRT engines, model binaries, or model execution",
+    "live camera capture, camera SDK loading, camera credentials, GPU/hardware validation, or hardware readiness approval",
+    "request-supplied file paths for replay/spec/calibration selection",
+    "Windmill credential/tunnel/runtime changes",
+    "production deploy/release, secrets, tokens, provider credentials, destructive migrations, production data migration, billing, legal/compliance behavior, or security boundary change",
+    "product spec approval, QC/SOP tolerance approval, model promotion approval, production PASS/NG authority, or production auto-reject behavior",
+    "Memory0 approved record writes"
+  ],
+  "acceptance_criteria": [
+    "/inspection/replay reads replay manifest, product specs, and calibration paths from env-only configuration when provided.",
+    "Env vars are optional and default to existing checked-in bootstrap fixtures.",
+    "Env-configured boundary replay fixture returns derived length/width/diagonal measurements through /inspection/replay.",
+    "Request-supplied paths or query strings are not used for replay/spec/calibration selection.",
+    "Endpoint remains no-camera/shadow-only and all phase production_authority values remain false.",
+    "Docs/tests describe env-only replay configuration and do not approve production release, live camera, product specs, QC/SOP tolerance, or model promotion."
+  ],
+  "required_checks": [
+    "python3 -m unittest tests.flange_qc_v2.test_hmi_stream tests.flange_qc_v2.test_hmi_screen tests.flange_qc_v2.test_replay -v",
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m json.tool .ai-factory/gates/flange_qc_v2_fqv2_049_dor.json",
+    "git diff --check",
+    "HTTP preview smoke for /inspection/replay with FLANGE_QC_V2_REPLAY_MANIFEST_PATH=samples/replay/flange_qc_v2/phase2_synthetic_boundary.json when local preview is available"
+  ],
+  "memory_preflight": {
+    "query": "FQV2 env-configured replay source for boundary-derived measurements.",
+    "retrieved_decisions": [
+      "Boundary/corners measurement derivation exists and remains shadow-only.",
+      "Request-supplied artifact paths are rejected in detector flows.",
+      "App runtime configuration should use env-only paths."
+    ],
+    "retrieved_lessons": [
+      "HMI should exercise sanitized fixtures through normal endpoints without introducing request path injection.",
+      "Replay source selection must preserve no-camera/shadow-only production authority rules."
+    ],
+    "restricted_areas": [
+      "secrets",
+      "raw media/data",
+      "model binaries/deserialization/inference",
+      "live camera/hardware",
+      "destructive migrations",
+      "production deploy/release",
+      "request-supplied file paths",
+      "product spec approval",
+      "QC/SOP tolerance approval",
+      "model promotion",
+      "production PASS/NG authority"
+    ],
+    "conflicts_found": "runtime/Windmill daily attention is separate; this task does not require Windmill secret access.",
+    "sources_to_verify": [
+      "AGENTS.md",
+      "apps/flange_qc_v2/asgi.py",
+      "apps/flange_qc_v2/hmi_stream.py",
+      "tests/flange_qc_v2/test_hmi_stream.py",
+      "docs/project/flange_qc_v2/USER_FLOWS.md"
+    ]
+  },
+  "rollback_note": "Revert the FQV2-049 PR to restore /inspection/replay to default checked-in fixtures only. Existing replay, HMI, boundary measurement, product tolerance, and product CI behavior remain valid."
+}

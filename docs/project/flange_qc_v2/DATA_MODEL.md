@@ -80,6 +80,13 @@ return behavior. This local audit path is replay/shadow evidence only and does
 not approve production data retention, production migrations, customer data
 handling, release, deploy, or production PASS/NG authority.
 
+The replay source, product specs, and calibration fixtures can be selected only
+through `FLANGE_QC_V2_REPLAY_MANIFEST_PATH`,
+`FLANGE_QC_V2_PRODUCT_SPECS_PATH`, and `FLANGE_QC_V2_CALIBRATION_PATH`.
+If those env vars are unset, the app uses the checked-in bootstrap fixtures.
+HTTP query parameters and request bodies never choose replay/spec/calibration
+file paths.
+
 Bootstrap calibration validation lives in:
 
 ```text

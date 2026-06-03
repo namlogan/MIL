@@ -14,18 +14,21 @@ DEFAULT_PRODUCT_SPECS = REPO_ROOT / "configs/flange_qc_v2/product_specs.bootstra
 DEFAULT_CALIBRATION = REPO_ROOT / "configs/flange_qc_v2/camera_calibration.synthetic.example.json"
 DEFAULT_REPLAY = REPO_ROOT / "samples/replay/flange_qc_v2/phase2_synthetic_measurements.json"
 ARTIFACT_INTAKE_ENV = "FLANGE_QC_V2_ARTIFACT_INTAKE_DIR"
+REPLAY_MANIFEST_ENV = "FLANGE_QC_V2_REPLAY_MANIFEST_PATH"
+PRODUCT_SPECS_ENV = "FLANGE_QC_V2_PRODUCT_SPECS_PATH"
+CALIBRATION_ENV = "FLANGE_QC_V2_CALIBRATION_PATH"
 
 
 def build_replay_inspection_snapshot(
     *,
-    manifest_path: str | Path = DEFAULT_REPLAY,
-    product_specs_path: str | Path = DEFAULT_PRODUCT_SPECS,
-    calibration_path: str | Path = DEFAULT_CALIBRATION,
+    manifest_path: str | Path | None = None,
+    product_specs_path: str | Path | None = None,
+    calibration_path: str | Path | None = None,
 ) -> InspectionSnapshot:
     result = run_no_camera_replay(
-        manifest_path=manifest_path,
-        product_specs_path=product_specs_path,
-        calibration_path=calibration_path,
+        manifest_path=_path_from_env(REPLAY_MANIFEST_ENV, manifest_path, DEFAULT_REPLAY),
+        product_specs_path=_path_from_env(PRODUCT_SPECS_ENV, product_specs_path, DEFAULT_PRODUCT_SPECS),
+        calibration_path=_path_from_env(CALIBRATION_ENV, calibration_path, DEFAULT_CALIBRATION),
     )
     frame = result.frames[0]
     observations = _build_review_only_observations(
@@ -73,3 +76,10 @@ def _build_review_only_observations(frame: Any, *, source_ref: str) -> list[Dete
         return []
 
     return list(detector_result.observations)
+
+
+def _path_from_env(env_name: str, explicit_path: str | Path | None, default_path: Path) -> str | Path:
+    if explicit_path is not None:
+        return explicit_path
+    configured = os.environ.get(env_name, "").strip()
+    return configured or default_path
