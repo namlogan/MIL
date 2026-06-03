@@ -1,0 +1,91 @@
+{
+  "task_id": "FQV2-054",
+  "github_issue": "https://github.com/namlogan/MIL/issues/165",
+  "branch": "agent/165-machine-vision-workstream",
+  "title": "Freeze demo-only V2 and open machine_vision real-runtime SOP workstream",
+  "status": "definition_of_ready",
+  "user_business_goal": "Freeze the completed Flange QC V2 demo-only/no-camera workstream and open the next real-runtime SOP workstream under machine_vision so future agent work prioritizes camera, calibration, geometry, product specs, and full SOP rule gates before advanced model defect work.",
+  "allowed_files": [
+    ".ai-factory/workstreams/**",
+    ".ai-factory/gates/flange_qc_v2_fqv2_054_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_054_handoff_2026-06-03.md",
+    "docs/project/flange_qc_v2/WORKSTREAM_STATUS.md",
+    "docs/project/flange_qc_v2/WORK_PACKAGES.md",
+    "docs/project/flange_qc_v2/MVP_SCOPE.md",
+    "docs/project/flange_qc_v2/HARDWARE_CAMERA_READINESS.md",
+    "docs/project/flange_qc_v2/MLOPS_BOUNDARY.md",
+    "tests/flange_qc_v2/test_workstream_status.py"
+  ],
+  "out_of_scope": [
+    "app runtime code changes",
+    "live camera SDK import or live capture",
+    "raw media storage or customer/factory data",
+    "camera credentials or secrets",
+    "calibration approval",
+    "product spec approval",
+    "QC/SOP tolerance approval",
+    "model promotion",
+    "production PASS/NG authority",
+    "production auto-reject",
+    "production release/deploy",
+    "destructive migrations",
+    "Memory0 approved writes",
+    "advanced defect model implementation",
+    "model deserialization or inference runtime loading",
+    "GPU inference",
+    "dataset notebooks or raw dataset management"
+  ],
+  "acceptance_criteria": [
+    "Add a source-of-truth workstream manifest that marks demo-only V2 work as frozen and machine_vision real-runtime SOP as the active workstream.",
+    "Document that demo-only/replay/HMI polish is closed except for regression fixes, evidence corrections, security or policy repair, or owner-approved emergency unblock.",
+    "Document the active workstream priority order: camera hardware/readiness, calibration, runtime geometry, product specs approval package, full SOP rule gate, then advanced model defect work.",
+    "Make advanced model defect work explicitly blocked until the earlier gates are recorded.",
+    "Add tests that fail if the workstream manifest loses the freeze, active machine_vision workstream, priority order, or advanced-model deferral.",
+    "Keep this task governance/docs/tests only.",
+    "Existing product CI and full repository checks pass."
+  ],
+  "required_checks": [
+    "python3 -m unittest tests.flange_qc_v2.test_workstream_status -v",
+    "python3 -m json.tool .ai-factory/workstreams/flange_qc_v2_machine_vision.json",
+    "python3 -m json.tool .ai-factory/gates/flange_qc_v2_fqv2_054_dor.json",
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 -m compileall -q apps/flange_qc_v2 tests/flange_qc_v2",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m unittest discover -s tests -v",
+    "git diff --check"
+  ],
+  "memory_preflight": {
+    "query": "Flange QC v2 pause state, demo-only freeze, machine_vision real-runtime SOP, camera calibration geometry product specs full rule gate before advanced model defects.",
+    "retrieved_decisions": [
+      "V2 no-camera/replay baseline is complete enough to pause.",
+      "POST /inspection/intake is the real runtime handoff.",
+      "Production authority remains blocked until hardware, calibration, product specs, QC/SOP, model, release, staging, rollback, and monitoring gates pass."
+    ],
+    "retrieved_lessons": [
+      "Do not create more demo-only polish work while waiting for real inputs.",
+      "Prioritize deterministic SOP readiness before model-dependent defect sophistication.",
+      "Keep model observations review-only until runtime SOP gates and model approval evidence exist."
+    ],
+    "restricted_areas": [
+      "live camera SDK/capture",
+      "raw media/customer data",
+      "secrets",
+      "product spec approval",
+      "QC/SOP tolerance approval",
+      "model promotion",
+      "production release/deploy",
+      "production PASS/NG authority",
+      "destructive migrations"
+    ],
+    "conflicts_found": "Current docs still described replay/no-camera MVP as the active baseline and did not name machine_vision as the active real-runtime workstream.",
+    "sources_to_verify": [
+      "AGENTS.md",
+      "docs/project/flange_qc_v2/MVP_SCOPE.md",
+      "docs/project/flange_qc_v2/WORK_PACKAGES.md",
+      "docs/project/flange_qc_v2/HARDWARE_CAMERA_READINESS.md",
+      "docs/project/flange_qc_v2/MLOPS_BOUNDARY.md",
+      "apps/flange_qc_v2/inspection_intake.py"
+    ]
+  },
+  "rollback_note": "Revert the FQV2-054 PR to remove the workstream manifest, status doc, tests, and documentation updates. No runtime app behavior, data, secrets, hardware state, model artifacts, migrations, or release state is changed."
+}

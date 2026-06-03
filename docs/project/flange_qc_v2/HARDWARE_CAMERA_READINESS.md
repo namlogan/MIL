@@ -6,6 +6,11 @@ FQV2-015 is approved for disabled no-hardware boundary work only. The app must
 continue to run in CI and local bootstrap without a camera, SDK, credentials,
 raw media, GPU, model weights, or production datasets.
 
+Camera hardware/readiness is now the first gate in the active
+`machine_vision` real-runtime SOP workstream. Demo-only replay/HMI work is
+frozen except for regression fixes, evidence corrections, policy repairs, or
+owner-approved emergency unblocks.
+
 The current boundary lives in:
 
 ```text
@@ -35,6 +40,10 @@ Live camera work remains blocked until the owner/engineering operator approves:
 - Whether any credentials are required.
 - Calibration fixture and acceptance evidence.
 - Rollback path to replay/shadow-only mode.
+
+The next DoR-ready implementation issue should capture those items as evidence
+before any live SDK import, live capture, calibration approval, geometry
+authority, product-spec authority, or advanced model defect work begins.
 
 ## Restricted Until Approval
 

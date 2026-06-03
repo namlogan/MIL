@@ -5,6 +5,12 @@
 The app is built now. MLOps and model training run separately and integrate later
 through explicit contracts.
 
+As of 2026-06-03, advanced model defect work is intentionally deferred behind
+the `machine_vision` real-runtime SOP gates. Camera hardware/readiness,
+calibration evidence, runtime geometry measurement evidence, product specs and
+tolerance approval package, and the full SOP rule gate must be recorded before
+advanced defect model work becomes agent-runnable.
+
 ## App Owns
 
 - Inspection API and WebSocket HMI payload.
@@ -26,6 +32,7 @@ through explicit contracts.
 - Model training and evaluation.
 - Model registry and promotion criteria.
 - Production model accuracy gates.
+- Advanced model defect work after the `machine_vision` runtime SOP gates pass.
 - Model binary packaging, deserialization, runtime execution, and accelerator
   selection.
 - Raw dataset retention and privacy controls.

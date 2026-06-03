@@ -1,0 +1,134 @@
+{
+  "schema_version": "workstream.status.v1",
+  "project_id": "flange_qc_v2",
+  "source_issue": "https://github.com/namlogan/MIL/issues/165",
+  "recorded_at": "2026-06-03",
+  "decision": "freeze_demo_only_open_real_runtime_sop",
+  "frozen_workstreams": [
+    {
+      "workstream_id": "flange_qc_v2_demo_only",
+      "status": "frozen",
+      "reason": "Replay/no-camera/HMI demo-only implementation is complete enough for pause; further work must move toward real runtime SOP evidence.",
+      "allowed_work": [
+        "regression_fix",
+        "evidence_correction",
+        "security_or_policy_repair",
+        "owner_approved_emergency_unblock"
+      ],
+      "blocked_work": [
+        "demo_only_polish",
+        "new_replay_only_operator_features",
+        "synthetic_visual_expansion",
+        "model_defect_work_without_runtime_sop_gates"
+      ]
+    }
+  ],
+  "active_workstream": {
+    "workstream_id": "machine_vision",
+    "name": "Real-runtime SOP",
+    "status": "active_waiting_external_evidence",
+    "mode": "real_runtime_sop",
+    "objective": "Prepare Flange QC v2 to run the real machine-vision SOP path from camera/calibration/geometry/product-spec evidence before advanced model defect work.",
+    "runtime_entrypoint": "POST /inspection/intake",
+    "production_authority": false,
+    "human_gates": [
+      "product_specs_approval",
+      "qc_sop_tolerance_approval",
+      "camera_hardware_validation",
+      "model_promotion_approval",
+      "production_release_approval"
+    ],
+    "priority_order": [
+      {
+        "rank": 1,
+        "gate_id": "camera_hardware_readiness",
+        "status": "waiting_external_camera",
+        "required_evidence": [
+          "camera_model",
+          "lens",
+          "working_distance",
+          "lighting_layout",
+          "mount_fixture",
+          "trigger_mode",
+          "resolution_fps",
+          "connection_topology",
+          "rollback_to_replay"
+        ]
+      },
+      {
+        "rank": 2,
+        "gate_id": "calibration_evidence",
+        "status": "blocked_by_camera_hardware_readiness",
+        "required_evidence": [
+          "calibration_fixture",
+          "pixel_to_measurement_scale",
+          "camera_pose_or_top_down_assumption",
+          "lighting_stability",
+          "calibration_acceptance_report"
+        ]
+      },
+      {
+        "rank": 3,
+        "gate_id": "runtime_geometry_evidence",
+        "status": "blocked_by_calibration_evidence",
+        "required_evidence": [
+          "boundary_or_corner_detection_contract",
+          "length_width_diagonal_measurement_replay",
+          "inspection_intake_payload_samples",
+          "fail_closed_unknown_geometry_cases",
+          "audit_persistence_samples"
+        ]
+      },
+      {
+        "rank": 4,
+        "gate_id": "product_specs_approval_package",
+        "status": "blocked_by_runtime_geometry_evidence",
+        "required_evidence": [
+          "qc_owner_product_spec_review",
+          "tolerance_source_refs",
+          "size_group_mapping",
+          "unknown_product_blocking_evidence",
+          "rollback_to_draft_specs"
+        ]
+      },
+      {
+        "rank": 5,
+        "gate_id": "full_sop_rule_gate",
+        "status": "blocked_by_product_specs_approval_package",
+        "required_evidence": [
+          "phase_1_length_width_authority_evidence",
+          "phase_2_diagonal_authority_evidence",
+          "phase_3_punch_mark_and_offset_gate_definition",
+          "phase_4_post_mvp_rule_policy",
+          "not_evaluated_never_maps_to_pass_evidence",
+          "qc_sop_tolerance_approval"
+        ]
+      },
+      {
+        "rank": 6,
+        "gate_id": "advanced_model_defect_work",
+        "status": "blocked_until_prior_gates_pass",
+        "blocked_by": [
+          "camera_hardware_readiness",
+          "calibration_evidence",
+          "runtime_geometry_evidence",
+          "product_specs_approval_package",
+          "full_sop_rule_gate"
+        ],
+        "allowed_after": [
+          "dataset_manifest_validation",
+          "evaluation_report_validation",
+          "model_artifact_manifest_validation",
+          "parallel_qc_evidence_review",
+          "model_promotion_approval"
+        ]
+      }
+    ]
+  },
+  "blocked_until_reopened_by_issue": [
+    "demo_only_polish",
+    "advanced_model_defect_work",
+    "production_auto_reject",
+    "production_release_deploy"
+  ]
+}
