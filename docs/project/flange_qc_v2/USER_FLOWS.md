@@ -115,11 +115,16 @@
    from `FLANGE_QC_V2_ARTIFACT_INTAKE_DIR`, rejects request-supplied artifact or
    model paths, fills `model_ref` and `evidence_ref` from the manifest, and
    returns `detector.result.v1` with `production_authority=false`.
-7. Replay frames may provide sanitized synthetic `detector_observations`.
+7. Before posting observation metadata, MLOps/engineering validates payload
+   files with `scripts/flange_qc_v2/validate_shadow_detector_observations.py`
+   against `shadow_detector_observation_request.v1`. The checked-in sample
+   payload is metadata-only and contains no raw media, model refs, or evidence
+   refs from the request.
+8. Replay frames may provide sanitized synthetic `detector_observations`.
    During HMI snapshot generation, those observations are attached only through
    `ManifestDetectorAdapter` after artifact intake is ready. The adapter fills
    the manifest model reference and evaluation evidence reference.
-8. Model weights, runtime inference, camera access, model promotion, product
+9. Model weights, runtime inference, camera access, model promotion, product
    spec approval, QC/SOP tolerance approval, and production release remain
    outside this flow.
 
@@ -175,6 +180,9 @@
   returns manifest metadata from the template bundle when intake is ready.
 - Shadow detector observation dry-run returns `detector.result.v1` from sanitized
   request/observation metadata and rejects request-supplied paths or model refs.
+- Shadow detector observation request validation accepts the checked-in sample
+  payload and rejects raw-media source URIs, request-supplied artifact paths,
+  model refs, evidence refs, malformed bbox/confidence, and missing files.
 - Replay/HMI snapshots keep observations empty without ready intake and attach
   review-only manifest detector observations when ready intake and synthetic
   replay observation metadata are present.

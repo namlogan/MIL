@@ -132,6 +132,14 @@ fill traceability from the validated manifest, and remain review-only with
 `production_authority=false`. This is the app-side contract test path for future
 model output, not a model runtime, inference endpoint, or model promotion gate.
 
+MLOps/engineering validates candidate request payloads before posting them with
+`scripts/flange_qc_v2/validate_shadow_detector_observations.py`. The CLI checks
+`shadow_detector_observation_request.v1` metadata, and the checked-in sample at
+`samples/replay/flange_qc_v2/shadow_detector_observation_request.json` shows the
+allowed shape. Payloads cannot include artifact directories, model paths, raw
+media paths, request-supplied `model_ref`, request-supplied `evidence_ref`, or
+production authority.
+
 No-camera replay frames may carry optional synthetic `detector_observations`
 metadata for review. The replay parser validates label, confidence, and bbox
 through the detector observation domain contract, then strips any model or

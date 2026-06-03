@@ -382,6 +382,22 @@ validated manifest. It can return review-only `ASSIST` or `NOT_EVALUATED`, but
 cannot emit `PASS`/`NG`, run inference, load model binaries, read raw media, or
 grant production authority.
 
+The corresponding MLOps-facing request contract lives in:
+
+```text
+contracts/flange_qc_v2/detector/shadow_observation_request.schema.json
+scripts/flange_qc_v2/validate_shadow_detector_observations.py
+samples/replay/flange_qc_v2/shadow_detector_observation_request.json
+```
+
+`shadow_detector_observation_request.v1` requires request metadata plus
+sanitized observations with only label, confidence, and normalized bbox. The
+validator rejects raw-media source URIs, request-supplied artifact paths,
+observation `model_ref`, observation `evidence_ref`, malformed geometry, missing
+input files, and unexpected fields. This contract prepares model-output metadata
+for shadow validation only and does not approve model execution or production
+authority.
+
 Replay frames may include optional synthetic `detector_observations` metadata:
 label, confidence, and normalized bbox only. Replay parsing validates these
 values through `DetectorObservation` and strips model/evidence references from
