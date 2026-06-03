@@ -200,7 +200,12 @@ def validate_artifact_intake(intake_dir: str | Path, *, repo_root: str | Path | 
 
     ok = not errors
     shadow_ready = ok and all(name in artifacts for name in REQUIRED_ARTIFACTS)
-    recommended_task = "shadow_model_integration" if shadow_ready else "fix_artifact_intake"
+    recommended_task = "shadow_observation_review" if shadow_ready else "fix_artifact_intake"
+    recommended_next_actions = (
+        ["submit_shadow_observation_payload", "collect_more_qc_feedback"]
+        if shadow_ready
+        else ["repair_artifact_intake"]
+    )
     return {
         "ok": ok,
         "intake_dir": str(intake_root),
@@ -214,6 +219,7 @@ def validate_artifact_intake(intake_dir: str | Path, *, repo_root: str | Path | 
         },
         "next_issue": {
             "recommended_task": recommended_task,
+            "recommended_next_actions": recommended_next_actions,
             "source_ref": "https://github.com/namlogan/MIL/issues/103",
         },
     }

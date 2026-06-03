@@ -69,8 +69,11 @@
   evidence should include the common case where the overall banner is red
   `CHECK`, measurement is green `OK`, and stitch is red `CHECK`.
 - Artifact intake endpoint tests validate safe unconfigured state and configured
-  template readiness from `FLANGE_QC_V2_ARTIFACT_INTAKE_DIR`; HMI screen tests
-  and browser evidence validate the metadata-only readiness panel.
+  template readiness from `FLANGE_QC_V2_ARTIFACT_INTAKE_DIR`; configured intake
+  keeps `ready.shadow_model_integration_issue=true` for compatibility while
+  returning `next_issue.recommended_task=shadow_observation_review` and
+  `submit_shadow_observation_payload`. HMI screen tests and browser evidence
+  validate the metadata-only readiness panel.
 - Shadow detector bridge tests validate that `/detector/shadow/status` reads
   only `FLANGE_QC_V2_ARTIFACT_INTAKE_DIR`, reports safe unconfigured state, and
   returns manifest metadata only after artifact intake is ready. Adapter tests

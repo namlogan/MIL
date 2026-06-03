@@ -62,7 +62,7 @@ request-supplied filesystem paths. If the env var is missing, the endpoint
 returns `configured=false`, readiness flags false, no production authority, and
 `next_issue.recommended_task=configure_artifact_intake`. If the env var points
 to a valid metadata bundle, the endpoint returns the validator result with
-`configured=true`.
+`configured=true` and points the next issue to shadow observation review.
 
 The HMI renders this endpoint as an artifact readiness panel. It shows configured
 state, shadow model readiness, live camera readiness, next task, warnings/errors,
@@ -71,10 +71,10 @@ camera credentials, or grant production authority.
 
 ## Next Issue Rules
 
-If `ready.shadow_model_integration_issue=true`, the next allowed issue is a
-shadow model integration task. That task may read metadata and connect a model
-reference to the detector boundary, but it still cannot run production PASS/NG
-or approve model promotion.
+If `ready.shadow_model_integration_issue=true`, the next allowed app issue is
+shadow observation review. That loop validates and submits sanitized detector
+observation metadata, but it still cannot run production PASS/NG or approve
+model promotion.
 
 If `ready.live_camera_implementation_issue=false`, hardware work remains blocked.
 Open camera hardware readiness only after the physical camera, lens, lighting,
