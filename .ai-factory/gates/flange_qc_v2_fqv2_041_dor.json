@@ -1,0 +1,80 @@
+{
+  "task_id": "FQV2-041",
+  "github_issue": "https://github.com/namlogan/MIL/issues/139",
+  "branch": "agent/139-hmi-artifact-readiness-panel",
+  "title": "Render artifact readiness status in HMI",
+  "status": "definition_of_ready",
+  "user_business_goal": "Show the dataset/model/camera/QC feedback readiness summary in the HMI so engineering/operator can see next blockers without running the CLI, while keeping the QC tablet viewport signal-first and uncluttered.",
+  "allowed_files": [
+    "apps/flange_qc_v2/static/hmi.html",
+    "tests/flange_qc_v2/test_hmi_screen.py",
+    "docs/project/flange_qc_v2/USER_FLOWS.md",
+    "docs/project/flange_qc_v2/DATA_MODEL.md",
+    "docs/project/flange_qc_v2/TEST_STRATEGY.md",
+    ".ai-factory/gates/flange_qc_v2_fqv2_041_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_041_handoff_2026-06-03.md"
+  ],
+  "out_of_scope": [
+    "raw images, videos, raw datasets, customer/factory data, notebooks, model weights, TensorRT engines, model binaries, or model execution",
+    "live camera capture, camera SDK loading, camera credentials, GPU/hardware validation, or hardware readiness approval",
+    "backend route changes or new API behavior",
+    "major QC tablet redesign or changing pass/fail visual semantics",
+    "production deploy/release, secrets, tokens, provider credentials, destructive migrations, production data migration, billing, legal/compliance behavior, or security boundary change",
+    "product spec approval, QC/SOP tolerance approval, model promotion approval, production PASS/NG authority, or production auto-reject behavior",
+    "Memory0 approved record writes",
+    "Windmill runtime secrets/logs or .windmill/runtime/** changes"
+  ],
+  "acceptance_criteria": [
+    "Add a compact artifact readiness panel to the existing HMI outside the primary QC tablet viewport.",
+    "The HMI fetches GET /artifact-readiness/status and renders artifact intake state, shadow model readiness, live camera readiness, QC feedback readiness, production release blocker, and recommended next actions.",
+    "Missing or malformed readiness status renders a safe blocked/attention state without changing the QC viewport decision signal.",
+    "The panel must not expose raw feedback rows, raw media, raw datasets, model weights, credentials, or request-supplied filesystem paths.",
+    "The QC tablet viewport remains signal-first; the readiness panel must not become the primary visual focus for QC pass/fail workflow.",
+    "Update docs/tests/DoR/QA handoff evidence.",
+    "Existing HMI screen, feedback controls, detector status, artifact-intake status, readiness endpoint, and product CI behavior remains valid."
+  ],
+  "required_checks": [
+    "python3 -m unittest tests.flange_qc_v2.test_hmi_screen -v",
+    "python3 -m unittest tests.flange_qc_v2.test_artifact_readiness -v",
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 -m compileall -q apps/flange_qc_v2 tests/flange_qc_v2 scripts/flange_qc_v2",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m unittest discover -s tests -v",
+    "Browser smoke on http://127.0.0.1:8765/hmi after local server refresh",
+    "git diff --check",
+    "python3 -m json.tool .ai-factory/gates/flange_qc_v2_fqv2_041_dor.json"
+  ],
+  "memory_preflight": {
+    "query": "Flange QC v2 HMI artifact readiness panel, QC tablet signal-first viewport, artifact readiness endpoint.",
+    "retrieved_decisions": [
+      "HMI should keep QC viewport minimal.",
+      "Readiness endpoint is metadata-only and env-only.",
+      "Production authority remains false."
+    ],
+    "retrieved_lessons": [
+      "Technical readiness belongs in compact support panels, not the primary QC signal area.",
+      "Missing or malformed readiness metadata must fail closed without changing QC pass/fail semantics."
+    ],
+    "restricted_areas": [
+      "raw media/data",
+      "model weights/binaries/inference",
+      "camera hardware/SDK/credentials",
+      "secrets",
+      "production deploy/release",
+      "destructive migrations",
+      "product spec approval",
+      "QC/SOP tolerance approval",
+      "model promotion",
+      "production PASS/NG authority"
+    ],
+    "conflicts_found": "none",
+    "sources_to_verify": [
+      "AGENTS.md",
+      ".ai-factory/RULES.md",
+      "apps/flange_qc_v2/static/hmi.html",
+      "tests/flange_qc_v2/test_hmi_screen.py",
+      "apps/flange_qc_v2/asgi.py"
+    ]
+  },
+  "rollback_note": "Revert the FQV2-041 PR to remove the HMI artifact readiness panel, tests, docs, and gate evidence. Existing HMI QC viewport, artifact readiness endpoint, artifact intake status, detector bridge, feedback flow, and product CI behavior remain valid."
+}

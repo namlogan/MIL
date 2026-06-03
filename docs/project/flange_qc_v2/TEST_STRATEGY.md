@@ -97,6 +97,11 @@
   live-camera and production-release blockers, optional labeling review pack
   handling, malformed pack rejection, CLI output, fail-closed missing intake
   behavior, and `/artifact-readiness/status` env-only HTTP status behavior.
+- HMI screen tests and browser evidence validate that artifact readiness renders
+  as a compact support panel outside the primary QC tablet viewport, fetches
+  `/artifact-readiness/status`, displays shadow model, live camera, QC feedback,
+  production release, and recommended next actions, and does not change QC
+  pass/fail visual semantics.
 
 ## Fixtures And Test Data
 

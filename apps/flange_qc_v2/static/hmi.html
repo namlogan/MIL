@@ -932,6 +932,25 @@
         </div>
       </section>
 
+      <section class="grid" aria-label="Artifact readiness report">
+        <div class="panel">
+          <h2>Artifact Readiness</h2>
+          <div id="artifact-readiness-status" class="feedback-status" data-state="idle">artifact_readiness_report.v1 pending</div>
+          <div class="detail-row"><span class="label">Shadow Model</span><span id="artifact-readiness-shadow-model" class="value">blocked</span></div>
+          <div class="detail-row"><span class="label">Live Camera</span><span id="artifact-readiness-live-camera" class="value">blocked</span></div>
+          <div class="detail-row"><span class="label">QC Feedback</span><span id="artifact-readiness-qc-feedback" class="value">blocked</span></div>
+          <div class="detail-row"><span class="label">Production</span><span id="artifact-readiness-production-release" class="value">blocked</span></div>
+        </div>
+
+        <div class="panel">
+          <h2>Readiness Actions</h2>
+          <div class="detail-row"><span class="label">Optional Pack</span><span class="value">FLANGE_QC_V2_LABELING_REVIEW_PACK_PATH</span></div>
+          <ul id="artifact-readiness-actions" class="list">
+            <li>configure_artifact_intake</li>
+          </ul>
+        </div>
+      </section>
+
       <section class="grid" aria-label="Detector shadow status">
         <div class="panel">
           <h2>Detector Bridge</h2>
@@ -1052,6 +1071,12 @@
         artifactCameraReady: document.getElementById("artifact-camera-ready"),
         artifactNextTask: document.getElementById("artifact-next-task"),
         artifactIntakeArtifacts: document.getElementById("artifact-intake-artifacts"),
+        artifactReadinessStatus: document.getElementById("artifact-readiness-status"),
+        artifactReadinessShadowModel: document.getElementById("artifact-readiness-shadow-model"),
+        artifactReadinessLiveCamera: document.getElementById("artifact-readiness-live-camera"),
+        artifactReadinessQcFeedback: document.getElementById("artifact-readiness-qc-feedback"),
+        artifactReadinessProductionRelease: document.getElementById("artifact-readiness-production-release"),
+        artifactReadinessActions: document.getElementById("artifact-readiness-actions"),
         detectorShadowStatus: document.getElementById("detector-shadow-status"),
         detectorShadowReady: document.getElementById("detector-shadow-ready"),
         detectorShadowAdapter: document.getElementById("detector-shadow-adapter"),
@@ -1526,6 +1551,61 @@
         return parts.join("; ");
       }
 
+      function renderArtifactReadinessStatus(payload) {
+        const lanes = payload.lanes && typeof payload.lanes === "object" ? payload.lanes : {};
+        const shadowModel = lanes.shadow_model || {};
+        const liveCamera = lanes.live_camera || {};
+        const qcFeedback = lanes.qc_feedback || {};
+        const productionRelease = lanes.production_release || {};
+        const warnings = Array.isArray(payload.warnings) ? payload.warnings : [];
+        const configured = Boolean(payload.configured);
+        const shadowReady = Boolean(shadowModel.ready);
+
+        fields.artifactReadinessStatus.textContent = artifactReadinessStatusLabel(payload);
+        fields.artifactReadinessStatus.dataset.state = configured && shadowReady && !warnings.length ? "ok" : "error";
+        fields.artifactReadinessShadowModel.textContent = summarizeReadinessLane(shadowModel);
+        fields.artifactReadinessLiveCamera.textContent = summarizeReadinessLane(liveCamera);
+        fields.artifactReadinessQcFeedback.textContent = qcFeedback.ready_for_labeling_review
+          ? `ready: ${qcFeedback.source_record_count || 0} feedback records`
+          : `blocked: ${qcFeedback.recommended_task || "collect_qc_feedback"}`;
+        fields.artifactReadinessProductionRelease.textContent = summarizeReadinessLane(productionRelease);
+        renderArtifactReadinessActions(payload.recommended_next_actions);
+      }
+
+      function artifactReadinessStatusLabel(payload) {
+        const warnings = Array.isArray(payload.warnings) ? payload.warnings : [];
+        if (payload.contract_version !== "artifact_readiness_report.v1") {
+          return "artifact readiness report invalid";
+        }
+        if (!payload.configured) {
+          return "artifact readiness blocked: configure intake";
+        }
+        if (warnings.length) {
+          return `artifact readiness warning: ${warnings[0]}`;
+        }
+        return "artifact readiness metadata loaded";
+      }
+
+      function summarizeReadinessLane(lane) {
+        if (!lane || typeof lane !== "object") {
+          return "blocked";
+        }
+        const ready = Boolean(lane.ready || lane.ok);
+        const state = lane.state || (ready ? "ready" : "blocked");
+        const task = lane.recommended_task || lane.reason || "";
+        return task ? `${state}: ${task}` : state;
+      }
+
+      function renderArtifactReadinessActions(actions) {
+        const items = Array.isArray(actions) && actions.length ? actions : ["configure_artifact_intake"];
+        fields.artifactReadinessActions.innerHTML = "";
+        items.forEach((action) => {
+          const item = document.createElement("li");
+          item.textContent = action;
+          fields.artifactReadinessActions.appendChild(item);
+        });
+      }
+
       function renderDetectorShadowStatus(payload) {
         const ready = Boolean(payload.ready);
         fields.detectorShadowStatus.textContent = detectorShadowStatusLabel(payload);
@@ -1631,6 +1711,34 @@
             next_issue: {
               recommended_task: "configure_artifact_intake"
             }
+          });
+        }
+      }
+
+      async function fetchArtifactReadinessStatus() {
+        try {
+          const response = await fetch("/artifact-readiness/status", {
+            headers: { "Accept": "application/json" }
+          });
+          const payload = await response.json();
+          if (!response.ok) {
+            throw new Error(payload.detail || `artifact readiness ${response.status}`);
+          }
+          renderArtifactReadinessStatus(payload);
+        } catch (error) {
+          renderArtifactReadinessStatus({
+            contract_version: "artifact_readiness_report.v1",
+            configured: false,
+            warnings: [`artifact readiness error: ${error.message}`],
+            lanes: {
+              artifact_intake: { ok: false, recommended_task: "configure_artifact_intake" },
+              shadow_model: { ready: false, recommended_task: "configure_artifact_intake" },
+              live_camera: { ready: false, recommended_task: "schedule_camera_hardware_readiness" },
+              qc_feedback: { ready_for_labeling_review: false, recommended_task: "collect_qc_feedback" },
+              production_release: { ready: false, state: "blocked" }
+            },
+            recommended_next_actions: ["configure_artifact_intake", "keep_production_release_blocked"],
+            production_authority: false
           });
         }
       }
@@ -1764,6 +1872,7 @@
       connect();
       fetchReplaySnapshot();
       fetchArtifactIntakeStatus();
+      fetchArtifactReadinessStatus();
       fetchDetectorShadowStatus();
     </script>
   </body>
