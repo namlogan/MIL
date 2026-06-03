@@ -1,4 +1,6 @@
 import json
+import contextlib
+import io
 import tempfile
 import unittest
 from pathlib import Path
@@ -87,9 +89,12 @@ class QcFeedbackExportTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             missing_path = Path(tmpdir) / "missing.sqlite"
 
-            exit_code = export_main(["--audit-db", str(missing_path)])
+            stderr = io.StringIO()
+            with contextlib.redirect_stderr(stderr):
+                exit_code = export_main(["--audit-db", str(missing_path)])
 
         self.assertEqual(exit_code, 1)
+        self.assertIn("audit DB does not exist", stderr.getvalue())
 
 
 if __name__ == "__main__":

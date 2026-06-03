@@ -55,6 +55,9 @@ MIGRATIONS = (
 )
 
 
+FEEDBACK_EXPORT_CONTRACT_VERSION = "qc_feedback_export.v1"
+
+
 class AuditStore:
     def __init__(self, path: str | Path):
         self.path = Path(path)
@@ -206,6 +209,55 @@ class AuditStore:
             )
         return records
 
+    def export_feedback_metadata_records(self) -> list[dict[str, Any]]:
+        with self._connection() as connection:
+            rows = connection.execute(
+                """
+                SELECT
+                    feedback.id AS audit_feedback_id,
+                    feedback.feedback_type AS feedback_type,
+                    feedback.payload_json AS feedback_payload_json,
+                    feedback.created_at AS feedback_created_at,
+                    inspections.product_code AS product_code,
+                    inspections.product_spec_version AS product_spec_version,
+                    inspections.decision AS inspection_decision,
+                    inspections.payload_json AS inspection_payload_json,
+                    inspections.created_at AS inspection_created_at
+                FROM qc_feedback AS feedback
+                JOIN inspections
+                    ON inspections.inspection_id = feedback.inspection_id
+                ORDER BY feedback.id
+                """
+            ).fetchall()
+        records: list[dict[str, Any]] = []
+        for row in rows:
+            feedback_payload = json.loads(row["feedback_payload_json"])
+            inspection_payload = json.loads(row["inspection_payload_json"])
+            records.append(
+                {
+                    "contract_version": FEEDBACK_EXPORT_CONTRACT_VERSION,
+                    "audit_feedback_id": row["audit_feedback_id"],
+                    "feedback_id": feedback_payload["feedback_id"],
+                    "inspection_id": feedback_payload["inspection_id"],
+                    "product": {
+                        "code": row["product_code"],
+                        "spec_version": row["product_spec_version"],
+                    },
+                    "inspection_decision": row["inspection_decision"],
+                    "inspection_created_at": row["inspection_created_at"],
+                    "feedback_type": row["feedback_type"],
+                    "reviewer_id": feedback_payload["reviewer_id"],
+                    "note": feedback_payload["note"],
+                    "shadow_decision": feedback_payload["shadow_decision"],
+                    "source_ref": feedback_payload["source_ref"],
+                    "feedback_created_at": row["feedback_created_at"],
+                    "production_authority": False,
+                    "authority_blockers": list(feedback_payload["authority_blockers"]),
+                    "observations": _compact_observations(inspection_payload.get("observations", [])),
+                }
+            )
+        return records
+
     def _connect(self) -> sqlite3.Connection:
         connection = sqlite3.connect(self.path)
         connection.row_factory = sqlite3.Row
@@ -231,3 +283,23 @@ class AuditStore:
             "SELECT version FROM schema_migrations ORDER BY version"
         ).fetchall()
         return [int(row["version"]) for row in rows]
+
+
+def _compact_observations(observations: Any) -> list[dict[str, Any]]:
+    if not isinstance(observations, list):
+        return []
+    compact: list[dict[str, Any]] = []
+    for observation in observations:
+        if not isinstance(observation, dict):
+            continue
+        record = {
+            "label": observation.get("label", ""),
+            "confidence": observation.get("confidence"),
+            "bbox": observation.get("bbox", []),
+        }
+        if observation.get("model_ref"):
+            record["model_ref"] = observation["model_ref"]
+        if observation.get("evidence_ref"):
+            record["evidence_ref"] = observation["evidence_ref"]
+        compact.append(record)
+    return compact
