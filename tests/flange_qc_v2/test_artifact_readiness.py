@@ -1,12 +1,15 @@
+import asyncio
 import contextlib
 import io
 import json
+import os
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
 
+from apps.flange_qc_v2.asgi import app
 from apps.flange_qc_v2.artifact_intake import validate_artifact_intake
 from apps.flange_qc_v2.artifact_readiness import build_artifact_readiness_report
 from apps.flange_qc_v2.audit import FEEDBACK_EXPORT_CONTRACT_VERSION
@@ -17,6 +20,22 @@ from scripts.flange_qc_v2.build_artifact_readiness_report import main as readine
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 READINESS_CLI = REPO_ROOT / "scripts/flange_qc_v2/build_artifact_readiness_report.py"
+
+
+def asgi_get_json(path: str) -> dict[str, object]:
+    messages = []
+
+    async def receive():
+        return {"type": "http.request", "body": b"", "more_body": False}
+
+    async def send(message):
+        messages.append(message)
+
+    asyncio.run(app({"type": "http", "method": "GET", "path": path}, receive, send))
+    return {
+        "status": messages[0]["status"],
+        "body": json.loads(messages[1]["body"].decode("utf-8")),
+    }
 
 
 class ArtifactReadinessReportTests(unittest.TestCase):
@@ -149,6 +168,88 @@ class ArtifactReadinessReportTests(unittest.TestCase):
         self.assertEqual(report["contract_version"], "artifact_readiness_report.v1")
         self.assertTrue(report["lanes"]["shadow_model"]["ready"])
         self.assertFalse(report["production_authority"])
+
+    def test_status_endpoint_reports_safe_unconfigured_state(self) -> None:
+        previous_intake = os.environ.pop("FLANGE_QC_V2_ARTIFACT_INTAKE_DIR", None)
+        previous_pack = os.environ.pop("FLANGE_QC_V2_LABELING_REVIEW_PACK_PATH", None)
+        try:
+            response = asgi_get_json("/artifact-readiness/status")
+        finally:
+            if previous_intake is not None:
+                os.environ["FLANGE_QC_V2_ARTIFACT_INTAKE_DIR"] = previous_intake
+            if previous_pack is not None:
+                os.environ["FLANGE_QC_V2_LABELING_REVIEW_PACK_PATH"] = previous_pack
+
+        body = response["body"]
+        self.assertEqual(response["status"], 200)
+        self.assertEqual(body["contract_version"], "artifact_readiness_report.v1")
+        self.assertFalse(body["configured"])
+        self.assertFalse(body["lanes"]["artifact_intake"]["ok"])
+        self.assertFalse(body["lanes"]["shadow_model"]["ready"])
+        self.assertFalse(body["lanes"]["live_camera"]["ready"])
+        self.assertEqual(body["lanes"]["artifact_intake"]["recommended_task"], "configure_artifact_intake")
+        self.assertIn("configure_artifact_intake", body["recommended_next_actions"])
+        self.assertFalse(body["production_authority"])
+
+    def test_status_endpoint_reads_env_only_and_optional_labeling_pack(self) -> None:
+        feedback_pack = self._labeling_review_pack(source_record_count=3)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            pack_path = Path(tmpdir) / "labeling-pack.json"
+            pack_path.write_text(json.dumps(feedback_pack, sort_keys=True), encoding="utf-8")
+            previous_intake = os.environ.get("FLANGE_QC_V2_ARTIFACT_INTAKE_DIR")
+            previous_pack = os.environ.get("FLANGE_QC_V2_LABELING_REVIEW_PACK_PATH")
+            os.environ["FLANGE_QC_V2_ARTIFACT_INTAKE_DIR"] = str(TEMPLATE_DIR)
+            os.environ["FLANGE_QC_V2_LABELING_REVIEW_PACK_PATH"] = str(pack_path)
+            try:
+                response = asgi_get_json("/artifact-readiness/status")
+            finally:
+                if previous_intake is None:
+                    os.environ.pop("FLANGE_QC_V2_ARTIFACT_INTAKE_DIR", None)
+                else:
+                    os.environ["FLANGE_QC_V2_ARTIFACT_INTAKE_DIR"] = previous_intake
+                if previous_pack is None:
+                    os.environ.pop("FLANGE_QC_V2_LABELING_REVIEW_PACK_PATH", None)
+                else:
+                    os.environ["FLANGE_QC_V2_LABELING_REVIEW_PACK_PATH"] = previous_pack
+
+        body = response["body"]
+        self.assertEqual(response["status"], 200)
+        self.assertTrue(body["configured"])
+        self.assertEqual(body["labeling_review_pack_path"], str(pack_path))
+        self.assertTrue(body["lanes"]["shadow_model"]["ready"])
+        self.assertFalse(body["lanes"]["live_camera"]["ready"])
+        self.assertTrue(body["lanes"]["qc_feedback"]["ready_for_labeling_review"])
+        self.assertEqual(body["lanes"]["qc_feedback"]["source_record_count"], 3)
+        self.assertFalse(body["production_authority"])
+        self.assertNotIn("records", json.dumps(body))
+
+    def test_status_endpoint_fails_closed_for_malformed_labeling_pack(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            pack_path = Path(tmpdir) / "bad-pack.json"
+            pack_path.write_text('{"contract_version":"wrong"}', encoding="utf-8")
+            previous_intake = os.environ.get("FLANGE_QC_V2_ARTIFACT_INTAKE_DIR")
+            previous_pack = os.environ.get("FLANGE_QC_V2_LABELING_REVIEW_PACK_PATH")
+            os.environ["FLANGE_QC_V2_ARTIFACT_INTAKE_DIR"] = str(TEMPLATE_DIR)
+            os.environ["FLANGE_QC_V2_LABELING_REVIEW_PACK_PATH"] = str(pack_path)
+            try:
+                response = asgi_get_json("/artifact-readiness/status")
+            finally:
+                if previous_intake is None:
+                    os.environ.pop("FLANGE_QC_V2_ARTIFACT_INTAKE_DIR", None)
+                else:
+                    os.environ["FLANGE_QC_V2_ARTIFACT_INTAKE_DIR"] = previous_intake
+                if previous_pack is None:
+                    os.environ.pop("FLANGE_QC_V2_LABELING_REVIEW_PACK_PATH", None)
+                else:
+                    os.environ["FLANGE_QC_V2_LABELING_REVIEW_PACK_PATH"] = previous_pack
+
+        body = response["body"]
+        self.assertEqual(response["status"], 200)
+        self.assertTrue(body["configured"])
+        self.assertTrue(body["lanes"]["shadow_model"]["ready"])
+        self.assertFalse(body["lanes"]["qc_feedback"]["ready_for_labeling_review"])
+        self.assertIn("labeling review pack", body["warnings"][0])
+        self.assertFalse(body["production_authority"])
 
     def _labeling_review_pack(self, *, source_record_count: int) -> dict[str, object]:
         pack = {
