@@ -24,7 +24,11 @@
    `boundary_corners_calibrated_shadow` with sanitized boundary/calibration
    evidence for boundary-derived values.
 6. Detector adapter returns observations when available.
-7. SOP rule engine evaluates product, calibration, geometry, and model-dependent rules.
+7. SOP rule engine evaluates product, calibration, geometry, and
+   model-dependent rules. Phase 3 consumes sanitized detector observations as
+   review-only evidence: no observations return `NOT_EVALUATED`, relevant
+   observations return `ASSIST`, and neither path can emit production `PASS` or
+   `NG`.
 8. Inspection decision emits PASS, NG, BLOCKED, NOT_EVALUATED, or ASSIST reason codes.
 9. Audit DB stores inspection and rule evidence.
 10. WebSocket pushes HMI payload to the UI.

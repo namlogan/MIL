@@ -118,6 +118,11 @@
 - Replay/HMI stream tests validate optional synthetic `detector_observations`,
   invalid observation rejection, safe empty observations without artifact intake,
   and manifest-filled review-only observations when artifact intake is ready.
+- Phase 3 decision-engine, replay, and HMI stream tests validate sanitized
+  detector observations flow into shadow SOP evidence: missing observations
+  return `NOT_EVALUATED` with `MODEL_MISSING`, relevant observations return
+  `ASSIST` with matched labels/confidence/bbox evidence, and neither path grants
+  production authority or emits `PASS`/`NG`.
 - Audit DB stores inspection, rule, calibration, and feedback evidence.
 - QC feedback export tests validate one sanitized JSONL metadata record per
   stored feedback row, empty audit export behavior, and fail-closed missing DB

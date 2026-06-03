@@ -303,8 +303,12 @@ validated `DetectorObservation` entries only. The default stub adapter runs
 without camera hardware, GPU, model weights, raw media, or MLOps dependencies.
 When no model evidence exists, the stub emits `NOT_EVALUATED` with
 `MODEL_MISSING`; when stub observations are present, it emits `ASSIST` with
-`MODEL_REVIEW_REQUIRED`. Detector results cannot emit `PASS` or `NG`, cannot
-approve production authority, and carry `MODEL_APPROVAL_REQUIRED` plus
+`MODEL_REVIEW_REQUIRED`. Phase 3 consumes sanitized detector observations as
+shadow-only SOP evidence: relevant observations carry matched labels,
+confidence, bbox, and optional model/evidence refs in rule evidence, while
+missing observations remain `NOT_EVALUATED`. Detector results and Phase 3
+observation evidence cannot emit `PASS` or `NG`, cannot approve production
+authority, and carry `MODEL_APPROVAL_REQUIRED` plus
 `PRODUCTION_APPROVAL_REQUIRED` blockers.
 
 Bootstrap model artifact boundary evidence lives in:

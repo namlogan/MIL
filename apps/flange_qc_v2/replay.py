@@ -9,6 +9,7 @@ from apps.flange_qc_v2.calibration import load_calibration_config
 from apps.flange_qc_v2.decision_engine import (
     DecisionResult,
     evaluate_phase_one_measurements,
+    evaluate_phase_three_observations,
     evaluate_phase_two_geometry,
     evaluate_sop_safe_fallbacks,
 )
@@ -202,6 +203,10 @@ def run_no_camera_replay(
         frame.with_geometry(frame_geometry)
         for frame, frame_geometry in zip(manifest.frames, frame_geometries, strict=True)
     )
+    phase_three_observations = tuple(
+        DetectorObservation.from_payload(observation)
+        for observation in frames[0].detector_observations
+    )
     phase_results = (
         evaluate_phase_one_measurements(
             product_spec=product_spec,
@@ -213,7 +218,7 @@ def run_no_camera_replay(
             calibration=calibration,
             geometry=geometry,
         ),
-        evaluate_sop_safe_fallbacks(phase="PHASE_3"),
+        evaluate_phase_three_observations(observations=phase_three_observations),
         evaluate_sop_safe_fallbacks(phase="PHASE_4"),
     )
     return ReplayRunResult(

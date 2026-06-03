@@ -147,6 +147,10 @@ class HmiStreamSnapshotTests(unittest.TestCase):
         self.assertEqual(parsed.phase, "FINAL")
         self.assertIn("PRODUCT_SPEC_APPROVAL_MISSING", parsed.reason_codes)
         self.assertEqual(parsed.phase_results[2]["phase"], "PHASE_3")
+        phase_three = parsed.phase_results[2]
+        self.assertEqual(phase_three["decision"], "ASSIST")
+        self.assertEqual(phase_three["rule_results"][0]["evidence"]["matched_labels"], ["punch_mark"])
+        self.assertEqual(phase_three["rule_results"][0]["evidence"]["max_confidence"], 0.87)
 
     def test_replay_http_endpoint_uses_env_configured_boundary_replay_only(self) -> None:
         os.environ[REPLAY_MANIFEST_ENV] = str(BOUNDARY_REPLAY)
