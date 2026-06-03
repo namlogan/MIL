@@ -119,109 +119,180 @@
         gap: 14px;
       }
 
-      .qc-device-layout {
+      .qc-tablet-viewport {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 14px;
-      }
-
-      .device-phase-card {
-        display: grid;
+        grid-template-rows: auto auto minmax(240px, 1fr) auto;
         gap: 12px;
-        min-width: 0;
-        min-height: 168px;
-        padding: 14px;
+        min-height: min(720px, calc(100vh - 112px));
         border: 1px solid var(--line);
-        border-left: 8px solid var(--amber);
         border-radius: var(--radius);
         background: var(--surface);
+        overflow: hidden;
       }
 
-      .device-phase-card[data-state="ok"] {
-        border-left-color: var(--green);
-      }
-
-      .device-phase-card[data-state="error"] {
-        border-left-color: var(--red);
-      }
-
-      .device-phase-card[data-state="warn"] {
-        border-left-color: var(--amber);
-      }
-
-      .device-phase-header {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 10px;
-      }
-
-      .phase-signal {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 76px;
-        min-height: 36px;
-        padding: 0 10px;
-        border-radius: 6px;
-        color: #ffffff;
-        background: var(--amber);
-        font-weight: 850;
-      }
-
-      .phase-signal[data-state="ok"] {
-        background: var(--green);
-      }
-
-      .phase-signal[data-state="error"] {
-        background: var(--red);
-      }
-
-      .phase-signal[data-state="warn"] {
-        background: var(--amber);
-      }
-
-      .phase-device-detail {
-        min-height: 48px;
-        color: var(--muted);
-        font-weight: 700;
-        overflow-wrap: anywhere;
-      }
-
-      .stitch-zone {
-        display: grid;
-        gap: 6px;
-        min-height: 72px;
-        padding: 12px;
-        border: 1px solid #f7c78b;
-        border-radius: var(--radius);
-        background: #fff8ed;
-      }
-
-      .stitch-zone[data-state="ok"] {
+      .qc-tablet-viewport[data-operator-state="pass"] {
         border-color: #9bd8b9;
         background: #effaf4;
       }
 
-      .stitch-zone[data-state="error"] {
+      .qc-tablet-viewport[data-operator-state="check"] {
         border-color: #f4b3aa;
         background: #fff7f5;
       }
 
-      .stitch-zone[data-state="warn"] {
+      .qc-tablet-viewport[data-operator-state="review"] {
         border-color: #f7c78b;
         background: #fff8ed;
       }
 
-      .stitch-zone span {
+      .measurement-strip {
+        display: grid;
+        grid-template-columns: 1.1fr repeat(3, minmax(0, 0.8fr));
+        gap: 1px;
+        background: var(--line);
+      }
+
+      .measurement-chip {
+        min-width: 0;
+        padding: 12px 14px;
+        background: #ffffff;
+      }
+
+      .measurement-chip span {
+        display: block;
         color: var(--muted);
         font-size: 12px;
         font-weight: 800;
       }
 
-      .stitch-zone strong {
-        font-size: 22px;
+      .measurement-chip strong {
+        display: block;
+        margin-top: 5px;
+        font-size: clamp(20px, 3vw, 34px);
         line-height: 1;
+        overflow-wrap: anywhere;
+      }
+
+      .measurement-chip[data-state="ok"] strong {
+        color: var(--green);
+      }
+
+      .measurement-chip[data-state="check"] strong {
+        color: var(--red);
+      }
+
+      .measurement-chip[data-state="review"] strong {
+        color: var(--amber);
+      }
+
+      .operator-state-banner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        min-height: 112px;
+        padding: 18px 22px;
+        color: #ffffff;
+        background: var(--amber);
+      }
+
+      .operator-state-banner[data-operator-state="pass"] {
+        background: var(--green);
+      }
+
+      .operator-state-banner[data-operator-state="check"] {
+        background: var(--red);
+      }
+
+      .operator-state-banner[data-operator-state="review"] {
+        background: var(--amber);
+      }
+
+      .operator-state-banner strong {
+        display: block;
+        font-size: clamp(44px, 8vw, 88px);
+        line-height: 0.95;
+        letter-spacing: 0;
+      }
+
+      .operator-state-banner span {
+        display: block;
+        margin-top: 8px;
+        font-size: clamp(16px, 2vw, 24px);
+        font-weight: 850;
+      }
+
+      .operator-state-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 116px;
+        min-height: 46px;
+        border: 2px solid rgba(255, 255, 255, 0.82);
+        border-radius: 999px;
+        font-weight: 950;
+      }
+
+      .inspection-image-panel {
+        position: relative;
+        min-height: 260px;
+        margin: 0 14px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        overflow: hidden;
+        background:
+          radial-gradient(circle at 38% 42%, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 22%),
+          linear-gradient(135deg, #dbe4ed 0 18%, #b6c4d2 18% 20%, #d8e1ea 20% 44%, #aab9c7 44% 46%, #e4eaf0 46% 100%);
+      }
+
+      .suspect-overlay-layer {
+        position: absolute;
+        inset: 0;
+      }
+
+      .suspect-overlay {
+        position: absolute;
+        border: 6px solid var(--red);
+        border-radius: 999px;
+        background: rgba(180, 35, 24, 0.12);
+        box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.86);
+      }
+
+      .suspect-region-label {
+        position: absolute;
+        left: 14px;
+        bottom: 14px;
+        max-width: calc(100% - 28px);
+        padding: 9px 11px;
+        border-radius: 6px;
+        background: rgba(17, 24, 39, 0.9);
+        color: #ffffff;
+        font-size: 13px;
+        font-weight: 850;
+        overflow-wrap: anywhere;
+      }
+
+      .alarm-feedback-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        padding: 0 14px 14px;
+      }
+
+      .alarm-action {
+        min-height: 54px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #ffffff;
+        color: var(--ink);
+        font-weight: 900;
+        cursor: pointer;
+      }
+
+      .alarm-action-primary {
+        border-color: var(--ink);
+        color: #ffffff;
+        background: var(--ink);
       }
 
       .panel {
@@ -602,7 +673,8 @@
 
         header,
         .grid,
-        .qc-device-layout,
+        .measurement-strip,
+        .alarm-feedback-actions,
         .status-strip,
         .phase-results,
         .measurement-grid {
@@ -633,6 +705,45 @@
     </header>
 
     <main>
+      <section id="qc-tablet-viewport" class="qc-tablet-viewport" data-operator-state="review" aria-label="QC tablet operating viewport">
+        <div id="measurement-strip" class="measurement-strip">
+          <div class="measurement-chip" data-chip="product" data-state="review">
+            <span>Product</span>
+            <strong id="product">611</strong>
+          </div>
+          <div class="measurement-chip" data-chip="length" data-state="review">
+            <span>Length</span>
+            <strong id="length-chip-status">REVIEW</strong>
+          </div>
+          <div class="measurement-chip" data-chip="width" data-state="review">
+            <span>Width</span>
+            <strong id="width-chip-status">REVIEW</strong>
+          </div>
+          <div class="measurement-chip" data-chip="diagonal-or-stitch" data-state="review">
+            <span>Diagonal / Stitch</span>
+            <strong id="diagonal-chip-status">REVIEW</strong>
+          </div>
+        </div>
+
+        <div id="operator-state-banner" class="operator-state-banner" data-operator-state="review">
+          <div>
+            <strong id="operator-state-label">REVIEW</strong>
+            <span id="operator-state-action">Wait / review</span>
+          </div>
+          <div id="operator-state-badge" class="operator-state-badge">AMBER</div>
+        </div>
+
+        <div id="inspection-image-panel" class="inspection-image-panel">
+          <div id="suspect-overlay-layer" class="suspect-overlay-layer"></div>
+          <div id="suspect-region-label" class="suspect-region-label">No approved live image; replay image well active</div>
+        </div>
+
+        <div id="alarm-feedback-actions" class="alarm-feedback-actions">
+          <button id="alarm-correct" class="alarm-action alarm-action-primary" type="button">Alert correct</button>
+          <button id="alarm-false" class="alarm-action" type="button">False alarm</button>
+        </div>
+      </section>
+
       <section class="status-strip" aria-label="Inspection status">
         <div class="metric">
           <h2>Decision</h2>
@@ -643,39 +754,13 @@
           <strong id="phase">PHASE_2</strong>
         </div>
         <div class="metric">
-          <h2>Product</h2>
-          <strong id="product">611</strong>
-        </div>
-        <div class="metric">
           <h2>Spec</h2>
           <strong id="spec">bootstrap_replay</strong>
         </div>
-      </section>
-
-      <section id="qc-device-layout" class="qc-device-layout" aria-label="QC device phase layout">
-        <article id="phase-one-device-card" class="device-phase-card" data-state="warn">
-          <div class="device-phase-header">
-            <div>
-              <h2>Phase 1 Dimensions</h2>
-              <p id="phase-one-device-detail" class="phase-device-detail">Waiting for length and width evidence.</p>
-            </div>
-            <strong id="phase-one-device-status" class="phase-signal" data-state="warn">REVIEW</strong>
-          </div>
-        </article>
-
-        <article id="phase-two-device-card" class="device-phase-card" data-state="warn">
-          <div class="device-phase-header">
-            <div>
-              <h2>Phase 2 Stitch Watch</h2>
-              <p id="phase-two-device-detail" class="phase-device-detail">Independent QC review zone.</p>
-            </div>
-            <strong id="phase-two-device-status" class="phase-signal" data-state="warn">REVIEW</strong>
-          </div>
-          <div id="phase-two-stitch-zone" class="stitch-zone" data-state="warn">
-            <span>Suspected stitch area</span>
-            <strong id="phase-two-stitch-status">REVIEW</strong>
-          </div>
-        </article>
+        <div class="metric">
+          <h2>Detail</h2>
+          <strong>Below</strong>
+        </div>
       </section>
 
       <section class="grid">
@@ -888,14 +973,20 @@
         unit: document.getElementById("unit"),
         reasonList: document.getElementById("reason-list"),
         phaseResults: document.getElementById("phase-results"),
-        phaseOneDeviceCard: document.getElementById("phase-one-device-card"),
-        phaseOneDeviceStatus: document.getElementById("phase-one-device-status"),
-        phaseOneDeviceDetail: document.getElementById("phase-one-device-detail"),
-        phaseTwoDeviceCard: document.getElementById("phase-two-device-card"),
-        phaseTwoDeviceStatus: document.getElementById("phase-two-device-status"),
-        phaseTwoDeviceDetail: document.getElementById("phase-two-device-detail"),
-        phaseTwoStitchZone: document.getElementById("phase-two-stitch-zone"),
-        phaseTwoStitchStatus: document.getElementById("phase-two-stitch-status"),
+        qcTabletViewport: document.getElementById("qc-tablet-viewport"),
+        operatorStateBanner: document.getElementById("operator-state-banner"),
+        operatorStateLabel: document.getElementById("operator-state-label"),
+        operatorStateAction: document.getElementById("operator-state-action"),
+        operatorStateBadge: document.getElementById("operator-state-badge"),
+        lengthChipStatus: document.getElementById("length-chip-status"),
+        widthChipStatus: document.getElementById("width-chip-status"),
+        diagonalChipStatus: document.getElementById("diagonal-chip-status"),
+        inspectionImagePanel: document.getElementById("inspection-image-panel"),
+        suspectOverlayLayer: document.getElementById("suspect-overlay-layer"),
+        suspectRegionLabel: document.getElementById("suspect-region-label"),
+        alarmFeedbackActions: document.getElementById("alarm-feedback-actions"),
+        alarmCorrect: document.getElementById("alarm-correct"),
+        alarmFalse: document.getElementById("alarm-false"),
         artifactIntakeStatus: document.getElementById("artifact-intake-status"),
         artifactConfigured: document.getElementById("artifact-configured"),
         artifactShadowReady: document.getElementById("artifact-shadow-ready"),
@@ -939,7 +1030,7 @@
         });
         renderMeasurements(payload.measurements);
         renderPhaseResults(payload.phase_results);
-        renderQcDevicePhaseLayout(payload.phase_results);
+        renderQcTabletViewport(payload);
         renderDetectorObservations(observations);
       }
 
@@ -957,74 +1048,143 @@
         });
       }
 
-      function renderQcDevicePhaseLayout(phaseResults) {
-        const results = Array.isArray(phaseResults) ? phaseResults : [];
-        const phaseOne = findPhaseResult(results, "PHASE_1");
-        const phaseTwo = findPhaseResult(results, "PHASE_2");
-        renderDevicePhase(
-          fields.phaseOneDeviceCard,
-          fields.phaseOneDeviceStatus,
-          fields.phaseOneDeviceDetail,
-          phaseOne,
-          "PHASE_1"
-        );
-        renderDevicePhase(
-          fields.phaseTwoDeviceCard,
-          fields.phaseTwoDeviceStatus,
-          fields.phaseTwoDeviceDetail,
-          phaseTwo,
-          "PHASE_2"
-        );
-        renderPhaseTwoStitchZone(phaseTwo);
+      function renderQcTabletViewport(payload) {
+        const operatorState = mapOperatorState(payload);
+        fields.qcTabletViewport.dataset.operatorState = operatorState.state;
+        fields.operatorStateBanner.dataset.operatorState = operatorState.state;
+        fields.operatorStateLabel.textContent = operatorState.label;
+        fields.operatorStateAction.textContent = operatorState.action;
+        fields.operatorStateBadge.textContent = operatorState.badge;
+        renderMeasurementStrip(payload, operatorState);
+        renderInspectionImagePanel(payload, operatorState);
+        renderAlarmFeedbackActions(operatorState);
       }
 
-      function findPhaseResult(results, phaseName) {
-        return results.find((result) => result && result.phase === phaseName) || null;
-      }
-
-      function renderDevicePhase(card, status, detail, phaseResult, fallbackPhase) {
-        const decision = phaseResult && phaseResult.decision ? phaseResult.decision : "BLOCKED";
-        const state = trafficStateForDecision(decision);
-        card.dataset.state = state;
-        status.dataset.state = state;
-        status.textContent = trafficLabelForDecision(decision);
-        detail.textContent = summarizeDevicePhase(phaseResult, fallbackPhase);
-      }
-
-      function renderPhaseTwoStitchZone(phaseResult) {
-        const decision = phaseResult && phaseResult.decision ? phaseResult.decision : "BLOCKED";
-        const state = trafficStateForDecision(decision);
-        fields.phaseTwoStitchZone.dataset.state = state;
-        fields.phaseTwoStitchStatus.textContent = trafficLabelForDecision(decision);
-      }
-
-      function trafficStateForDecision(decision) {
-        if (decision === "PASS") {
-          return "ok";
+      function mapOperatorState(payload) {
+        const observations = Array.isArray(payload.observations) ? payload.observations : [];
+        const hasObservation = observations.some(hasActionableObservation);
+        const phaseResults = Array.isArray(payload.phase_results) ? payload.phase_results : [];
+        const hasNgPhase = phaseResults.some((phaseResult) => phaseResult && phaseResult.decision === "NG");
+        if (payload.decision === "PASS" && !hasObservation && !hasNgPhase) {
+          return {
+            state: "pass",
+            label: "PASS",
+            action: "Continue",
+            badge: "GREEN"
+          };
         }
-        if (decision === "NG") {
-          return "error";
+        if (payload.decision === "NG" || hasNgPhase || hasObservation) {
+          return {
+            state: "check",
+            label: "CHECK",
+            action: "Inspect suspected area",
+            badge: "RED"
+          };
         }
-        return "warn";
+        return {
+          state: "review",
+          label: "REVIEW",
+          action: "Wait / review",
+          badge: "AMBER"
+        };
       }
 
-      function trafficLabelForDecision(decision) {
-        if (decision === "PASS") {
+      function renderMeasurementStrip(payload, operatorState) {
+        const phaseResults = Array.isArray(payload.phase_results) ? payload.phase_results : [];
+        const phaseOne = findPhaseResult(phaseResults, "PHASE_1");
+        const phaseTwo = findPhaseResult(phaseResults, "PHASE_2");
+        setMeasurementChip("length", measurementChipState(phaseOne), measurementChipLabel(phaseOne));
+        setMeasurementChip("width", measurementChipState(phaseOne), measurementChipLabel(phaseOne));
+        setMeasurementChip(
+          "diagonal-or-stitch",
+          operatorState.state === "check" ? "check" : measurementChipState(phaseTwo),
+          operatorState.state === "check" ? "CHECK" : measurementChipLabel(phaseTwo)
+        );
+      }
+
+      function setMeasurementChip(chipName, state, label) {
+        const chip = document.querySelector(`[data-chip="${chipName}"]`);
+        if (!chip) {
+          return;
+        }
+        chip.dataset.state = state;
+        const value = chip.querySelector("strong");
+        if (value) {
+          value.textContent = label;
+        }
+      }
+
+      function measurementChipState(phaseResult) {
+        if (!phaseResult || phaseResult.decision === "BLOCKED" || phaseResult.decision === "ASSIST" || phaseResult.decision === "NOT_EVALUATED") {
+          return "review";
+        }
+        if (phaseResult.decision === "NG") {
+          return "check";
+        }
+        return "ok";
+      }
+
+      function measurementChipLabel(phaseResult) {
+        if (!phaseResult) {
+          return "REVIEW";
+        }
+        if (phaseResult.decision === "PASS") {
           return "OK";
         }
-        if (decision === "NG") {
-          return "NG";
+        if (phaseResult.decision === "NG") {
+          return "CHECK";
         }
         return "REVIEW";
       }
 
-      function summarizeDevicePhase(phaseResult, fallbackPhase) {
-        if (!phaseResult) {
-          return `${fallbackPhase}: waiting for phase evidence.`;
+      function renderInspectionImagePanel(payload, operatorState) {
+        const observations = Array.isArray(payload.observations) ? payload.observations : [];
+        const actionable = observations.find(hasActionableObservation) || null;
+        fields.suspectOverlayLayer.innerHTML = "";
+        if (actionable) {
+          applySuspectOverlay(actionable);
+          fields.suspectRegionLabel.textContent = `${actionable.label || "suspected defect"} / ${formatConfidence(actionable.confidence)}`;
+          return;
         }
-        const reasons = joinValues(phaseResult.reason_codes);
-        const blockers = joinValues(phaseResult.authority_blockers);
-        return `${phaseResult.phase}: ${phaseResult.decision}; reasons: ${reasons}; authority: ${blockers}`;
+        if (operatorState.state === "pass") {
+          fields.suspectRegionLabel.textContent = "All required measurements in tolerance";
+          return;
+        }
+        if (operatorState.state === "check") {
+          fields.suspectRegionLabel.textContent = "Measurement check required; QC self-measure";
+          return;
+        }
+        fields.suspectRegionLabel.textContent = "Review setup, calibration, approval, or model evidence";
+      }
+
+      function hasActionableObservation(observation) {
+        return Boolean(observation && Array.isArray(observation.bbox) && observation.bbox.length === 4);
+      }
+
+      function applySuspectOverlay(observation) {
+        const [x, y, width, height] = observation.bbox.map(Number);
+        if (![x, y, width, height].every(Number.isFinite)) {
+          return;
+        }
+        const overlay = document.createElement("div");
+        overlay.className = "suspect-overlay";
+        overlay.style.left = `${Math.max(0, Math.min(1, x)) * 100}%`;
+        overlay.style.top = `${Math.max(0, Math.min(1, y)) * 100}%`;
+        overlay.style.width = `${Math.max(0.02, Math.min(1, width)) * 100}%`;
+        overlay.style.height = `${Math.max(0.02, Math.min(1, height)) * 100}%`;
+        fields.suspectOverlayLayer.appendChild(overlay);
+      }
+
+      function renderAlarmFeedbackActions(operatorState) {
+        const isAlarm = operatorState.state === "check";
+        fields.alarmCorrect.textContent = isAlarm ? "Alert correct" : "Next product";
+        fields.alarmFalse.textContent = isAlarm ? "False alarm" : "Details";
+        fields.alarmCorrect.dataset.feedbackType = isAlarm ? "CONFIRM_BLOCKED" : "";
+        fields.alarmFalse.dataset.feedbackType = isAlarm ? "MARK_FALSE_POSITIVE" : "";
+      }
+
+      function findPhaseResult(results, phaseName) {
+        return results.find((result) => result && result.phase === phaseName) || null;
       }
 
       function renderPhaseResults(phaseResults) {
@@ -1400,6 +1560,20 @@
         }
       }
 
+      function submitAlarmFeedback(button) {
+        const feedbackType = button.dataset.feedbackType || "";
+        if (!feedbackType) {
+          setFeedbackStatus("No alarm feedback required for this state", "ok");
+          return;
+        }
+        const note = feedbackType === "CONFIRM_BLOCKED"
+          ? "QC tablet alarm feedback: alert correct."
+          : "QC tablet alarm feedback: false alarm.";
+        feedbackForm.elements.feedback_type.value = feedbackType;
+        feedbackForm.elements.note.value = note;
+        submitFeedback();
+      }
+
       function connect() {
         const scheme = window.location.protocol === "https:" ? "wss" : "ws";
         const socket = new WebSocket(`${scheme}://${window.location.host}/ws/inspection`);
@@ -1419,6 +1593,8 @@
         event.preventDefault();
         submitFeedback();
       });
+      fields.alarmCorrect.addEventListener("click", () => submitAlarmFeedback(fields.alarmCorrect));
+      fields.alarmFalse.addEventListener("click", () => submitAlarmFeedback(fields.alarmFalse));
 
       connect();
       fetchReplaySnapshot();
