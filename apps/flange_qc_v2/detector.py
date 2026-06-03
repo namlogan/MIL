@@ -11,9 +11,12 @@ from apps.flange_qc_v2.sop_registry import get_reason_code
 
 
 CONTRACT_VERSION = "detector.result.v1"
+SHADOW_OBSERVATION_REQUEST_CONTRACT_VERSION = "shadow_detector_observation_request.v1"
 AUTHORITY_BLOCKERS = ("MODEL_APPROVAL_REQUIRED", "PRODUCTION_APPROVAL_REQUIRED")
 ALLOWED_SOURCE_PREFIXES = ("synthetic://", "replay://")
 SHADOW_DETECTOR_NEXT_TASK = "shadow_detector_observations"
+SHADOW_OBSERVATION_ALLOWED_REQUEST_FIELDS = ("contract_version", "request", "observations")
+SHADOW_OBSERVATION_ALLOWED_OBSERVATION_FIELDS = ("label", "confidence", "bbox")
 SHADOW_OBSERVATION_FORBIDDEN_REQUEST_FIELDS = (
     "artifact_intake_dir",
     "manifest_path",
@@ -270,25 +273,127 @@ def build_shadow_detector_result_from_payload(
 ) -> DetectorResult:
     if not str(intake_dir).strip():
         raise ValidationError("FLANGE_QC_V2_ARTIFACT_INTAKE_DIR is not configured")
-    if not isinstance(payload, dict):
-        raise ValidationError("shadow detector payload must be an object")
-    for field_name in SHADOW_OBSERVATION_FORBIDDEN_REQUEST_FIELDS:
-        if field_name in payload:
-            raise ValidationError(f"shadow detector payload must not include {field_name}")
-
-    observations = payload.get("observations", [])
-    if not isinstance(observations, list):
-        raise ValidationError("observations must be a list")
-    for observation in observations:
-        if not isinstance(observation, dict):
-            raise ValidationError("observation must be an object")
-        for field_name in SHADOW_OBSERVATION_FORBIDDEN_OBSERVATION_FIELDS:
-            if field_name in observation:
-                raise ValidationError(f"shadow detector observation must not include {field_name}")
+    errors = validate_shadow_detector_observation_request(payload, require_contract_version=False)
+    if errors:
+        raise ValidationError(str(errors[0]["message"]))
 
     adapter = build_manifest_detector_from_intake(
         intake_dir,
         repo_root=repo_root,
-        observations=observations,
+        observations=payload.get("observations", []),
     )
     return adapter.detect(DetectorRequest.from_payload(_require_field(payload, "request")))
+
+
+def validate_shadow_detector_observation_request(
+    payload: Any,
+    *,
+    require_contract_version: bool = True,
+) -> list[dict[str, Any]]:
+    errors: list[dict[str, Any]] = []
+    if not isinstance(payload, dict):
+        return [{"field": "payload", "message": "shadow detector payload must be an object"}]
+
+    _validate_shadow_contract_version(payload, require_contract_version=require_contract_version, errors=errors)
+    for field_name in SHADOW_OBSERVATION_FORBIDDEN_REQUEST_FIELDS:
+        if field_name in payload:
+            errors.append(
+                {
+                    "field": field_name,
+                    "message": f"shadow detector payload must not include {field_name}",
+                }
+            )
+    for field_name in payload:
+        if field_name not in SHADOW_OBSERVATION_ALLOWED_REQUEST_FIELDS:
+            errors.append(
+                {
+                    "field": field_name,
+                    "message": f"shadow detector payload field is not allowed: {field_name}",
+                }
+            )
+
+    request_payload = payload.get("request")
+    if not isinstance(request_payload, dict):
+        errors.append({"field": "request", "message": "request is required and must be an object"})
+    else:
+        try:
+            DetectorRequest.from_payload(request_payload)
+        except ValidationError as exc:
+            errors.append({"field": "request", "message": str(exc)})
+
+    observations = payload.get("observations")
+    if not isinstance(observations, list):
+        errors.append({"field": "observations", "message": "observations is required and must be a list"})
+        return errors
+
+    for index, observation in enumerate(observations):
+        field_prefix = f"observations[{index}]"
+        if not isinstance(observation, dict):
+            errors.append({"field": field_prefix, "message": "observation must be an object"})
+            continue
+        for field_name in observation:
+            if field_name not in SHADOW_OBSERVATION_ALLOWED_OBSERVATION_FIELDS:
+                errors.append(
+                    {
+                        "field": f"{field_prefix}.{field_name}",
+                        "message": f"shadow detector observation must not include {field_name}",
+                    }
+                )
+        errors.extend(_validate_shadow_observation_fields(observation, field_prefix))
+        try:
+            DetectorObservation.from_payload(observation)
+        except ValidationError as exc:
+            errors.append({"field": field_prefix, "message": str(exc)})
+    return errors
+
+
+def _validate_shadow_contract_version(
+    payload: dict[str, Any],
+    *,
+    require_contract_version: bool,
+    errors: list[dict[str, Any]],
+) -> None:
+    if "contract_version" not in payload:
+        if require_contract_version:
+            errors.append(
+                {
+                    "field": "contract_version",
+                    "message": "contract_version is required",
+                }
+            )
+        return
+    if payload.get("contract_version") != SHADOW_OBSERVATION_REQUEST_CONTRACT_VERSION:
+        errors.append(
+            {
+                "field": "contract_version",
+                "message": "contract_version must be shadow_detector_observation_request.v1",
+            }
+        )
+
+
+def _validate_shadow_observation_fields(observation: dict[str, Any], field_prefix: str) -> list[dict[str, Any]]:
+    errors: list[dict[str, Any]] = []
+    label = str(observation.get("label", "")).strip()
+    if not label:
+        errors.append({"field": f"{field_prefix}.label", "message": "observation label is required"})
+
+    try:
+        confidence = float(observation.get("confidence", -1))
+    except (TypeError, ValueError):
+        confidence = -1
+    if confidence < 0 or confidence > 1:
+        errors.append({"field": f"{field_prefix}.confidence", "message": "confidence values must be between 0 and 1"})
+
+    bbox = observation.get("bbox")
+    if not isinstance(bbox, list) or len(bbox) != 4:
+        errors.append({"field": f"{field_prefix}.bbox", "message": "bbox must contain 4 values"})
+        return errors
+    for value in bbox:
+        try:
+            number = float(value)
+        except (TypeError, ValueError):
+            number = -1
+        if number < 0 or number > 1:
+            errors.append({"field": f"{field_prefix}.bbox", "message": "bbox values must be between 0 and 1"})
+            break
+    return errors
