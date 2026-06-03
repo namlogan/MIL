@@ -97,6 +97,19 @@ Valid output means the file matches the sanitized metadata contract only. It
 does not approve labels, raw dataset retention, model training, model promotion,
 or production authority.
 
+Build a labeling review pack after validation:
+
+```bash
+python3 scripts/flange_qc_v2/build_labeling_review_pack.py \
+  --input .ai-factory/tmp/flange_qc_v2/qc_feedback_export.jsonl \
+  --output .ai-factory/tmp/flange_qc_v2/labeling_review_pack.json
+```
+
+The pack summarizes metadata counts by product, feedback type, inspection
+decision, shadow decision, and detector label. It is a planning artifact for QC
+and MLOps review, not a dataset, label approval, model training run, or
+production-authority approval.
+
 ## Forbidden In App Repo
 
 - Raw factory/customer images or video.
