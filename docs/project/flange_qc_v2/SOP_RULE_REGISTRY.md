@@ -110,8 +110,11 @@ authority.
   production authority remains gated by QC/SOP tolerance approval.
 - Diagonal deviation greater than 0.5 inch can return shadow `NG` evidence in
   phase 2, but production authority remains gated by QC/SOP tolerance approval.
-- Missing model returns `NOT_EVALUATED`, `ASSIST`, or `BLOCKED` for model-dependent rules.
-- Phase 3 model/vision rules currently return safe `ASSIST` fallback evidence.
+- Missing Phase 3 model observations return `NOT_EVALUATED` with `MODEL_MISSING`.
+- Phase 3 model/vision rules consume sanitized detector observations as
+  shadow-only review evidence. Relevant observations return `ASSIST` with
+  `MODEL_REVIEW_REQUIRED`, bbox/confidence evidence, and
+  `MODEL_APPROVAL_REQUIRED`; they never emit `PASS` or `NG`.
 - Phase 4 post-MVP rules currently return `NOT_EVALUATED`, while Phase 4
   review-dependent rules return `ASSIST`.
 - Detector observations never decide final PASS/NG directly.

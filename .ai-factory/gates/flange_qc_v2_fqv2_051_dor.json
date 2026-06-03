@@ -1,0 +1,82 @@
+{
+  "task_id": "FQV2-051",
+  "github_issue": "https://github.com/namlogan/MIL/issues/159",
+  "branch": "agent/159-phase3-shadow-observation-evidence",
+  "title": "Wire phase 3 shadow observations into SOP evidence",
+  "status": "definition_of_ready",
+  "user_business_goal": "While waiting for live camera hardware, make Phase 3 SOP evidence more useful by routing sanitized detector observations into the Phase 3 shadow decision result instead of only returning generic safe fallback evidence.",
+  "allowed_files": [
+    "apps/flange_qc_v2/decision_engine.py",
+    "apps/flange_qc_v2/replay.py",
+    "tests/flange_qc_v2/test_decision_engine.py",
+    "tests/flange_qc_v2/test_replay.py",
+    "tests/flange_qc_v2/test_hmi_stream.py",
+    "docs/project/flange_qc_v2/DATA_MODEL.md",
+    "docs/project/flange_qc_v2/TEST_STRATEGY.md",
+    "docs/project/flange_qc_v2/USER_FLOWS.md",
+    "docs/project/flange_qc_v2/SOP_RULE_REGISTRY.md",
+    ".ai-factory/gates/flange_qc_v2_fqv2_051_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_051_handoff_2026-06-03.md"
+  ],
+  "out_of_scope": [
+    "raw media, raw datasets, customer/factory data, notebooks, model weights, TensorRT engines, model binaries, or model execution",
+    "live camera capture, camera SDK loading, camera credentials, GPU/hardware validation, or hardware readiness approval",
+    "request-supplied file paths for replay/spec/calibration/model selection",
+    "Windmill credential/tunnel/runtime changes",
+    "production deploy/release, secrets, tokens, provider credentials, destructive migrations, production data migration, billing, legal/compliance behavior, or security boundary change",
+    "product spec approval, QC/SOP tolerance approval, model promotion approval, production PASS/NG authority, or production auto-reject behavior",
+    "Memory0 approved record writes"
+  ],
+  "acceptance_criteria": [
+    "Add a Phase 3 shadow evaluator that accepts sanitized DetectorObservation entries.",
+    "When no observations are available, Phase 3 returns NOT_EVALUATED with MODEL_MISSING, no production authority, and model approval blockers.",
+    "When relevant observations are available, Phase 3 returns ASSIST with MODEL_REVIEW_REQUIRED, no production authority, and evidence including rule id, labels, confidence, bbox, model/evidence refs when present.",
+    "Phase 3 never returns PASS or NG and never grants production authority.",
+    "No-camera replay uses the Phase 3 shadow evaluator from replay frame detector_observations metadata.",
+    "HMI/replay payloads still include ordered Phase 1 through Phase 4 results and remain fail-closed/shadow-only.",
+    "Docs/tests describe the Phase 3 observation-evidence lane without approving model promotion, live inference, live camera capture, product specs, QC/SOP tolerances, or production release."
+  ],
+  "required_checks": [
+    "python3 -m unittest tests.flange_qc_v2.test_decision_engine tests.flange_qc_v2.test_replay tests.flange_qc_v2.test_hmi_stream -v",
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m json.tool .ai-factory/gates/flange_qc_v2_fqv2_051_dor.json",
+    "git diff --check",
+    "HTTP preview smoke for /inspection/replay when local preview is available"
+  ],
+  "memory_preflight": {
+    "query": "FQV2 phase 3 shadow observation evidence while camera hardware is pending.",
+    "retrieved_decisions": [
+      "Detector observations cannot decide final PASS/NG.",
+      "Model-dependent rules remain shadow-only.",
+      "Live camera/model promotion remain human-gated."
+    ],
+    "retrieved_lessons": [
+      "HMI should show actionable suspected regions from sanitized observations, but production authority remains false until QC/SOP/model approvals.",
+      "Phase 3 can consume replay observation metadata before live camera hardware arrives."
+    ],
+    "restricted_areas": [
+      "secrets",
+      "raw media/data",
+      "model binaries/deserialization/inference",
+      "live camera/hardware",
+      "destructive migrations",
+      "production deploy/release",
+      "request-supplied file paths",
+      "product spec approval",
+      "QC/SOP tolerance approval",
+      "model promotion",
+      "production PASS/NG authority"
+    ],
+    "conflicts_found": "runtime/Windmill daily attention is separate; this task does not require Windmill secret access.",
+    "sources_to_verify": [
+      "AGENTS.md",
+      "apps/flange_qc_v2/decision_engine.py",
+      "apps/flange_qc_v2/replay.py",
+      "apps/flange_qc_v2/sop_registry.py",
+      "tests/flange_qc_v2/test_decision_engine.py",
+      "docs/project/flange_qc_v2/SOP_RULE_REGISTRY.md"
+    ]
+  },
+  "rollback_note": "Revert the FQV2-051 PR to restore Phase 3 to generic safe fallback evidence only. Existing Phase 1/2 measurement logic, HMI signal layout, replay, detector bridge, and product CI behavior remain valid."
+}

@@ -4,10 +4,11 @@ from pathlib import Path
 from apps.flange_qc_v2.calibration import CalibrationConfig, load_calibration_config
 from apps.flange_qc_v2.decision_engine import (
     evaluate_phase_one_measurements,
+    evaluate_phase_three_observations,
     evaluate_phase_two_geometry,
     evaluate_sop_safe_fallbacks,
 )
-from apps.flange_qc_v2.domain import ValidationError
+from apps.flange_qc_v2.domain import BoundingBox, DetectorObservation, ValidationError
 from apps.flange_qc_v2.geometry import resolve_geometry_measurements
 from apps.flange_qc_v2.product_specs import ProductSpecResolution, load_product_specs
 
@@ -255,6 +256,55 @@ class PhaseTwoDecisionEngineTests(unittest.TestCase):
 
 
 class SopSafeFallbackDecisionEngineTests(unittest.TestCase):
+    def test_phase_three_returns_not_evaluated_without_detector_observations(self) -> None:
+        result = evaluate_phase_three_observations(observations=[])
+
+        self.assertEqual(result.phase, "PHASE_3")
+        self.assertEqual(result.decision, "NOT_EVALUATED")
+        self.assertEqual(result.reason_codes, ("MODEL_MISSING",))
+        self.assertEqual(result.authority_blockers, ("MODEL_APPROVAL_REQUIRED",))
+        self.assertTrue(result.shadow_mode)
+        self.assertFalse(result.production_authority)
+        self.assertEqual(
+            tuple(rule.rule_id for rule in result.rule_results),
+            ("M1-SOP-6.4-PUNCH-MARK-001", "M1-SOP-6.2-PUNCH-OFFSET-001"),
+        )
+        self.assertTrue(all(rule.decision == "NOT_EVALUATED" for rule in result.rule_results))
+        self.assertEqual(result.rule_results[0].evidence["observation_count"], 0)
+
+    def test_phase_three_returns_assist_with_detector_observation_evidence(self) -> None:
+        observation = DetectorObservation(
+            label="punch_mark",
+            confidence=0.87,
+            bbox=BoundingBox(x=0.42, y=0.25, width=0.12, height=0.08),
+            model_ref="registry://flange-qc-v2/detector/punch-mark/2026-06-02",
+            evidence_ref="templates/flange_qc_v2/artifact_intake/evaluation_report.json",
+        )
+
+        result = evaluate_phase_three_observations(observations=[observation])
+
+        self.assertEqual(result.phase, "PHASE_3")
+        self.assertEqual(result.decision, "ASSIST")
+        self.assertEqual(result.reason_codes, ("MODEL_REVIEW_REQUIRED",))
+        self.assertEqual(result.authority_blockers, ("MODEL_APPROVAL_REQUIRED",))
+        self.assertTrue(result.shadow_mode)
+        self.assertFalse(result.production_authority)
+        self.assertEqual(result.rule_results[0].rule_id, "M1-SOP-6.4-PUNCH-MARK-001")
+        self.assertEqual(result.rule_results[0].decision, "ASSIST")
+        self.assertEqual(result.rule_results[0].evidence["matched_labels"], ["punch_mark"])
+        self.assertEqual(result.rule_results[0].evidence["max_confidence"], 0.87)
+        self.assertEqual(result.rule_results[0].evidence["bboxes"], [[0.42, 0.25, 0.12, 0.08]])
+        self.assertEqual(
+            result.rule_results[0].evidence["model_refs"],
+            ["registry://flange-qc-v2/detector/punch-mark/2026-06-02"],
+        )
+        self.assertEqual(
+            result.rule_results[0].evidence["evidence_refs"],
+            ["templates/flange_qc_v2/artifact_intake/evaluation_report.json"],
+        )
+        self.assertNotIn("PASS", {rule.decision for rule in result.rule_results})
+        self.assertNotIn("NG", {rule.decision for rule in result.rule_results})
+
     def test_phase_three_model_dependent_rules_return_assist_without_authority(self) -> None:
         result = evaluate_sop_safe_fallbacks(phase="PHASE_3")
 

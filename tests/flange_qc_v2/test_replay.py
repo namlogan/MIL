@@ -69,6 +69,8 @@ class ReplayFrameSourceTests(unittest.TestCase):
             payload["phase_results"][2]["rule_results"][0]["rule_id"],
             "M1-SOP-6.4-PUNCH-MARK-001",
         )
+        self.assertEqual(payload["phase_results"][2]["rule_results"][0]["evidence"]["matched_labels"], ["punch_mark"])
+        self.assertEqual(payload["phase_results"][2]["rule_results"][0]["evidence"]["max_confidence"], 0.87)
         self.assertEqual(payload["frames"][0]["frame_id"], "frame-001")
 
     def test_no_camera_replay_derives_measurements_from_boundary_corners(self) -> None:
@@ -88,6 +90,8 @@ class ReplayFrameSourceTests(unittest.TestCase):
         self.assertEqual(payload["decision"]["decision"], "BLOCKED")
         self.assertIn("PRODUCT_SPEC_APPROVAL_MISSING", payload["decision"]["reason_codes"])
         self.assertIn("CALIBRATION_MISSING", payload["decision"]["reason_codes"])
+        self.assertEqual(payload["phase_results"][2]["decision"], "NOT_EVALUATED")
+        self.assertEqual(payload["phase_results"][2]["reason_codes"], ["MODEL_MISSING"])
         self.assertFalse(payload["decision"]["production_authority"])
 
     def test_replay_manifest_without_frames_is_rejected_explicitly(self) -> None:

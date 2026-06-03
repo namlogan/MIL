@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from apps.flange_qc_v2.calibration import CalibrationConfig
-from apps.flange_qc_v2.domain import DECISION_STATES, PHASE_STATES, ValidationError
+from apps.flange_qc_v2.domain import DECISION_STATES, PHASE_STATES, DetectorObservation, ValidationError
 from apps.flange_qc_v2.geometry import GeometryMeasurementResolution
 from apps.flange_qc_v2.product_specs import ProductSpecResolution
 from apps.flange_qc_v2.sop_registry import SopRule, get_reason_code, list_rules
@@ -18,6 +18,10 @@ SOP_AUTHORITY_BLOCKER = "SOP_TOLERANCE_APPROVAL_MISSING"
 BOOTSTRAP_AGGREGATE_METHOD = "all_points_must_pass_bootstrap"
 MM_PER_INCH = 25.4
 MODEL_AUTHORITY_BLOCKER = "MODEL_APPROVAL_REQUIRED"
+PHASE_THREE_RULE_LABELS = {
+    "M1-SOP-6.4-PUNCH-MARK-001": ("punch_mark", "corner_mark", "mid_width_mark", "missing_punch_mark"),
+    "M1-SOP-6.2-PUNCH-OFFSET-001": ("punch_offset", "offset_punch_mark"),
+}
 
 
 @dataclass(frozen=True)
@@ -189,6 +193,37 @@ def evaluate_phase_one_measurements(
     )
 
 
+def evaluate_phase_three_observations(*, observations: list[DetectorObservation] | tuple[DetectorObservation, ...]) -> DecisionResult:
+    normalized_observations = tuple(observations)
+    rule_results = tuple(
+        _phase_three_observation_rule_result(rule, normalized_observations)
+        for rule in list_rules()
+        if rule.phase == "PHASE_3"
+    )
+    if not rule_results:
+        raise ValidationError("no phase-three SOP rules configured")
+
+    if any(rule_result.decision == "ASSIST" for rule_result in rule_results):
+        reason_codes = ("MODEL_REVIEW_REQUIRED",)
+    else:
+        reason_codes = _unique_codes(
+            [
+                code
+                for rule_result in rule_results
+                for code in rule_result.reason_codes
+            ]
+        )
+    return DecisionResult(
+        phase="PHASE_3",
+        decision=_aggregate_safe_fallback_decision(rule_results),
+        reason_codes=reason_codes,
+        authority_blockers=(MODEL_AUTHORITY_BLOCKER,),
+        rule_results=rule_results,
+        production_authority=False,
+        shadow_mode=True,
+    )
+
+
 def evaluate_sop_safe_fallbacks(*, phase: str) -> DecisionResult:
     if phase not in ("PHASE_3", "PHASE_4"):
         raise ValidationError("SOP safe fallback evaluator supports PHASE_3 or PHASE_4")
@@ -221,6 +256,48 @@ def evaluate_sop_safe_fallbacks(*, phase: str) -> DecisionResult:
         rule_results=rule_results,
         production_authority=False,
         shadow_mode=True,
+    )
+
+
+def _phase_three_observation_rule_result(rule: SopRule, observations: tuple[DetectorObservation, ...]) -> RuleResult:
+    expected_labels = PHASE_THREE_RULE_LABELS.get(rule.rule_id, ())
+    matched_observations = tuple(
+        observation
+        for observation in observations
+        if observation.label in expected_labels
+    )
+    if not matched_observations:
+        return RuleResult(
+            rule_id=rule.rule_id,
+            phase=rule.phase,
+            decision="NOT_EVALUATED",
+            reason_codes=("MODEL_MISSING",),
+            evidence={
+                "observation_count": len(observations),
+                "expected_labels": list(expected_labels),
+                "matched_labels": [],
+                "production_enabled": rule.production_enabled,
+                "category": rule.category,
+            },
+        )
+
+    confidences = [observation.confidence for observation in matched_observations]
+    return RuleResult(
+        rule_id=rule.rule_id,
+        phase=rule.phase,
+        decision="ASSIST",
+        reason_codes=("MODEL_REVIEW_REQUIRED",),
+        evidence={
+            "observation_count": len(matched_observations),
+            "expected_labels": list(expected_labels),
+            "matched_labels": [observation.label for observation in matched_observations],
+            "max_confidence": max(confidences),
+            "bboxes": [observation.bbox.to_list() for observation in matched_observations],
+            "model_refs": _non_empty_sorted_values(observation.model_ref for observation in matched_observations),
+            "evidence_refs": _non_empty_sorted_values(observation.evidence_ref for observation in matched_observations),
+            "production_enabled": rule.production_enabled,
+            "category": rule.category,
+        },
     )
 
 
@@ -293,6 +370,10 @@ def _safe_fallback_rule_result(rule: SopRule) -> RuleResult:
             "production_enabled": rule.production_enabled,
         },
     )
+
+
+def _non_empty_sorted_values(values: Any) -> list[str]:
+    return sorted({str(value).strip() for value in values if str(value).strip()})
 
 
 def _aggregate_safe_fallback_decision(rule_results: tuple[RuleResult, ...]) -> str:
