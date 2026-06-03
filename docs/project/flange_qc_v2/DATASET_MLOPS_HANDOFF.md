@@ -110,6 +110,22 @@ decision, shadow decision, and detector label. It is a planning artifact for QC
 and MLOps review, not a dataset, label approval, model training run, or
 production-authority approval.
 
+Build a combined readiness report for dataset/model/camera/QC feedback handoff:
+
+```bash
+python3 scripts/flange_qc_v2/build_artifact_readiness_report.py \
+  --intake-dir templates/flange_qc_v2/artifact_intake \
+  --labeling-review-pack .ai-factory/tmp/flange_qc_v2/labeling_review_pack.json \
+  --source-ref https://github.com/namlogan/MIL/issues/135 \
+  --output .ai-factory/tmp/flange_qc_v2/artifact_readiness_report.json
+```
+
+The readiness report separates shadow model integration readiness from live
+camera readiness and production release authority. It is aggregate metadata
+only. It does not approve labels, raw dataset handling, model training, model
+promotion, live camera use, QC/SOP tolerances, product specs, production
+release, or production PASS/NG authority.
+
 ## Forbidden In App Repo
 
 - Raw factory/customer images or video.

@@ -93,6 +93,10 @@
 - QC feedback labeling review pack tests validate aggregate counts, empty-pack
   next actions, fail-closed invalid input, CLI JSON output, and absence of raw
   payload dumps or production authority.
+- Artifact readiness report tests validate shadow-ready template intake,
+  live-camera and production-release blockers, optional labeling review pack
+  handling, malformed pack rejection, CLI output, and fail-closed missing
+  intake behavior.
 
 ## Fixtures And Test Data
 
@@ -138,6 +142,9 @@ labeling review.
 The labeling review pack must stay aggregate-only and must not include raw media,
 raw datasets, full feedback rows, model weights, notebooks, credentials, or
 production authority.
+The artifact readiness report must stay metadata-only and must not include raw
+media, raw datasets, full feedback rows, model weights, notebooks, credentials,
+or production authority.
 
 ## Agent Verification Rules
 

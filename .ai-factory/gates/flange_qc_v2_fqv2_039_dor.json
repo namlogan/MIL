@@ -1,0 +1,82 @@
+{
+  "task_id": "FQV2-039",
+  "github_issue": "https://github.com/namlogan/MIL/issues/135",
+  "branch": "agent/135-artifact-readiness-report",
+  "title": "Generate artifact readiness report for dataset model camera handoff",
+  "status": "definition_of_ready",
+  "user_business_goal": "Prepare the next implementation loop by generating a single metadata-only readiness report for dataset, model, camera, and QC feedback artifacts before live hardware/model work starts.",
+  "allowed_files": [
+    "apps/flange_qc_v2/artifact_readiness.py",
+    "scripts/flange_qc_v2/**",
+    "tests/flange_qc_v2/**",
+    "docs/project/flange_qc_v2/BOOTSTRAP_READINESS.md",
+    "docs/project/flange_qc_v2/DATASET_MLOPS_HANDOFF.md",
+    "docs/project/flange_qc_v2/DATA_MODEL.md",
+    "docs/project/flange_qc_v2/TEST_STRATEGY.md",
+    ".ai-factory/gates/flange_qc_v2_fqv2_039_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_039_handoff_2026-06-03.md"
+  ],
+  "out_of_scope": [
+    "raw images, videos, raw datasets, customer/factory data, notebooks, model weights, TensorRT engines, model binaries, or model execution",
+    "live camera capture, camera SDK loading, camera credentials, GPU/hardware validation, or hardware readiness approval",
+    "production deploy/release, secrets, tokens, provider credentials, destructive migrations, production data migration, billing, legal/compliance behavior, or security boundary change",
+    "product spec approval, QC/SOP tolerance approval, model promotion approval, production PASS/NG authority, or production auto-reject behavior",
+    "Memory0 approved record writes",
+    "Windmill runtime secrets/logs or .windmill/runtime/** changes"
+  ],
+  "acceptance_criteria": [
+    "Add an app-level helper that builds an artifact readiness report from the existing artifact intake validation result and optional QC labeling review pack.",
+    "The report includes contract version, generated_at, readiness lanes, blockers, recommended next actions, source references, and production_authority=false.",
+    "The report distinguishes shadow model integration readiness from live camera readiness and production release authority.",
+    "The report fails closed on invalid or malformed input and never treats missing or invalid artifacts as ready.",
+    "Add a CLI under scripts/flange_qc_v2/** that reads an artifact intake directory, optionally reads a QC labeling review pack JSON, and writes the report JSON to stdout or an output file.",
+    "The report does not include raw images, raw datasets, full feedback rows, notebooks, model weights, camera credentials, secrets, or production PASS/NG authority.",
+    "Update MLOps/readiness/data-model/test docs and add DoR/QA evidence.",
+    "Existing artifact intake, MLOps handoff, feedback export, labeling pack, HMI, detector bridge, and product CI behavior remains valid."
+  ],
+  "required_checks": [
+    "python3 -m unittest tests.flange_qc_v2.test_artifact_readiness -v",
+    "python3 -m unittest tests.flange_qc_v2.test_artifact_intake -v",
+    "python3 -m unittest tests.flange_qc_v2.test_feedback_export -v",
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 -m compileall -q apps/flange_qc_v2 tests/flange_qc_v2 scripts/flange_qc_v2",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m unittest discover -s tests -v",
+    "git diff --check",
+    "python3 -m json.tool .ai-factory/gates/flange_qc_v2_fqv2_039_dor.json"
+  ],
+  "memory_preflight": {
+    "query": "Flange QC v2 artifact readiness report, dataset/model/camera handoff, QC feedback labeling review pack, no hardware.",
+    "retrieved_decisions": [
+      "Artifact intake is metadata-only.",
+      "QC feedback pack is aggregate-only.",
+      "Camera/live capture remains blocked until hardware approval.",
+      "Model artifacts remain shadow-only."
+    ],
+    "retrieved_lessons": [
+      "Use validated metadata contracts and fail closed.",
+      "Do not mix review readiness with production authority."
+    ],
+    "restricted_areas": [
+      "raw media/data",
+      "model weights/binaries/inference",
+      "camera hardware/SDK/credentials",
+      "secrets",
+      "production deploy/release",
+      "destructive migrations",
+      "product spec approval",
+      "QC/SOP tolerance approval",
+      "model promotion",
+      "production PASS/NG authority"
+    ],
+    "conflicts_found": "none",
+    "sources_to_verify": [
+      "AGENTS.md",
+      ".ai-factory/RULES.md",
+      "apps/flange_qc_v2/artifact_intake.py",
+      "apps/flange_qc_v2/feedback.py",
+      "docs/project/flange_qc_v2/DATASET_MLOPS_HANDOFF.md"
+    ]
+  },
+  "rollback_note": "Revert the FQV2-039 PR to remove the artifact readiness report helper, CLI, tests, docs, and gate evidence. Existing artifact intake, feedback export, labeling review pack, detector bridge, HMI, and product CI behavior remain valid."
+}
