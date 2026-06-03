@@ -15,5 +15,10 @@
     "angle_degrees_min": 45,
     "angle_degrees_max": 60,
     "diffuser_required": true
+  },
+  "geometry": {
+    "source_units": "pixel",
+    "inch_per_pixel": 0.5,
+    "method": "top_down_boundary_corners_shadow_v1"
   }
 }

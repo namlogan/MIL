@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -20,6 +20,7 @@ class CalibrationConfig:
     production_authority: bool
     decision: str
     reason_codes: list[str]
+    geometry: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if self.decision not in DECISION_STATES:
@@ -44,6 +45,7 @@ def load_calibration_config(path: str | Path) -> CalibrationConfig:
         production_authority=production_authority,
         decision="NOT_EVALUATED" if production_authority else "BLOCKED",
         reason_codes=[] if production_authority else ["CALIBRATION_MISSING"],
+        geometry=dict(data.get("geometry", {})),
     )
 
 
@@ -68,6 +70,18 @@ def _validate_config(data: dict[str, Any]) -> None:
     max_angle = _coerce_positive_number(lighting["angle_degrees_max"], "lighting.angle_degrees_max")
     if min_angle > max_angle:
         raise ValidationError("lighting angle minimum must be <= maximum")
+    geometry = data.get("geometry", {})
+    if geometry:
+        if not isinstance(geometry, dict):
+            raise ValidationError("geometry must be an object")
+        for field in ("source_units", "inch_per_pixel", "method"):
+            if field not in geometry:
+                raise ValidationError(f"geometry.{field} is required")
+        if str(geometry["source_units"]) != "pixel":
+            raise ValidationError("geometry.source_units must be pixel")
+        _coerce_positive_number(geometry["inch_per_pixel"], "geometry.inch_per_pixel")
+        if not str(geometry["method"]).strip():
+            raise ValidationError("geometry.method is required")
 
 
 def _coerce_positive_number(value: Any, field_name: str) -> float:

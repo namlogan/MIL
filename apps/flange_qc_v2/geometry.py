@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from typing import Any
 
+from apps.flange_qc_v2.calibration import CalibrationConfig
 from apps.flange_qc_v2.domain import (
     DECISION_STATES,
     MEASUREMENT_UNITS,
@@ -12,6 +14,9 @@ from apps.flange_qc_v2.domain import (
 
 
 CONTRACT_VERSION = "geometry.measurement_set.v1"
+BOUNDARY_MEASUREMENT_SOURCE = "boundary_corners_calibrated_shadow"
+PROVIDED_MEASUREMENT_SOURCE = "provided_measurements"
+BOUNDARY_SAMPLE_FRACTIONS = (0.0, 0.5, 1.0)
 EXPECTED_COUNTS = {
     "length_points": 3,
     "width_points": 3,
@@ -43,6 +48,8 @@ class GeometryMeasurementResolution:
     expected_counts: dict[str, int] = field(default_factory=lambda: dict(EXPECTED_COUNTS))
     production_authority: bool = False
     contract_version: str = CONTRACT_VERSION
+    measurement_source: str = PROVIDED_MEASUREMENT_SOURCE
+    evidence: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if self.decision not in DECISION_STATES:
@@ -62,6 +69,8 @@ class GeometryMeasurementResolution:
             "expected_counts": dict(self.expected_counts),
             "received_counts": dict(self.received_counts),
             "diagonal_deviation": self.diagonal_deviation,
+            "measurement_source": self.measurement_source,
+            "evidence": dict(self.evidence),
         }
 
 
@@ -101,3 +110,101 @@ def resolve_geometry_measurements(payload: dict[str, Any]) -> GeometryMeasuremen
         received_counts=received_counts,
         diagonal_deviation=abs(diagonals[0] - diagonals[1]),
     )
+
+
+def resolve_geometry_from_boundary(
+    payload: dict[str, Any],
+    *,
+    calibration: CalibrationConfig,
+) -> GeometryMeasurementResolution:
+    if not isinstance(payload, dict):
+        raise ValidationError("boundary geometry must be an object")
+
+    inch_per_pixel = _inch_per_pixel(calibration)
+    method = str(calibration.geometry.get("method", "")).strip()
+    corners_payload = payload.get("corners")
+    if not isinstance(corners_payload, dict):
+        raise ValidationError("boundary corners are required")
+
+    top_left = _point(corners_payload, "top_left")
+    top_right = _point(corners_payload, "top_right")
+    bottom_right = _point(corners_payload, "bottom_right")
+    bottom_left = _point(corners_payload, "bottom_left")
+
+    length_points = [
+        _rounded_distance(
+            _interpolate(top_left, bottom_left, fraction),
+            _interpolate(top_right, bottom_right, fraction),
+            inch_per_pixel,
+        )
+        for fraction in BOUNDARY_SAMPLE_FRACTIONS
+    ]
+    width_points = [
+        _rounded_distance(
+            _interpolate(top_left, top_right, fraction),
+            _interpolate(bottom_left, bottom_right, fraction),
+            inch_per_pixel,
+        )
+        for fraction in BOUNDARY_SAMPLE_FRACTIONS
+    ]
+    diagonals = [
+        _rounded_distance(top_left, bottom_right, inch_per_pixel),
+        _rounded_distance(top_right, bottom_left, inch_per_pixel),
+    ]
+    measurements = {
+        "length_points": length_points,
+        "width_points": width_points,
+        "diagonals": diagonals,
+        "unit": "inch",
+    }
+    resolved = resolve_geometry_measurements(measurements)
+    return GeometryMeasurementResolution(
+        measurements=resolved.measurements,
+        decision=resolved.decision,
+        reason_codes=resolved.reason_codes,
+        received_counts=resolved.received_counts,
+        diagonal_deviation=resolved.diagonal_deviation,
+        measurement_source=BOUNDARY_MEASUREMENT_SOURCE,
+        evidence={
+            "boundary_source": str(payload.get("source", "boundary_corners")),
+            "calibration_source_ref": calibration.source_ref,
+            "calibration_method": method,
+            "source_units": calibration.geometry.get("source_units"),
+            "inch_per_pixel": inch_per_pixel,
+            "sample_fractions": list(BOUNDARY_SAMPLE_FRACTIONS),
+            "corner_order": ["top_left", "top_right", "bottom_right", "bottom_left"],
+        },
+    )
+
+
+def _inch_per_pixel(calibration: CalibrationConfig) -> float:
+    geometry = calibration.geometry
+    if not isinstance(geometry, dict) or "inch_per_pixel" not in geometry:
+        raise ValidationError("calibration.geometry.inch_per_pixel is required")
+    try:
+        inch_per_pixel = float(geometry["inch_per_pixel"])
+    except (TypeError, ValueError) as exc:
+        raise ValidationError("calibration.geometry.inch_per_pixel must be a number") from exc
+    if inch_per_pixel <= 0:
+        raise ValidationError("calibration.geometry.inch_per_pixel must be positive")
+    if str(geometry.get("source_units", "")).strip() != "pixel":
+        raise ValidationError("calibration.geometry.source_units must be pixel")
+    return inch_per_pixel
+
+
+def _point(corners: dict[str, Any], name: str) -> tuple[float, float]:
+    value = corners.get(name)
+    if not isinstance(value, (list, tuple)) or len(value) != 2:
+        raise ValidationError(f"boundary corner {name} must contain 2 values")
+    return (float(value[0]), float(value[1]))
+
+
+def _interpolate(first: tuple[float, float], second: tuple[float, float], fraction: float) -> tuple[float, float]:
+    return (
+        first[0] + (second[0] - first[0]) * fraction,
+        first[1] + (second[1] - first[1]) * fraction,
+    )
+
+
+def _rounded_distance(first: tuple[float, float], second: tuple[float, float], inch_per_pixel: float) -> float:
+    return round(math.dist(first, second) * inch_per_pixel, 6)

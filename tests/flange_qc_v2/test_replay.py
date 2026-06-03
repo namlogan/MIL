@@ -11,6 +11,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 PRODUCT_SPECS = REPO_ROOT / "configs/flange_qc_v2/product_specs.bootstrap.json"
 CALIBRATION_FIXTURE = REPO_ROOT / "configs/flange_qc_v2/camera_calibration.synthetic.example.json"
 SAMPLE_REPLAY = REPO_ROOT / "samples/replay/flange_qc_v2/phase2_synthetic_measurements.json"
+BOUNDARY_REPLAY = REPO_ROOT / "samples/replay/flange_qc_v2/phase2_synthetic_boundary.json"
 
 
 class ReplayFrameSourceTests(unittest.TestCase):
@@ -69,6 +70,25 @@ class ReplayFrameSourceTests(unittest.TestCase):
             "M1-SOP-6.4-PUNCH-MARK-001",
         )
         self.assertEqual(payload["frames"][0]["frame_id"], "frame-001")
+
+    def test_no_camera_replay_derives_measurements_from_boundary_corners(self) -> None:
+        result = run_no_camera_replay(
+            manifest_path=BOUNDARY_REPLAY,
+            product_specs_path=PRODUCT_SPECS,
+            calibration_path=CALIBRATION_FIXTURE,
+        )
+
+        payload = result.to_payload()
+        frame = payload["frames"][0]
+        measurements = frame["measurements"]
+
+        self.assertEqual(frame["measurement_source"], "boundary_corners_calibrated_shadow")
+        self.assertEqual(measurements["length_points"], [75.0, 75.0, 75.0])
+        self.assertEqual(measurements["width_points"], [37.5, 37.5, 37.5])
+        self.assertEqual(payload["decision"]["decision"], "BLOCKED")
+        self.assertIn("PRODUCT_SPEC_APPROVAL_MISSING", payload["decision"]["reason_codes"])
+        self.assertIn("CALIBRATION_MISSING", payload["decision"]["reason_codes"])
+        self.assertFalse(payload["decision"]["production_authority"])
 
     def test_replay_manifest_without_frames_is_rejected_explicitly(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

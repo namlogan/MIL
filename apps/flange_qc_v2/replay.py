@@ -13,7 +13,12 @@ from apps.flange_qc_v2.decision_engine import (
     evaluate_sop_safe_fallbacks,
 )
 from apps.flange_qc_v2.domain import DetectorObservation, ValidationError
-from apps.flange_qc_v2.geometry import resolve_geometry_measurements
+from apps.flange_qc_v2.geometry import (
+    PROVIDED_MEASUREMENT_SOURCE,
+    GeometryMeasurementResolution,
+    resolve_geometry_from_boundary,
+    resolve_geometry_measurements,
+)
 from apps.flange_qc_v2.product_specs import load_product_specs
 
 
@@ -23,7 +28,10 @@ class ReplayFrame:
     source_uri: str
     captured_at: str
     measurements: dict[str, Any]
+    boundary: dict[str, Any] | None = None
     detector_observations: tuple[dict[str, Any], ...] = ()
+    measurement_source: str = PROVIDED_MEASUREMENT_SOURCE
+    measurement_evidence: dict[str, Any] | None = None
 
     def __post_init__(self) -> None:
         for field_name in ("frame_id", "source_uri", "captured_at"):
@@ -33,25 +41,35 @@ class ReplayFrame:
             raise ValidationError("frame source_uri must use synthetic://")
         if not isinstance(self.measurements, dict):
             raise ValidationError("frame measurements must be an object")
-        resolve_geometry_measurements(self.measurements)
+        if self.measurements:
+            resolve_geometry_measurements(self.measurements)
+        elif not isinstance(self.boundary, dict):
+            raise ValidationError("frame measurements or boundary is required")
         object.__setattr__(
             self,
             "detector_observations",
             _coerce_detector_observations(self.detector_observations),
         )
+        evidence = self.measurement_evidence or {}
+        if not isinstance(evidence, dict):
+            raise ValidationError("measurement_evidence must be an object")
+        object.__setattr__(self, "measurement_evidence", dict(evidence))
 
     @classmethod
     def from_payload(cls, payload: Any) -> "ReplayFrame":
         if not isinstance(payload, dict):
             raise ValidationError("frame must be an object")
-        for field_name in ("frame_id", "source_uri", "captured_at", "measurements"):
+        for field_name in ("frame_id", "source_uri", "captured_at"):
             if field_name not in payload:
                 raise ValidationError(f"frame {field_name} is required")
+        if "measurements" not in payload and "boundary" not in payload:
+            raise ValidationError("frame measurements or boundary is required")
         return cls(
             frame_id=str(payload["frame_id"]),
             source_uri=str(payload["source_uri"]),
             captured_at=str(payload["captured_at"]),
-            measurements=dict(payload["measurements"]),
+            measurements=dict(payload.get("measurements", {})),
+            boundary=dict(payload["boundary"]) if isinstance(payload.get("boundary"), dict) else None,
             detector_observations=payload.get("detector_observations", ()),
         )
 
@@ -61,10 +79,27 @@ class ReplayFrame:
             "source_uri": self.source_uri,
             "captured_at": self.captured_at,
             "measurements": dict(self.measurements),
+            "measurement_source": self.measurement_source,
         }
+        if self.boundary is not None:
+            payload["boundary"] = dict(self.boundary)
+        if self.measurement_evidence:
+            payload["measurement_evidence"] = dict(self.measurement_evidence)
         if self.detector_observations:
             payload["detector_observations"] = [dict(observation) for observation in self.detector_observations]
         return payload
+
+    def with_geometry(self, geometry: GeometryMeasurementResolution) -> "ReplayFrame":
+        return ReplayFrame(
+            frame_id=self.frame_id,
+            source_uri=self.source_uri,
+            captured_at=self.captured_at,
+            measurements=geometry.measurements.to_payload(),
+            boundary=self.boundary,
+            detector_observations=self.detector_observations,
+            measurement_source=geometry.measurement_source,
+            measurement_evidence=geometry.evidence,
+        )
 
 
 @dataclass(frozen=True)
@@ -161,7 +196,12 @@ def run_no_camera_replay(
         size_group=manifest.size_group,
     )
     calibration = load_calibration_config(calibration_path)
-    geometry = resolve_geometry_measurements(manifest.frames[0].measurements)
+    frame_geometries = tuple(_resolve_frame_geometry(frame, calibration) for frame in manifest.frames)
+    geometry = frame_geometries[0]
+    frames = tuple(
+        frame.with_geometry(frame_geometry)
+        for frame, frame_geometry in zip(manifest.frames, frame_geometries, strict=True)
+    )
     phase_results = (
         evaluate_phase_one_measurements(
             product_spec=product_spec,
@@ -184,8 +224,16 @@ def run_no_camera_replay(
         frame_count=len(manifest.frames),
         decision=_aggregate_phase_results(phase_results),
         phase_results=phase_results,
-        frames=manifest.frames,
+        frames=frames,
     )
+
+
+def _resolve_frame_geometry(frame: ReplayFrame, calibration: Any) -> GeometryMeasurementResolution:
+    if frame.measurements:
+        return resolve_geometry_measurements(frame.measurements)
+    if frame.boundary is None:
+        raise ValidationError("frame measurements or boundary is required")
+    return resolve_geometry_from_boundary(frame.boundary, calibration=calibration)
 
 
 def _aggregate_phase_results(phase_results: tuple[DecisionResult, ...]) -> DecisionResult:

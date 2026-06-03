@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "replay_id": "fqv2-phase2-synthetic-boundary-001",
+  "product_code": "611",
+  "size_group": "11",
+  "no_camera": true,
+  "source_ref": "https://github.com/namlogan/MIL/issues/153",
+  "frames": [
+    {
+      "frame_id": "frame-boundary-001",
+      "source_uri": "synthetic://flange-qc-v2/phase2/frame-boundary-001",
+      "captured_at": "2026-06-03T00:00:00Z",
+      "boundary": {
+        "source": "synthetic_boundary_corners",
+        "corners": {
+          "top_left": [0, 0],
+          "top_right": [150, 0],
+          "bottom_right": [150, 75],
+          "bottom_left": [0, 75]
+        }
+      }
+    }
+  ]
+}

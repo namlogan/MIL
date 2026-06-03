@@ -21,6 +21,9 @@ class CalibrationConfigTests(unittest.TestCase):
         self.assertEqual(calibration.reason_codes, ["CALIBRATION_MISSING"])
         self.assertEqual(calibration.camera["mount"], "top_down_90_degrees")
         self.assertEqual(calibration.lighting["layout"], "four_led_bars")
+        self.assertEqual(calibration.geometry["source_units"], "pixel")
+        self.assertEqual(calibration.geometry["inch_per_pixel"], 0.5)
+        self.assertEqual(calibration.geometry["method"], "top_down_boundary_corners_shadow_v1")
 
     def test_invalid_calibration_shape_is_rejected_explicitly(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

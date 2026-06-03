@@ -1,0 +1,82 @@
+{
+  "task_id": "FQV2-048",
+  "github_issue": "https://github.com/namlogan/MIL/issues/153",
+  "branch": "agent/153-boundary-calibrated-measurements",
+  "title": "Derive shadow measurements from boundary corners and calibration",
+  "status": "definition_of_ready",
+  "user_business_goal": "Add the missing shadow-only measurement bridge from sanitized detected boundary/corners plus calibration scale into length, width, and diagonal measurement evidence, then feed the existing product tolerance and Phase 1/2 decision logic.",
+  "allowed_files": [
+    "apps/flange_qc_v2/calibration.py",
+    "apps/flange_qc_v2/geometry.py",
+    "apps/flange_qc_v2/replay.py",
+    "tests/flange_qc_v2/test_calibration.py",
+    "tests/flange_qc_v2/test_geometry.py",
+    "tests/flange_qc_v2/test_replay.py",
+    "configs/flange_qc_v2/camera_calibration.synthetic.example.json",
+    "samples/replay/flange_qc_v2/phase2_synthetic_boundary.json",
+    "docs/project/flange_qc_v2/DATA_MODEL.md",
+    "docs/project/flange_qc_v2/TEST_STRATEGY.md",
+    "docs/project/flange_qc_v2/USER_FLOWS.md",
+    ".ai-factory/gates/flange_qc_v2_fqv2_048_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_048_handoff_2026-06-03.md"
+  ],
+  "out_of_scope": [
+    "raw media, raw datasets, customer/factory data, notebooks, model weights, TensorRT engines, model binaries, or model execution",
+    "live camera capture, camera SDK loading, camera credentials, GPU/hardware validation, or hardware readiness approval",
+    "Windmill credential/tunnel/runtime changes",
+    "production deploy/release, secrets, tokens, provider credentials, destructive migrations, production data migration, billing, legal/compliance behavior, or security boundary change",
+    "product spec approval, QC/SOP tolerance approval, model promotion approval, production PASS/NG authority, or production auto-reject behavior",
+    "Memory0 approved record writes"
+  ],
+  "acceptance_criteria": [
+    "Geometry derives 3 length points, 3 width points, and 2 diagonals from four sanitized boundary corners.",
+    "Derivation uses explicit calibration.geometry.inch_per_pixel evidence and fails closed when calibration scale is missing or invalid.",
+    "Derived measurement payload remains geometry.measurement_set.v1, production_authority=false, and carries boundary/calibration source evidence.",
+    "Replay frames can provide boundary corners instead of precomputed measurements and produce the same measurement contract for HMI/replay output.",
+    "Existing product tolerance logic consumes derived measurements without changing production authority.",
+    "Diagonal deviation derives from the two calibrated diagonals and remains subject to existing Phase 2 logic.",
+    "Docs/tests clarify this is shadow-only and does not resolve QC/SOP tolerance approval, product spec approval, camera hardware approval, or production release approval."
+  ],
+  "required_checks": [
+    "python3 -m unittest tests.flange_qc_v2.test_calibration tests.flange_qc_v2.test_geometry tests.flange_qc_v2.test_replay tests.flange_qc_v2.test_decision_engine tests.flange_qc_v2.test_hmi_stream -v",
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m json.tool .ai-factory/gates/flange_qc_v2_fqv2_048_dor.json",
+    "git diff --check",
+    "HTTP preview smoke for /inspection/replay when local preview is available"
+  ],
+  "memory_preflight": {
+    "query": "FQV2 boundary/corners calibration measurement derivation.",
+    "retrieved_decisions": [
+      "Current app evaluates provided length/width/diagonal measurements and product tolerance logic is shadow-only.",
+      "Production authority remains false; product spec and QC/SOP approval are human-gated.",
+      "Open SOP questions remain unresolved, so this task must use bootstrap shadow evidence only."
+    ],
+    "retrieved_lessons": [
+      "Readiness labels and geometry evidence must distinguish shadow measurement logic from production approval.",
+      "Replay/HMI should consume sanitized metadata and measurements, not raw media."
+    ],
+    "restricted_areas": [
+      "secrets",
+      "raw media/data",
+      "model binaries/deserialization/inference",
+      "live camera/hardware",
+      "destructive migrations",
+      "production deploy/release",
+      "product spec approval",
+      "QC/SOP tolerance approval",
+      "model promotion",
+      "production PASS/NG authority"
+    ],
+    "conflicts_found": "Open SOP/QC approval questions remain, so this task does not approve product tolerance interpretation or production measurement method.",
+    "sources_to_verify": [
+      "AGENTS.md",
+      "apps/flange_qc_v2/geometry.py",
+      "apps/flange_qc_v2/calibration.py",
+      "apps/flange_qc_v2/replay.py",
+      "docs/project/flange_qc_v2/DATA_MODEL.md",
+      "docs/project/flange_qc_v2/OPEN_QUESTIONS.md"
+    ]
+  },
+  "rollback_note": "Revert the FQV2-048 PR to restore replay to precomputed measurements only. Existing product tolerance, decision engine, HMI, detector bridge, and product CI behavior remain valid."
+}
