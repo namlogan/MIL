@@ -28,7 +28,7 @@
 - Modify: `tests/flange_qc_v2/test_hmi_screen.py`
 - Do not modify production code in this task.
 
-- [ ] **Step 1: Add failing viewport structure test**
+- [x] **Step 1: Add failing viewport structure test**
 
 Append this test method inside `HmiScreenTests`:
 
@@ -54,7 +54,7 @@ Append this test method inside `HmiScreenTests`:
         self.assertIn("Details", html)
 ```
 
-- [ ] **Step 2: Add failing behavior-hook test**
+- [x] **Step 2: Add failing behavior-hook test**
 
 Append this test method inside `HmiScreenTests`:
 
@@ -84,7 +84,7 @@ Append this test method inside `HmiScreenTests`:
         self.assertIn("CONFIRM_BLOCKED", html)
 ```
 
-- [ ] **Step 3: Run RED test**
+- [x] **Step 3: Run RED test**
 
 Run:
 
@@ -94,7 +94,7 @@ python3 -m unittest tests.flange_qc_v2.test_hmi_screen -v
 
 Expected: fails because `qc-tablet-viewport`, `renderQcTabletViewport`, and related viewport helpers are not present yet.
 
-- [ ] **Step 4: Commit RED test**
+- [x] **Step 4: Commit RED test**
 
 ```bash
 git add tests/flange_qc_v2/test_hmi_screen.py
@@ -107,7 +107,7 @@ git commit -m "test: add QC tablet viewport coverage"
 - Modify: `apps/flange_qc_v2/static/hmi.html`
 - Test: `tests/flange_qc_v2/test_hmi_screen.py`
 
-- [ ] **Step 1: Insert CSS variables and classes**
+- [x] **Step 1: Insert CSS variables and classes**
 
 Inside the `<style>` block, add these classes near the existing QC-device CSS:
 
@@ -298,7 +298,7 @@ Also extend the existing mobile media query so `.measurement-strip` and `.alarm-
         }
 ```
 
-- [ ] **Step 2: Replace the current top dense sections**
+- [x] **Step 2: Replace the current top dense sections**
 
 Inside `<main>`, replace the current `status-strip` and `qc-device-layout` first-viewport area with this section. Keep `id="decision"`, `id="phase"`, `id="product"`, and `id="spec"` as hidden compatibility fields so existing tests and JS bindings remain stable.
 
@@ -364,7 +364,7 @@ Inside `<main>`, replace the current `status-strip` and `qc-device-layout` first
 
 Remove the old `qc-device-layout` section from the first viewport. Leave later detail panels in place.
 
-- [ ] **Step 3: Add new DOM field bindings**
+- [x] **Step 3: Add new DOM field bindings**
 
 In the `fields` object, add these entries and remove the old `phaseOneDevice*`, `phaseTwoDevice*`, and `phaseTwoStitch*` entries:
 
@@ -385,7 +385,7 @@ In the `fields` object, add these entries and remove the old `phaseOneDevice*`, 
         alarmFalse: document.getElementById("alarm-false"),
 ```
 
-- [ ] **Step 4: Verify GREEN for structure**
+- [x] **Step 4: Verify GREEN for structure**
 
 Run:
 
@@ -395,7 +395,7 @@ python3 -m unittest tests.flange_qc_v2.test_hmi_screen -v
 
 Expected: the structure test passes; helper test may still fail until Task 3.
 
-- [ ] **Step 5: Commit markup and CSS**
+- [x] **Step 5: Commit markup and CSS**
 
 ```bash
 git add apps/flange_qc_v2/static/hmi.html
@@ -408,7 +408,7 @@ git commit -m "feat: add QC tablet viewport shell"
 - Modify: `apps/flange_qc_v2/static/hmi.html`
 - Test: `tests/flange_qc_v2/test_hmi_screen.py`
 
-- [ ] **Step 1: Replace the old QC-device renderer call**
+- [x] **Step 1: Replace the old QC-device renderer call**
 
 Inside `renderSnapshot(payload)`, replace:
 
@@ -422,7 +422,7 @@ with:
         renderQcTabletViewport(payload);
 ```
 
-- [ ] **Step 2: Add the tablet viewport render helpers**
+- [x] **Step 2: Add the tablet viewport render helpers**
 
 Replace the old helper block from `function renderQcDevicePhaseLayout` through `function summarizeDevicePhase` with:
 
@@ -567,7 +567,7 @@ Replace the old helper block from `function renderQcDevicePhaseLayout` through `
       }
 ```
 
-- [ ] **Step 3: Remove old helper names from production code**
+- [x] **Step 3: Remove old helper names from production code**
 
 Remove these old functions if they remain:
 
@@ -582,7 +582,7 @@ summarizeDevicePhase
 
 The existing `findPhaseResult` helper remains in the new block.
 
-- [ ] **Step 4: Run HMI tests**
+- [x] **Step 4: Run HMI tests**
 
 Run:
 
@@ -592,7 +592,7 @@ python3 -m unittest tests.flange_qc_v2.test_hmi_screen -v
 
 Expected: all HMI screen tests pass.
 
-- [ ] **Step 5: Commit renderer implementation**
+- [x] **Step 5: Commit renderer implementation**
 
 ```bash
 git add apps/flange_qc_v2/static/hmi.html
@@ -605,7 +605,7 @@ git commit -m "feat: render QC tablet operator state"
 - Modify: `apps/flange_qc_v2/static/hmi.html`
 - Test: `tests/flange_qc_v2/test_hmi_screen.py`
 
-- [ ] **Step 1: Add alarm button event listeners**
+- [x] **Step 1: Add alarm button event listeners**
 
 Near the existing `refreshReplay.addEventListener` and `feedbackForm.addEventListener` calls, add:
 
@@ -614,7 +614,7 @@ Near the existing `refreshReplay.addEventListener` and `feedbackForm.addEventLis
       fields.alarmFalse.addEventListener("click", () => submitAlarmFeedback("MARK_FALSE_POSITIVE"));
 ```
 
-- [ ] **Step 2: Add `submitAlarmFeedback` helper**
+- [x] **Step 2: Add `submitAlarmFeedback` helper**
 
 Place this function immediately before the existing `submitFeedback()` function:
 
@@ -646,7 +646,7 @@ Place this function immediately before the existing `submitFeedback()` function:
 
 This keeps feedback inside the existing contract. `Alert correct` maps to `CONFIRM_BLOCKED` for the current implementation, and the QA handoff must record this limitation.
 
-- [ ] **Step 3: Run HMI tests**
+- [x] **Step 3: Run HMI tests**
 
 Run:
 
@@ -656,7 +656,7 @@ python3 -m unittest tests.flange_qc_v2.test_hmi_screen -v
 
 Expected: all HMI screen tests pass.
 
-- [ ] **Step 4: Commit feedback wiring**
+- [x] **Step 4: Commit feedback wiring**
 
 ```bash
 git add apps/flange_qc_v2/static/hmi.html
@@ -672,7 +672,7 @@ git commit -m "feat: wire QC alarm feedback actions"
 - Add: `.ai-factory/gates/flange_qc_v2_fqv2_034_dor.json`
 - Add: `.ai-factory/qa/flange_qc_v2_fqv2_034_handoff_2026-06-03.md`
 
-- [ ] **Step 1: Update user flow docs**
+- [x] **Step 1: Update user flow docs**
 
 In `docs/project/flange_qc_v2/USER_FLOWS.md`, update the No-Camera HMI Feedback Loop steps so step 3 reads:
 
@@ -689,7 +689,7 @@ In `docs/project/flange_qc_v2/USER_FLOWS.md`, update the No-Camera HMI Feedback 
 
 Renumber later steps.
 
-- [ ] **Step 2: Update data model docs**
+- [x] **Step 2: Update data model docs**
 
 In `docs/project/flange_qc_v2/DATA_MODEL.md`, update the HMI screen section with:
 
@@ -703,7 +703,7 @@ review-only observations are present. Alarm feedback buttons post through the
 existing `/feedback` endpoint as shadow evidence only.
 ```
 
-- [ ] **Step 3: Update test strategy docs**
+- [x] **Step 3: Update test strategy docs**
 
 In `docs/project/flange_qc_v2/TEST_STRATEGY.md`, add:
 
@@ -713,7 +713,7 @@ In `docs/project/flange_qc_v2/TEST_STRATEGY.md`, add:
   suspect overlay rendering hooks, and alarm correctness feedback actions.
 ```
 
-- [ ] **Step 4: Add DoR JSON**
+- [x] **Step 4: Add DoR JSON**
 
 Create `.ai-factory/gates/flange_qc_v2_fqv2_034_dor.json`:
 
@@ -765,7 +765,7 @@ Create `.ai-factory/gates/flange_qc_v2_fqv2_034_dor.json`:
 }
 ```
 
-- [ ] **Step 5: Add QA handoff skeleton**
+- [x] **Step 5: Add QA handoff skeleton**
 
 Create `.ai-factory/qa/flange_qc_v2_fqv2_034_handoff_2026-06-03.md` with sections:
 
@@ -819,7 +819,7 @@ Create `.ai-factory/qa/flange_qc_v2_fqv2_034_handoff_2026-06-03.md` with section
 Revert FQV2-034 to restore the previous HMI layout. No migration, model, camera, dataset, or deploy rollback is required.
 ```
 
-- [ ] **Step 6: Commit docs and gate skeleton**
+- [x] **Step 6: Commit docs and gate skeleton**
 
 ```bash
 git add docs/project/flange_qc_v2/USER_FLOWS.md docs/project/flange_qc_v2/DATA_MODEL.md docs/project/flange_qc_v2/TEST_STRATEGY.md .ai-factory/gates/flange_qc_v2_fqv2_034_dor.json .ai-factory/qa/flange_qc_v2_fqv2_034_handoff_2026-06-03.md
@@ -833,7 +833,7 @@ git commit -m "docs: add QC tablet viewport gate evidence"
 - Add: `.ai-factory/qa/flange_qc_v2_fqv2_034_hmi_snapshot.md`
 - Modify: `.ai-factory/qa/flange_qc_v2_fqv2_034_handoff_2026-06-03.md`
 
-- [ ] **Step 1: Start a temporary local HMI server**
+- [x] **Step 1: Start a temporary local HMI server**
 
 Run the existing no-camera temp-server pattern from previous HMI tasks with:
 
@@ -883,7 +883,7 @@ server.serve_forever()
 PY
 ```
 
-- [ ] **Step 2: Capture tablet browser evidence**
+- [x] **Step 2: Capture tablet browser evidence**
 
 Use Browser/Playwright:
 
@@ -932,7 +932,7 @@ The temporary HTTP server does not implement WebSocket upgrade, so one
 covered by `tests.flange_qc_v2.test_hmi_stream`.
 ```
 
-- [ ] **Step 3: Run final verification**
+- [x] **Step 3: Run final verification**
 
 Run:
 
@@ -948,7 +948,7 @@ git diff --check
 
 Expected: all commands pass. Record exact counts in the handoff.
 
-- [ ] **Step 4: Update QA handoff and commit browser evidence**
+- [x] **Step 4: Update QA handoff and commit browser evidence**
 
 ```bash
 git add .ai-factory/qa/flange_qc_v2_fqv2_034_handoff_2026-06-03.md .ai-factory/qa/flange_qc_v2_fqv2_034_hmi_tablet.png .ai-factory/qa/flange_qc_v2_fqv2_034_hmi_snapshot.md

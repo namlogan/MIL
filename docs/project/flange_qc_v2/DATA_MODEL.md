@@ -165,16 +165,23 @@ apps/flange_qc_v2/static/hmi.html
 
 The current screen is served at `/hmi`, connects to `/ws/inspection`, can refresh
 the current replay snapshot through `/inspection/replay`, and renders the latest
-replay-backed `inspection.snapshot` payload. It displays operator status, reason
-codes, product/spec, measurements, a QC-device phase layout, ordered SOP
+replay-backed `inspection.snapshot` payload. It displays a signal-first QC tablet
+viewport, operator status, reason codes, product/spec, measurements, ordered SOP
 `phase_results` drilldown, frame source, timestamp, observations state, detector
-bridge status, and detector observation details. The QC-device phase layout maps
-Phase 1 and Phase 2 independently from `phase_results`; Phase 2 includes a
-suspected stitch area that uses traffic state `ok` for `PASS`, `error` for `NG`,
-and `warn` for every review/blocked/assist/not-evaluated state. The phase
-drilldown shows each phase decision, reason codes, authority blockers,
-production-authority state, rule ids, rule decisions, rule reason codes, and
-compact evidence summaries. The detector bridge status panel reads
+bridge status, and detector observation details. The QC tablet viewport derives
+an operator state from the existing snapshot without changing backend authority:
+`PASS` maps to green only when the final decision is `PASS`, no phase is `NG`,
+and no actionable observation bbox is present; `CHECK` maps to red when the final
+decision is `NG`, any phase is `NG`, or an actionable observation bbox exists;
+every other state maps to amber `REVIEW`. Its measurement strip summarizes
+product, dimension, and diagonal/stitch evidence from `phase_results`. Its image
+well draws suspected-region overlays from normalized detector-observation bbox
+metadata only; raw image paths and live camera frames remain outside the current
+contract. Red alerts expose `Alert correct` and `False alarm` buttons that submit
+`CONFIRM_BLOCKED` or `MARK_FALSE_POSITIVE` through the existing shadow feedback
+contract. The phase drilldown shows each phase decision, reason codes, authority
+blockers, production-authority state, rule ids, rule decisions, rule reason
+codes, and compact evidence summaries. The detector bridge status panel reads
 `/detector/shadow/status` and shows ready state, adapter id, model reference,
 labels, approval status, and authority blockers. The detector observations
 panel shows label, confidence, bbox, model reference, and evidence reference

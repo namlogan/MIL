@@ -60,6 +60,10 @@
 - HMI screen tests and browser evidence validate detector observation details
   render label, confidence, bbox, model reference, evidence reference, and a
   safe empty state without changing production authority.
+- HMI screen tests and browser evidence validate the signal-first QC tablet
+  viewport: measurement strip, green/red/amber operator states, suspected-region
+  bbox overlay well, and alarm-correct/false-alarm bindings to the existing
+  shadow feedback endpoint.
 - Artifact intake endpoint tests validate safe unconfigured state and configured
   template readiness from `FLANGE_QC_V2_ARTIFACT_INTAKE_DIR`; HMI screen tests
   and browser evidence validate the metadata-only readiness panel.
