@@ -143,6 +143,22 @@ class HmiScreenTests(unittest.TestCase):
         self.assertIn("live_camera_implementation_issue", html)
         self.assertIn("dataset_manifest", html)
 
+    def test_hmi_html_uses_parallel_qc_wording_for_operator_visible_readiness(self) -> None:
+        html = HMI_HTML.read_text(encoding="utf-8")
+
+        self.assertIn("Parallel QC", html)
+        self.assertIn("Model Assist", html)
+        self.assertIn("Review-only", html)
+        self.assertIn("formatMeasurementSource", html)
+        self.assertIn("boundary corners + calibration (parallel QC)", html)
+        self.assertIn("formatTaskLabel", html)
+        self.assertIn("ready for parallel QC observation review", html)
+        self.assertIn("parallel QC observation review", html)
+        self.assertIn("submit observation evidence", html)
+        self.assertIn("collect more QC feedback", html)
+        self.assertNotIn(">Shadow Model<", html)
+        self.assertNotIn('aria-label="Detector shadow status"', html)
+
     def test_hmi_html_renders_artifact_readiness_report_panel(self) -> None:
         html = HMI_HTML.read_text(encoding="utf-8")
 
@@ -177,7 +193,7 @@ class HmiScreenTests(unittest.TestCase):
     def test_hmi_html_renders_detector_shadow_status_panel(self) -> None:
         html = HMI_HTML.read_text(encoding="utf-8")
 
-        self.assertIn('aria-label="Detector shadow status"', html)
+        self.assertIn('aria-label="Detector parallel QC status"', html)
         self.assertIn('id="detector-shadow-status"', html)
         self.assertIn('id="detector-shadow-ready"', html)
         self.assertIn('id="detector-shadow-adapter"', html)
