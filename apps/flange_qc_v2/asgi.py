@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from apps.flange_qc_v2.artifact_intake import validate_artifact_intake
+from apps.flange_qc_v2.artifact_readiness import build_artifact_readiness_report
 from apps.flange_qc_v2.audit import AuditStore
 from apps.flange_qc_v2.detector import (
     build_shadow_detector_status_from_intake,
@@ -24,6 +25,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 HMI_SCREEN = STATIC_DIR / "hmi.html"
 ARTIFACT_INTAKE_ENV = "FLANGE_QC_V2_ARTIFACT_INTAKE_DIR"
+LABELING_REVIEW_PACK_ENV = "FLANGE_QC_V2_LABELING_REVIEW_PACK_PATH"
 
 
 async def app(scope: Scope, receive: Receive, send: Send) -> None:
@@ -56,6 +58,9 @@ async def _handle_http(scope: Scope, receive: Receive, send: Send) -> None:
         return
     if method == "GET" and path == "/artifact-intake/status":
         await _send_json(send, 200, _artifact_intake_status_from_env())
+        return
+    if method == "GET" and path == "/artifact-readiness/status":
+        await _send_json(send, 200, _artifact_readiness_status_from_env())
         return
     if method == "GET" and path == "/detector/shadow/status":
         await _send_json(send, 200, _shadow_detector_status_from_env())
@@ -195,6 +200,51 @@ def _artifact_intake_status_from_env() -> dict[str, Any]:
         "PRODUCTION_APPROVAL_REQUIRED",
     ]
     return result
+
+
+def _artifact_readiness_status_from_env() -> dict[str, Any]:
+    intake_configured = bool(os.environ.get(ARTIFACT_INTAKE_ENV, "").strip())
+    intake_result = _artifact_intake_status_from_env()
+    labeling_pack_path = os.environ.get(LABELING_REVIEW_PACK_ENV, "").strip()
+    warnings: list[str] = []
+    labeling_pack: dict[str, Any] | None = None
+
+    if labeling_pack_path:
+        try:
+            labeling_pack = _read_optional_labeling_review_pack(labeling_pack_path)
+        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            warnings.append(f"labeling review pack unavailable: {exc}")
+
+    try:
+        report = build_artifact_readiness_report(
+            intake_result,
+            labeling_review_pack=labeling_pack,
+            source_ref="app://flange-qc-v2/artifact-readiness/status",
+        )
+    except ValueError as exc:
+        warnings.append(f"labeling review pack invalid: {exc}")
+        report = build_artifact_readiness_report(
+            intake_result,
+            source_ref="app://flange-qc-v2/artifact-readiness/status",
+        )
+
+    report["configured"] = intake_configured
+    report["artifact_intake_env"] = ARTIFACT_INTAKE_ENV
+    report["labeling_review_pack_env"] = LABELING_REVIEW_PACK_ENV
+    report["labeling_review_pack_path"] = labeling_pack_path
+    report["warnings"] = warnings
+    report["production_authority"] = False
+    return report
+
+
+def _read_optional_labeling_review_pack(path: str) -> dict[str, Any]:
+    pack_path = Path(path)
+    if not pack_path.is_file():
+        raise ValueError(f"{LABELING_REVIEW_PACK_ENV} file does not exist: {pack_path}")
+    payload = json.loads(pack_path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("labeling review pack must be an object")
+    return payload
 
 
 def _shadow_detector_status_from_env() -> dict[str, Any]:
