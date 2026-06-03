@@ -83,6 +83,9 @@
   invalid observation rejection, safe empty observations without artifact intake,
   and manifest-filled review-only observations when artifact intake is ready.
 - Audit DB stores inspection, rule, calibration, and feedback evidence.
+- QC feedback export tests validate one sanitized JSONL metadata record per
+  stored feedback row, empty audit export behavior, and fail-closed missing DB
+  behavior without raw payloads or production authority.
 
 ## Fixtures And Test Data
 
@@ -119,6 +122,10 @@ Replay detector observation fixtures are metadata only. They may include label,
 confidence, and normalized bbox values, but must not include raw image paths,
 model binaries, runtime outputs, customer data, credentials, production model
 promotion evidence, or final inspection authority.
+
+QC feedback export fixtures must use temporary SQLite audit stores and synthetic
+metadata only. JSONL records must not include raw media, raw datasets, full
+payload dumps, model weights, notebooks, credentials, or production authority.
 
 ## Agent Verification Rules
 

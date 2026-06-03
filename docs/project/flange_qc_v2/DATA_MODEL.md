@@ -217,6 +217,23 @@ approve product specs, QC/SOP tolerances, production PASS/NG authority,
 production auto-reject, release, deploy, secrets, customer data, or destructive
 migrations.
 
+QC feedback metadata export lives in:
+
+```text
+apps/flange_qc_v2/audit.py
+scripts/flange_qc_v2/export_qc_feedback.py
+```
+
+The exporter reads the existing SQLite audit store and emits one JSONL record per
+`qc_feedback` row. Records use `contract_version=qc_feedback_export.v1` and
+include only sanitized metadata: feedback id, inspection id, product code/spec
+version, inspection decision, feedback type, reviewer id, note, shadow decision,
+source reference, timestamps, authority blockers, and compact detector
+observation label/confidence/bbox metadata when present. The export is for
+dataset-labeling and MLOps review planning only. It does not emit raw media, raw
+datasets, full inspection payload JSON, model binaries, credentials, or
+production authority.
+
 Bootstrap image quality evidence lives in:
 
 ```text
