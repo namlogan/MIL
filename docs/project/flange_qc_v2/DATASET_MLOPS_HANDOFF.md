@@ -64,6 +64,26 @@ Required metadata:
 - `production_authority=false`
 - `source_ref`
 
+### QC Feedback Export
+
+Contract/runtime:
+
+```text
+apps/flange_qc_v2/audit.py
+scripts/flange_qc_v2/export_qc_feedback.py
+```
+
+The app can export existing audit feedback into JSONL records with
+`contract_version=qc_feedback_export.v1`. Each row is sanitized metadata for
+labeling and model-review planning: feedback id, inspection id, product code and
+spec version, inspection decision, feedback type, reviewer id, note, source
+reference, shadow decision, authority blockers, and compact detector observation
+metadata when present.
+
+This export does not include raw images, videos, raw datasets, notebooks, model
+weights, camera credentials, production secrets, or production PASS/NG authority.
+Empty audit stores produce an empty JSONL file.
+
 ## Forbidden In App Repo
 
 - Raw factory/customer images or video.

@@ -14,6 +14,7 @@ through explicit contracts.
 - Replay/no-camera E2E.
 - SQLite audit evidence.
 - QC feedback contract.
+- Sanitized QC feedback metadata export for labeling and model-review planning.
 - Detector adapter interface and stub adapter.
 - Model artifact manifest contract and safe manifest loader.
 - Dataset manifest and evaluation report handoff contracts.
@@ -96,6 +97,13 @@ flags, production authority, and model promotion. Passing these contracts means
 the MLOps artifacts are structurally ready for shadow integration review; it
 does not approve the dataset, model, live camera behavior, production
 retention, or production PASS/NG authority.
+
+The QC feedback export reads only the app audit SQLite store and emits
+`qc_feedback_export.v1` JSONL metadata for MLOps labeling review. It can include
+operator feedback, inspection decision, product metadata, and compact detector
+observation label/confidence/bbox evidence. It must not export raw media, raw
+datasets, full inspection payload dumps, model binaries, notebooks, credentials,
+model promotion evidence, or production PASS/NG authority.
 
 The artifact intake validator combines dataset, evaluation, model artifact, and
 camera boundary checks into a single JSON readiness result. It rejects raw media,
