@@ -121,6 +121,17 @@ approval blockers. Missing or invalid intake returns a non-ready state with
 binaries, run inference, import camera SDKs, capture frames, approve model
 promotion, or grant production PASS/NG authority.
 
+The app also exposes `POST /detector/shadow/observations` for shadow detector
+observation dry-runs. MLOps/engineering may send detector request metadata and
+sanitized observations containing only label, confidence, and normalized bbox.
+The endpoint still reads the model manifest only from
+`FLANGE_QC_V2_ARTIFACT_INTAKE_DIR`; request-supplied artifact directories,
+manifest/model/dataset paths, observation `model_ref`, and observation
+`evidence_ref` are rejected. Successful responses use `detector.result.v1`,
+fill traceability from the validated manifest, and remain review-only with
+`production_authority=false`. This is the app-side contract test path for future
+model output, not a model runtime, inference endpoint, or model promotion gate.
+
 No-camera replay frames may carry optional synthetic `detector_observations`
 metadata for review. The replay parser validates label, confidence, and bbox
 through the detector observation domain contract, then strips any model or

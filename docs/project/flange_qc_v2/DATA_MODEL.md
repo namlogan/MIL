@@ -371,6 +371,17 @@ final QC PASS/NG authority. The HMI renders this payload as detector bridge
 status so operators can see metadata readiness without opening raw JSON or
 changing backend decision authority.
 
+`POST /detector/shadow/observations` is the metadata-only dry-run path for
+shadow detector integration. It accepts detector request metadata plus sanitized
+label/confidence/bbox observations, reads the manifest only from
+`FLANGE_QC_V2_ARTIFACT_INTAKE_DIR`, and returns the existing
+`detector.result.v1` payload. The endpoint rejects request-supplied artifact
+directories, manifest paths, model paths, dataset paths, and observation
+`model_ref` or `evidence_ref` values so traceability always comes from the
+validated manifest. It can return review-only `ASSIST` or `NOT_EVALUATED`, but
+cannot emit `PASS`/`NG`, run inference, load model binaries, read raw media, or
+grant production authority.
+
 Replay frames may include optional synthetic `detector_observations` metadata:
 label, confidence, and normalized bbox only. Replay parsing validates these
 values through `DetectorObservation` and strips model/evidence references from

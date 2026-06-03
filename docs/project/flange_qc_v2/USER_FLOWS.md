@@ -110,11 +110,16 @@
    approval status, shadow mode, and production-authority blockers.
 5. HMI calls this endpoint and renders the detector bridge status without
    opening raw JSON or changing decision authority.
-6. Replay frames may provide sanitized synthetic `detector_observations`.
+6. MLOps/engineering can post sanitized review-only observation metadata to
+   `/detector/shadow/observations`. The endpoint reads the model manifest only
+   from `FLANGE_QC_V2_ARTIFACT_INTAKE_DIR`, rejects request-supplied artifact or
+   model paths, fills `model_ref` and `evidence_ref` from the manifest, and
+   returns `detector.result.v1` with `production_authority=false`.
+7. Replay frames may provide sanitized synthetic `detector_observations`.
    During HMI snapshot generation, those observations are attached only through
    `ManifestDetectorAdapter` after artifact intake is ready. The adapter fills
    the manifest model reference and evaluation evidence reference.
-7. Model weights, runtime inference, camera access, model promotion, product
+8. Model weights, runtime inference, camera access, model promotion, product
    spec approval, QC/SOP tolerance approval, and production release remain
    outside this flow.
 
@@ -168,6 +173,8 @@
   shadow-only authority blockers.
 - Shadow detector status returns a safe unconfigured state without env setup and
   returns manifest metadata from the template bundle when intake is ready.
+- Shadow detector observation dry-run returns `detector.result.v1` from sanitized
+  request/observation metadata and rejects request-supplied paths or model refs.
 - Replay/HMI snapshots keep observations empty without ready intake and attach
   review-only manifest detector observations when ready intake and synthetic
   replay observation metadata are present.
