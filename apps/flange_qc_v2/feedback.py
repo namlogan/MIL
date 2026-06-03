@@ -8,6 +8,7 @@ from apps.flange_qc_v2.domain import DECISION_STATES, ValidationError
 
 SCHEMA_VERSION = 1
 FEEDBACK_EXPORT_CONTRACT_VERSION = "qc_feedback_export.v1"
+LABELING_REVIEW_PACK_CONTRACT_VERSION = "qc_feedback_labeling_review_pack.v1"
 FEEDBACK_TYPES = (
     "CONFIRM_BLOCKED",
     "MARK_FALSE_POSITIVE",
@@ -138,6 +139,40 @@ def validate_feedback_export_records(records: list[Any]) -> dict[str, Any]:
     }
 
 
+def build_labeling_review_pack(records: list[dict[str, Any]]) -> dict[str, Any]:
+    validation = validate_feedback_export_records(records)
+    if not validation["ok"]:
+        raise ValueError(f"feedback export validation failed: {validation['errors']}")
+
+    product_counts: dict[str, int] = {}
+    feedback_type_counts: dict[str, int] = {}
+    inspection_decision_counts: dict[str, int] = {}
+    shadow_decision_counts: dict[str, int] = {}
+    detector_label_counts: dict[str, int] = {}
+
+    for record in records:
+        _increment(product_counts, record["product"]["code"])
+        _increment(feedback_type_counts, record["feedback_type"])
+        _increment(inspection_decision_counts, record["inspection_decision"])
+        _increment(shadow_decision_counts, record["shadow_decision"])
+        for observation in record["observations"]:
+            _increment(detector_label_counts, observation["label"])
+
+    return {
+        "contract_version": LABELING_REVIEW_PACK_CONTRACT_VERSION,
+        "source_contract_version": FEEDBACK_EXPORT_CONTRACT_VERSION,
+        "source_record_count": len(records),
+        "product_counts": _sorted_counts(product_counts),
+        "feedback_type_counts": _sorted_counts(feedback_type_counts),
+        "inspection_decision_counts": _sorted_counts(inspection_decision_counts),
+        "shadow_decision_counts": _sorted_counts(shadow_decision_counts),
+        "detector_label_counts": _sorted_counts(detector_label_counts),
+        "recommended_next_actions": _labeling_review_next_actions(records, feedback_type_counts),
+        "production_authority": False,
+        "authority_blockers": list(AUTHORITY_BLOCKERS),
+    }
+
+
 def validate_feedback_export_record(record: Any, *, line: int | None = None) -> list[dict[str, Any]]:
     errors: list[dict[str, Any]] = []
     if not isinstance(record, dict):
@@ -181,6 +216,34 @@ def validate_feedback_export_record(record: Any, *, line: int | None = None) -> 
         if _looks_like_raw_media_ref(record.get(field_name, "")):
             errors.append(_feedback_export_error(field_name, f"{field_name} must not reference raw media", line=line))
     return errors
+
+
+def _increment(counts: dict[str, int], key: Any) -> None:
+    normalized = str(key).strip()
+    if not normalized:
+        return
+    counts[normalized] = counts.get(normalized, 0) + 1
+
+
+def _sorted_counts(counts: dict[str, int]) -> dict[str, int]:
+    return {key: counts[key] for key in sorted(counts)}
+
+
+def _labeling_review_next_actions(records: list[dict[str, Any]], feedback_type_counts: dict[str, int]) -> list[str]:
+    if not records:
+        return ["collect_more_qc_feedback"]
+
+    actions = ["review_labeling_policy_with_qc_owner"]
+    if feedback_type_counts.get("MARK_FALSE_POSITIVE", 0):
+        actions.append("review_false_positive_alerts")
+    if feedback_type_counts.get("MARK_FALSE_NEGATIVE", 0):
+        actions.append("review_false_negative_misses")
+    if feedback_type_counts.get("CONFIRM_BLOCKED", 0):
+        actions.append("prioritize_confirmed_alert_examples")
+    if feedback_type_counts.get("REQUEST_REVIEW", 0):
+        actions.append("triage_requested_reviews")
+    actions.append("prepare_mlop_dataset_manifest_after_data_owner_review")
+    return actions
 
 
 def _validate_feedback_export_product(product: Any, *, line: int | None) -> list[dict[str, Any]]:
