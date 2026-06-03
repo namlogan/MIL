@@ -36,6 +36,7 @@ class HmiScreenTests(unittest.TestCase):
         self.assertIn('id="measurements"', body)
         self.assertIn('id="phase-results"', body)
         self.assertIn('id="artifact-intake-status"', body)
+        self.assertIn('id="artifact-readiness-status"', body)
         self.assertIn('id="refresh-replay"', body)
         self.assertIn('id="feedback-form"', body)
         self.assertIn('id="feedback-status"', body)
@@ -136,6 +137,24 @@ class HmiScreenTests(unittest.TestCase):
         self.assertIn("shadow_model_integration_issue", html)
         self.assertIn("live_camera_implementation_issue", html)
         self.assertIn("dataset_manifest", html)
+
+    def test_hmi_html_renders_artifact_readiness_report_panel(self) -> None:
+        html = HMI_HTML.read_text(encoding="utf-8")
+
+        self.assertIn('aria-label="Artifact readiness report"', html)
+        self.assertIn('id="artifact-readiness-status"', html)
+        self.assertIn('id="artifact-readiness-shadow-model"', html)
+        self.assertIn('id="artifact-readiness-live-camera"', html)
+        self.assertIn('id="artifact-readiness-qc-feedback"', html)
+        self.assertIn('id="artifact-readiness-production-release"', html)
+        self.assertIn('id="artifact-readiness-actions"', html)
+        self.assertIn("fetchArtifactReadinessStatus", html)
+        self.assertIn("renderArtifactReadinessStatus", html)
+        self.assertIn('fetch("/artifact-readiness/status"', html)
+        self.assertIn("artifact_readiness_report.v1", html)
+        self.assertIn("FLANGE_QC_V2_LABELING_REVIEW_PACK_PATH", html)
+        self.assertIn("production_release", html)
+        self.assertIn("recommended_next_actions", html)
 
     def test_hmi_html_renders_detector_observation_detail_panel(self) -> None:
         html = HMI_HTML.read_text(encoding="utf-8")
