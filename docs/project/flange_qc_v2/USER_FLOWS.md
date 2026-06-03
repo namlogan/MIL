@@ -88,9 +88,10 @@
    for artifact intake, shadow model, live camera, QC feedback labeling review,
    and production release authority. The endpoint reads only configured env
    paths and never accepts request-supplied paths.
-5. If `ready.shadow_model_integration_issue=true`, the next allowed task is a
-   shadow model integration issue that still cannot approve model promotion or
-   production PASS/NG authority.
+5. If `ready.shadow_model_integration_issue=true`, the next allowed app task is
+   shadow observation review: validate and submit sanitized detector observation
+   metadata while keeping model promotion and production PASS/NG authority
+   blocked.
 6. If `ready.live_camera_implementation_issue=false`, hardware work remains
    blocked until camera readiness and credential handling are approved.
 7. If the env var is missing or the bundle is invalid, the HMI stays in a safe

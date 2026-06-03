@@ -1,0 +1,82 @@
+{
+  "task_id": "FQV2-044",
+  "github_issue": "https://github.com/namlogan/MIL/issues/145",
+  "branch": "agent/145-artifact-readiness-shadow-observation-next-actions",
+  "title": "Advance artifact readiness next actions after shadow observation contract",
+  "status": "definition_of_ready",
+  "user_business_goal": "After the shadow detector metadata bridge, dry-run endpoint, and observation request contract are merged, the artifact readiness report should guide the coordinator to the next safe metadata loop instead of reopening the completed shadow integration issue.",
+  "allowed_files": [
+    "apps/flange_qc_v2/artifact_readiness.py",
+    "tests/flange_qc_v2/test_artifact_readiness.py",
+    "tests/flange_qc_v2/test_hmi_screen.py",
+    "docs/project/flange_qc_v2/USER_FLOWS.md",
+    "docs/project/flange_qc_v2/DATA_MODEL.md",
+    "docs/project/flange_qc_v2/DATASET_MLOPS_HANDOFF.md",
+    "docs/project/flange_qc_v2/TEST_STRATEGY.md",
+    ".ai-factory/gates/flange_qc_v2_fqv2_044_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_044_handoff_2026-06-03.md"
+  ],
+  "out_of_scope": [
+    "raw media, raw datasets, customer/factory data, notebooks, model weights, TensorRT engines, model binaries, or model execution",
+    "live camera capture, camera SDK loading, camera credentials, GPU/hardware validation, or hardware readiness approval",
+    "Windmill credential/tunnel/runtime changes",
+    "production deploy/release, secrets, tokens, provider credentials, destructive migrations, production data migration, billing, legal/compliance behavior, or security boundary change",
+    "product spec approval, QC/SOP tolerance approval, model promotion approval, production PASS/NG authority, or production auto-reject behavior",
+    "Memory0 approved record writes"
+  ],
+  "acceptance_criteria": [
+    "artifact_readiness_report.v1 keeps shadow model production authority false and model promotion blocked.",
+    "Valid artifact intake advances the shadow model lane to a post-integration review state instead of ready_for_shadow_integration.",
+    "The shadow model lane recommends shadow_observation_review instead of shadow_model_integration.",
+    "recommended_next_actions includes submit_shadow_observation_payload and excludes open_shadow_model_integration_issue for the valid template intake path.",
+    "Missing or invalid artifact intake still recommends fix_artifact_intake or configure_artifact_intake as before.",
+    "HMI can render the new next action text from /artifact-readiness/status without layout or authority changes.",
+    "Existing artifact intake, detector, HMI, feedback, product CI, and full repo tests continue to pass."
+  ],
+  "required_checks": [
+    "python3 -m unittest tests.flange_qc_v2.test_artifact_readiness -v",
+    "python3 -m unittest tests.flange_qc_v2.test_hmi_screen -v",
+    "python3 -m unittest tests.flange_qc_v2.test_detector_adapter -v",
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 -m compileall -q apps/flange_qc_v2 tests/flange_qc_v2 scripts/flange_qc_v2",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m unittest discover -s tests -v",
+    "python3 -m json.tool .ai-factory/gates/flange_qc_v2_fqv2_044_dor.json",
+    "git diff --check",
+    "HTTP preview smoke for /artifact-readiness/status when local preview is available"
+  ],
+  "memory_preflight": {
+    "query": "FQV2 artifact readiness shadow model integration complete observation request contract next actions.",
+    "retrieved_decisions": [
+      "Shadow detector metadata bridge, dry-run endpoint, and shadow observation request contract are merged.",
+      "Detector output remains review-only and production authority false.",
+      "Model promotion, production release, QC/SOP tolerance approval, and live camera approval remain human gates."
+    ],
+    "retrieved_lessons": [
+      "Readiness next actions should reflect completed implementation stages.",
+      "The next safe app loop is sanitized shadow observation metadata validation and QC feedback collection."
+    ],
+    "restricted_areas": [
+      "secrets",
+      "raw media/data",
+      "model binaries/deserialization/inference",
+      "live camera/hardware",
+      "destructive migrations",
+      "production deploy/release",
+      "product spec approval",
+      "QC/SOP tolerance approval",
+      "model promotion",
+      "production PASS/NG authority"
+    ],
+    "conflicts_found": "runtime/Windmill daily attention is a non-app-code auth/session blocker; this task does not require Windmill secret access.",
+    "sources_to_verify": [
+      "AGENTS.md",
+      ".ai-factory/RULES.md",
+      "apps/flange_qc_v2/artifact_readiness.py",
+      "tests/flange_qc_v2/test_artifact_readiness.py",
+      "docs/project/flange_qc_v2/DATA_MODEL.md",
+      "FQV2-029 through FQV2-043 PR evidence"
+    ]
+  },
+  "rollback_note": "Revert the FQV2-044 PR to restore the previous artifact readiness next-action wording. Existing artifact intake, detector status, shadow observation validator, HMI, feedback, and product CI behavior remain valid."
+}

@@ -107,10 +107,12 @@
 - QC feedback labeling review pack tests validate aggregate counts, empty-pack
   next actions, fail-closed invalid input, CLI JSON output, and absence of raw
   payload dumps or production authority.
-- Artifact readiness report tests validate shadow-ready template intake,
-  live-camera and production-release blockers, optional labeling review pack
-  handling, malformed pack rejection, CLI output, fail-closed missing intake
-  behavior, and `/artifact-readiness/status` env-only HTTP status behavior.
+- Artifact readiness report tests validate shadow-ready template intake advances
+  to `shadow_observation_review`, recommends
+  `submit_shadow_observation_payload` instead of reopening shadow integration,
+  keeps live-camera and production-release blockers, handles optional labeling
+  review packs, rejects malformed packs, emits CLI output, fails closed for
+  missing intake, and keeps `/artifact-readiness/status` env-only.
 - HMI screen tests and browser evidence validate that artifact readiness renders
   as a compact support panel outside the primary QC tablet viewport, fetches
   `/artifact-readiness/status`, displays shadow model, live camera, QC feedback,

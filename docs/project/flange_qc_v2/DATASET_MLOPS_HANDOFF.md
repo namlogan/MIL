@@ -120,11 +120,13 @@ python3 scripts/flange_qc_v2/build_artifact_readiness_report.py \
   --output .ai-factory/tmp/flange_qc_v2/artifact_readiness_report.json
 ```
 
-The readiness report separates shadow model integration readiness from live
-camera readiness and production release authority. It is aggregate metadata
-only. It does not approve labels, raw dataset handling, model training, model
-promotion, live camera use, QC/SOP tolerances, product specs, production
-release, or production PASS/NG authority.
+The readiness report separates shadow observation review readiness from live
+camera readiness and production release authority. When artifact intake is
+valid, it now points MLOps/engineering to submit sanitized shadow observation
+payloads through the request validator instead of opening another shadow
+integration issue. It is aggregate metadata only. It does not approve labels,
+raw dataset handling, model training, model promotion, live camera use, QC/SOP
+tolerances, product specs, production release, or production PASS/NG authority.
 
 ## Forbidden In App Repo
 
@@ -139,6 +141,6 @@ release, or production PASS/NG authority.
 ## Gate Meaning
 
 Passing these contracts means only that MLOps metadata is structurally ready for
-shadow integration review. It does not approve model promotion, production
+shadow observation review. It does not approve model promotion, production
 release, production PASS/NG authority, QC/SOP tolerances, product specs, live
 camera hardware, or production data retention.
