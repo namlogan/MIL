@@ -14,7 +14,9 @@ CONTRACT_VERSION = "detector.result.v1"
 SHADOW_OBSERVATION_REQUEST_CONTRACT_VERSION = "shadow_detector_observation_request.v1"
 AUTHORITY_BLOCKERS = ("MODEL_APPROVAL_REQUIRED", "PRODUCTION_APPROVAL_REQUIRED")
 ALLOWED_SOURCE_PREFIXES = ("synthetic://", "replay://")
-SHADOW_DETECTOR_NEXT_TASK = "shadow_detector_observations"
+SHADOW_DETECTOR_NEXT_TASK = "shadow_observation_review"
+SHADOW_DETECTOR_READY_STATE = "ready_for_shadow_observation_review"
+SHADOW_DETECTOR_NEXT_ACTIONS = ("submit_shadow_observation_payload", "collect_more_qc_feedback")
 SHADOW_OBSERVATION_ALLOWED_REQUEST_FIELDS = ("contract_version", "request", "observations")
 SHADOW_OBSERVATION_ALLOWED_OBSERVATION_FIELDS = ("label", "confidence", "bbox")
 SHADOW_OBSERVATION_FORBIDDEN_REQUEST_FIELDS = (
@@ -233,6 +235,8 @@ def build_shadow_detector_status_from_intake(
     base_status.update(
         {
             "ready": True,
+            "state": SHADOW_DETECTOR_READY_STATE,
+            "next_task": SHADOW_DETECTOR_NEXT_TASK,
             "model_ref": manifest.model_ref,
             "artifact_version": manifest.artifact_version,
             "labels": list(manifest.labels),
@@ -241,8 +245,9 @@ def build_shadow_detector_status_from_intake(
             "shadow_mode": manifest.shadow_mode,
             "next_issue": {
                 "recommended_task": SHADOW_DETECTOR_NEXT_TASK,
+                "recommended_next_actions": list(SHADOW_DETECTOR_NEXT_ACTIONS),
                 "source_ref": manifest.source_ref,
-                "reason": "shadow detector metadata bridge is ready for review-only observations",
+                "reason": "shadow detector metadata bridge is ready for shadow observation review",
             },
         }
     )

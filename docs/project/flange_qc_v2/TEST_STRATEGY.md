@@ -76,8 +76,11 @@
   validate the metadata-only readiness panel.
 - Shadow detector bridge tests validate that `/detector/shadow/status` reads
   only `FLANGE_QC_V2_ARTIFACT_INTAKE_DIR`, reports safe unconfigured state, and
-  returns manifest metadata only after artifact intake is ready. Adapter tests
-  prove `ManifestDetectorAdapter` remains review-only and cannot emit production
+  returns manifest metadata only after artifact intake is ready. Ready status
+  must expose `ready_for_shadow_observation_review`,
+  `next_task=shadow_observation_review`, and
+  `submit_shadow_observation_payload`. Adapter tests prove
+  `ManifestDetectorAdapter` remains review-only and cannot emit production
   PASS/NG authority.
 - Shadow detector observation dry-run tests validate that
   `/detector/shadow/observations` reads manifest metadata only from
