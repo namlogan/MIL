@@ -352,6 +352,11 @@ endpoint reads only `FLANGE_QC_V2_ARTIFACT_INTAKE_DIR` and optional
 metadata is reported as a warning and the QC feedback lane remains blocked.
 The endpoint does not accept request-supplied paths or change QC/operator
 decision authority.
+The HMI renders this endpoint as a compact artifact readiness support panel
+outside the primary QC tablet viewport. It displays lane summaries for shadow
+model integration, live camera implementation, QC feedback labeling review, the
+production release blocker, and recommended next actions while keeping the main
+green/red/amber QC signal unchanged.
 
 The shadow detector metadata bridge uses the same env-var-bound artifact intake
 source. `GET /detector/shadow/status` returns a detector-focused readiness

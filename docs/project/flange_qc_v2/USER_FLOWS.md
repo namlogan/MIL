@@ -50,22 +50,27 @@
 8. HMI shows detector bridge status from `/detector/shadow/status`, including
    ready state, adapter, model reference, labels, approval status, and remaining
    authority blockers when metadata is available.
-9. If review-only detector observations are present, the HMI detector
+9. HMI shows a compact artifact readiness support panel from
+   `/artifact-readiness/status`, including shadow model, live camera, QC
+   feedback labeling, production release blocker, and recommended next actions.
+   This panel is outside the primary QC tablet viewport so the green/red/amber
+   operator signal remains the main QC workflow.
+10. If review-only detector observations are present, the HMI detector
    observations panel shows label, confidence, bbox, model reference, and
    evidence reference without granting inspection authority.
-10. When `FLANGE_QC_V2_AUDIT_DB_PATH` is configured, replay refresh initializes
+11. When `FLANGE_QC_V2_AUDIT_DB_PATH` is configured, replay refresh initializes
    the local audit store and records the current inspection idempotently.
-11. Operator refreshes the replay snapshot from the HMI header when a manual
+12. Operator refreshes the replay snapshot from the HMI header when a manual
    no-camera check is needed.
-12. Operator records reviewer ID, feedback type, and note for the current
+13. Operator records reviewer ID, feedback type, and note for the current
    inspection.
-13. HMI submits the feedback payload to `/feedback` with the current inspection
+14. HMI submits the feedback payload to `/feedback` with the current inspection
    ID and shadow decision.
-14. The feedback contract returns shadow evidence with
+15. The feedback contract returns shadow evidence with
    `production_authority=false` and `PRODUCTION_APPROVAL_REQUIRED`.
-15. When audit persistence is configured, `/feedback` stores the feedback in
+16. When audit persistence is configured, `/feedback` stores the feedback in
    `qc_feedback` and returns audit persistence evidence for the HMI status.
-16. Any production release, product spec approval, QC/SOP tolerance approval,
+17. Any production release, product spec approval, QC/SOP tolerance approval,
    live hardware approval, or production PASS/NG authority remains outside this
    flow.
 
@@ -78,10 +83,11 @@
 3. HMI calls `/artifact-intake/status` and displays configured state, shadow
    model readiness, live camera readiness, next task, warnings/errors, and
    artifact names/summaries.
-4. Engineering/operator can call `/artifact-readiness/status` to see the
-   combined readiness report for artifact intake, shadow model, live camera,
-   QC feedback labeling review, and production release authority. The endpoint
-   reads only configured env paths and never accepts request-supplied paths.
+4. Engineering/operator can call `/artifact-readiness/status`, and HMI can
+   display it as a compact support panel, to see the combined readiness report
+   for artifact intake, shadow model, live camera, QC feedback labeling review,
+   and production release authority. The endpoint reads only configured env
+   paths and never accepts request-supplied paths.
 5. If `ready.shadow_model_integration_issue=true`, the next allowed task is a
    shadow model integration issue that still cannot approve model promotion or
    production PASS/NG authority.
@@ -156,6 +162,8 @@
 - HMI renders a signal-first QC tablet viewport with a top measurement strip,
   large green/red/amber operator state, suspected-region overlay well, and
   alarm-correct/false-alarm buttons for red alerts.
+- HMI renders artifact readiness from `/artifact-readiness/status` as a compact
+  support panel outside the primary QC tablet viewport.
 - HMI feedback submits the current inspection ID to `/feedback` and receives
   shadow-only authority blockers.
 - Shadow detector status returns a safe unconfigured state without env setup and
