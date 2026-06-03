@@ -5,7 +5,9 @@
 - Issue: https://github.com/namlogan/MIL/issues/125
 - Task: FQV2-034
 - User approval: revised option A, signal-first tablet viewport.
-- Backup completed before this design work:
+- Framework starter repo confirmed before implementation work:
+  https://github.com/namlogan/MIL-agent-factory-starter
+- Local framework backup artifacts also exist:
   `/Users/mac/Desktop/MIL-framework-bootstrap-pre-app-code-941e92a-20260603.bundle`
 
 ## Goal
