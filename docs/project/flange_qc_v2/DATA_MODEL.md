@@ -173,15 +173,21 @@ an operator state from the existing snapshot without changing backend authority:
 `PASS` maps to green only when the final decision is `PASS`, no phase is `NG`,
 and no actionable observation bbox is present; `CHECK` maps to red when the final
 decision is `NG`, any phase is `NG`, or an actionable observation bbox exists;
-every other state maps to amber `REVIEW`. Its measurement strip summarizes
-product, dimension, and diagonal/stitch evidence from `phase_results`. Its image
-well draws suspected-region overlays from normalized detector-observation bbox
-metadata only; raw image paths and live camera frames remain outside the current
-contract. Red alerts expose `Alert correct` and `False alarm` buttons that submit
-`CONFIRM_BLOCKED` or `MARK_FALSE_POSITIVE` through the existing shadow feedback
-contract. The phase drilldown shows each phase decision, reason codes, authority
-blockers, production-authority state, rule ids, rule decisions, rule reason
-codes, and compact evidence summaries. The detector bridge status panel reads
+every other state maps to amber `REVIEW`. Its top strip separates the product
+number from two independent SOP scopes. The measurement scope renders measured
+length/width ranges from `measurements` and can show green `OK` even when the
+overall banner is red for a stitch/model observation. The stitch scope renders
+review-only observation label/confidence when a normalized bbox exists and shows
+red `CHECK` for that suspected area. This scope split is display evidence only:
+product-spec approval, QC/SOP tolerance approval, and production authority still
+live in the detailed gate evidence below. Its image well draws suspected-region
+overlays from normalized detector-observation bbox metadata only; raw image paths
+and live camera frames remain outside the current contract. Red alerts expose
+`Alert correct` and `False alarm` buttons that submit `CONFIRM_BLOCKED` or
+`MARK_FALSE_POSITIVE` through the existing shadow feedback contract. The phase
+drilldown shows each phase decision, reason codes, authority blockers,
+production-authority state, rule ids, rule decisions, rule reason codes, and
+compact evidence summaries. The detector bridge status panel reads
 `/detector/shadow/status` and shows ready state, adapter id, model reference,
 labels, approval status, and authority blockers. The detector observations
 panel shows label, confidence, bbox, model reference, and evidence reference

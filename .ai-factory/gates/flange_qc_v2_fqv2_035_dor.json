@@ -1,0 +1,60 @@
+{
+  "task_id": "FQV2-035",
+  "github_issue": 127,
+  "source_ref": "https://github.com/namlogan/MIL/issues/127",
+  "owner_agent": "codex_developer",
+  "qa_agent": "codex_qa",
+  "preferred_lane": "codex",
+  "branch": "agent/127-qc-tablet-sop-scopes",
+  "allowed_paths": [
+    ".ai-factory/gates/flange_qc_v2_fqv2_035_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_035_handoff_2026-06-03.md",
+    ".ai-factory/qa/flange_qc_v2_fqv2_035_hmi_scope_strip.png",
+    ".ai-factory/qa/flange_qc_v2_fqv2_035_hmi_snapshot.md",
+    "apps/flange_qc_v2/static/hmi.html",
+    "tests/flange_qc_v2/test_hmi_screen.py",
+    "docs/project/flange_qc_v2/USER_FLOWS.md",
+    "docs/project/flange_qc_v2/DATA_MODEL.md",
+    "docs/project/flange_qc_v2/TEST_STRATEGY.md"
+  ],
+  "restricted_summary": "No backend authority change, production PASS/NG authority, product spec approval, QC/SOP tolerance approval, model runtime/training, model promotion, raw media/data, live camera enablement, camera SDK loading, destructive migration, deploy, or release.",
+  "acceptance_criteria": [
+    "First viewport top strip has three logical areas: small product number, measurement SOP scope, and stitch SOP scope.",
+    "Measurement scope displays measured length/width values and an independent green/red/review state.",
+    "Stitch scope displays suspected stitch/defect state and observation label/confidence when available.",
+    "Overall operator banner can remain red CHECK while measurement scope remains green OK.",
+    "Product, SOP drilldown, detector bridge, artifact intake, and feedback behavior remain compatible.",
+    "HMI tests and browser/tablet evidence verify the split scope layout."
+  ],
+  "memory_preflight": {
+    "query": "flange_qc_v2 QC tablet split measurement stitch SOP scopes independent green red state",
+    "retrieved_decisions": [
+      "HMI may surface existing evidence without changing backend authority.",
+      "Detector observations remain review-only.",
+      "Production release, product specs, QC/SOP tolerances, hardware, and model promotion remain human-gated."
+    ],
+    "retrieved_lessons": [
+      "QC tablet should prioritize operator action and avoid making QC inspect or measure scopes that are already visually OK."
+    ],
+    "conflicts_found": [],
+    "sources_to_verify": [
+      "https://github.com/namlogan/MIL/issues/127",
+      "apps/flange_qc_v2/static/hmi.html",
+      "tests/flange_qc_v2/test_hmi_screen.py",
+      ".ai-factory/qa/flange_qc_v2_fqv2_034_handoff_2026-06-03.md"
+    ]
+  },
+  "test_commands": [
+    "python3 -m unittest tests.flange_qc_v2.test_hmi_screen -v",
+    "Browser/Playwright verification on http://127.0.0.1:8765/hmi at tablet viewport with template artifact intake metadata",
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 -m compileall -q apps/flange_qc_v2 tests/flange_qc_v2",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m unittest discover -s tests -v",
+    "git diff --check",
+    "python3 -m json.tool .ai-factory/gates/flange_qc_v2_fqv2_035_dor.json"
+  ],
+  "handoff_required": true,
+  "browser_verification_required": true,
+  "rollback_note": "Revert FQV2-035 to restore the previous QC tablet top strip. Existing backend replay, decision engine, detector bridge, artifact intake, SOP drilldown, and feedback contracts remain valid."
+}

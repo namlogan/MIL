@@ -27,14 +27,17 @@
    `/inspection/replay` and continues to accept `/ws/inspection` updates.
    The snapshot exposes a top-level `FINAL` aggregate decision and ordered
    `phase_results` for Phase 1 through Phase 4 SOP evidence.
-3. Operator first scans the signal-first QC tablet viewport. The top measurement
-   strip shows product, dimension status, and diagonal/stitch status; the large
-   banner maps the current evidence to green `PASS`, red `CHECK`, or amber
-   `REVIEW`.
+3. Operator first scans the signal-first QC tablet viewport. The top strip shows
+   a small product number plus two independent SOP scopes: `Do luong` for
+   measured length/width evidence and `Mui chi` for stitch or model-observation
+   evidence. The large banner maps the current overall operator action to green
+   `PASS`, red `CHECK`, or amber `REVIEW`.
 4. If the viewport is green, QC continues to the next work item. If the viewport
-   is red, QC inspects the suspected area shown on the image well and self-measures
-   before disposition. If the viewport is amber, QC waits for setup, calibration,
-   approval, or model-evidence readiness.
+   is red because the stitch scope is red while the measurement scope is green,
+   QC inspects only the suspected stitch/defect area shown on the image well. If
+   the measurement scope is red, QC self-measures before disposition. If the
+   viewport is amber, QC waits for setup, calibration, approval, or model-evidence
+   readiness.
 5. When review-only detector observations include a normalized bbox, the image
    well draws a red suspected-region overlay. The overlay is assistive only and
    never grants production PASS/NG authority.
