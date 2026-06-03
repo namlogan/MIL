@@ -78,12 +78,16 @@
 3. HMI calls `/artifact-intake/status` and displays configured state, shadow
    model readiness, live camera readiness, next task, warnings/errors, and
    artifact names/summaries.
-4. If `ready.shadow_model_integration_issue=true`, the next allowed task is a
+4. Engineering/operator can call `/artifact-readiness/status` to see the
+   combined readiness report for artifact intake, shadow model, live camera,
+   QC feedback labeling review, and production release authority. The endpoint
+   reads only configured env paths and never accepts request-supplied paths.
+5. If `ready.shadow_model_integration_issue=true`, the next allowed task is a
    shadow model integration issue that still cannot approve model promotion or
    production PASS/NG authority.
-5. If `ready.live_camera_implementation_issue=false`, hardware work remains
+6. If `ready.live_camera_implementation_issue=false`, hardware work remains
    blocked until camera readiness and credential handling are approved.
-6. If the env var is missing or the bundle is invalid, the HMI stays in a safe
+7. If the env var is missing or the bundle is invalid, the HMI stays in a safe
    repair/configuration state and no production authority is granted.
 
 ## Critical Path: Shadow Detector Metadata Bridge
