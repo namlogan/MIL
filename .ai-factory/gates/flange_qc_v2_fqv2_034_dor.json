@@ -1,0 +1,66 @@
+{
+  "task_id": "FQV2-034",
+  "github_issue": 125,
+  "source_ref": "https://github.com/namlogan/MIL/issues/125",
+  "owner_agent": "codex_developer",
+  "qa_agent": "codex_qa",
+  "preferred_lane": "codex",
+  "branch": "agent/125-qc-tablet-viewport",
+  "allowed_paths": [
+    ".ai-factory/gates/flange_qc_v2_fqv2_034_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_034_handoff_2026-06-03.md",
+    ".ai-factory/qa/flange_qc_v2_fqv2_034_hmi_tablet.png",
+    ".ai-factory/qa/flange_qc_v2_fqv2_034_hmi_snapshot.md",
+    "apps/flange_qc_v2/static/hmi.html",
+    "tests/flange_qc_v2/test_hmi_screen.py",
+    "docs/project/flange_qc_v2/USER_FLOWS.md",
+    "docs/project/flange_qc_v2/DATA_MODEL.md",
+    "docs/project/flange_qc_v2/TEST_STRATEGY.md",
+    "docs/superpowers/specs/2026-06-03-qc-tablet-viewport-design.md",
+    "docs/superpowers/plans/2026-06-03-qc-tablet-viewport.md"
+  ],
+  "restricted_summary": "No live camera enablement, camera SDK loading, raw media ingestion, raw factory/customer data, model weights, model binaries, model deserialization, training code, runtime inference, MLOps promotion, production deploy, release approval, product spec approval, QC/SOP tolerance approval, destructive migration, production PASS/NG authority, or production auto-reject behavior.",
+  "acceptance_criteria": [
+    "First viewport is signal-first and tablet-oriented, not a dense dashboard.",
+    "Three-state visual model is used: green/PASS/continue, red/CHECK/inspect suspected area or self-measure, amber/REVIEW/wait or not enough evidence.",
+    "Automated measurement status is visible at the top of the viewport with minimal chips for product and key measurement checks.",
+    "Product image/suspect area panel is the dominant visual area; current no-camera mode may use replay/placeholder evidence, while future camera frames can draw overlays directly on the captured product image.",
+    "Suspected defect overlays use existing normalized bbox detector observations where available.",
+    "QC can submit whether the app alarm was correct or a false alarm using existing feedback authority where possible.",
+    "Existing SOP drilldown, detector bridge, artifact intake, and feedback evidence remain available below the first viewport.",
+    "HMI tests and browser/tablet evidence verify the new viewport."
+  ],
+  "memory_preflight": {
+    "query": "flange_qc_v2 QC tablet HMI signal-first viewport alarm feedback bbox overlay",
+    "retrieved_decisions": [
+      "HMI may surface existing evidence without changing backend decision authority.",
+      "Detector observations remain review-only.",
+      "Production release, product specs, QC/SOP tolerances, hardware, and model promotion remain human-gated."
+    ],
+    "retrieved_lessons": [
+      "QC tablet should prioritize glanceable operator action over detailed debug panels.",
+      "Detailed SOP evidence can stay below the fold."
+    ],
+    "conflicts_found": [],
+    "sources_to_verify": [
+      "https://github.com/namlogan/MIL/issues/125",
+      "apps/flange_qc_v2/static/hmi.html",
+      "tests/flange_qc_v2/test_hmi_screen.py",
+      "docs/project/flange_qc_v2/USER_FLOWS.md",
+      "docs/superpowers/specs/2026-06-03-qc-tablet-viewport-design.md"
+    ]
+  },
+  "test_commands": [
+    "python3 -m unittest tests.flange_qc_v2.test_hmi_screen -v",
+    "Browser/Playwright verification on http://127.0.0.1:8765/hmi at tablet viewport with template artifact intake metadata",
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 -m compileall -q apps/flange_qc_v2 tests/flange_qc_v2",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m unittest discover -s tests -v",
+    "git diff --check",
+    "python3 -m json.tool .ai-factory/gates/flange_qc_v2_fqv2_034_dor.json"
+  ],
+  "handoff_required": true,
+  "browser_verification_required": true,
+  "rollback_note": "Revert FQV2-034 to restore the previous HMI first viewport. Existing backend replay, decision engine, detector bridge, artifact intake, SOP drilldown, and feedback contracts remain valid. No migration, camera, model, dataset, or deploy rollback is required."
+}
