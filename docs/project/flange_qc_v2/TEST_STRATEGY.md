@@ -64,6 +64,10 @@
   viewport: measurement strip, green/red/amber operator states, suspected-region
   bbox overlay well, and alarm-correct/false-alarm bindings to the existing
   shadow feedback endpoint.
+- HMI screen tests and browser evidence validate that the QC tablet top strip
+  separates product number, measurement SOP scope, and stitch SOP scope. Browser
+  evidence should include the common case where the overall banner is red
+  `CHECK`, measurement is green `OK`, and stitch is red `CHECK`.
 - Artifact intake endpoint tests validate safe unconfigured state and configured
   template readiness from `FLANGE_QC_V2_ARTIFACT_INTAKE_DIR`; HMI screen tests
   and browser evidence validate the metadata-only readiness panel.

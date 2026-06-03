@@ -147,18 +147,25 @@
 
       .measurement-strip {
         display: grid;
-        grid-template-columns: 1.1fr repeat(3, minmax(0, 0.8fr));
+        grid-template-columns: minmax(84px, 0.48fr) minmax(0, 1.35fr) minmax(0, 1.35fr);
         gap: 1px;
         background: var(--line);
       }
 
-      .measurement-chip {
+      .measurement-chip,
+      .scope-card {
         min-width: 0;
         padding: 12px 14px;
         background: #ffffff;
       }
 
-      .measurement-chip span {
+      .measurement-chip {
+        display: grid;
+        align-content: center;
+      }
+
+      .measurement-chip span,
+      .scope-card span {
         display: block;
         color: var(--muted);
         font-size: 12px;
@@ -183,6 +190,52 @@
 
       .measurement-chip[data-state="review"] strong {
         color: var(--amber);
+      }
+
+      .scope-card {
+        display: grid;
+        gap: 8px;
+      }
+
+      .scope-card-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .scope-card-title {
+        color: var(--ink);
+        font-size: 18px;
+        font-weight: 900;
+      }
+
+      .scope-status {
+        min-width: 72px;
+        text-align: right;
+        color: var(--amber);
+        font-size: 22px;
+        font-weight: 950;
+        line-height: 1;
+      }
+
+      .scope-card[data-state="ok"] .scope-status {
+        color: var(--green);
+      }
+
+      .scope-card[data-state="check"] .scope-status {
+        color: var(--red);
+      }
+
+      .scope-card[data-state="review"] .scope-status {
+        color: var(--amber);
+      }
+
+      .scope-card-detail {
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 750;
+        overflow-wrap: anywhere;
       }
 
       .operator-state-banner {
@@ -707,21 +760,23 @@
     <main>
       <section id="qc-tablet-viewport" class="qc-tablet-viewport" data-operator-state="review" aria-label="QC tablet operating viewport">
         <div id="measurement-strip" class="measurement-strip">
-          <div class="measurement-chip" data-chip="product" data-state="review">
+          <div id="product-scope-chip" class="measurement-chip" data-chip="product" data-state="review">
             <span>Product</span>
             <strong id="product">611</strong>
           </div>
-          <div class="measurement-chip" data-chip="length" data-state="review">
-            <span>Length</span>
-            <strong id="length-chip-status">REVIEW</strong>
+          <div id="measurement-scope-card" class="scope-card" data-scope="measurement" data-state="review" aria-label="Do luong SOP scope">
+            <div class="scope-card-header">
+              <span class="scope-card-title">Do luong</span>
+              <strong id="measurement-scope-status" class="scope-status">REVIEW</strong>
+            </div>
+            <div id="measurement-scope-detail" class="scope-card-detail">Waiting for measurement payload</div>
           </div>
-          <div class="measurement-chip" data-chip="width" data-state="review">
-            <span>Width</span>
-            <strong id="width-chip-status">REVIEW</strong>
-          </div>
-          <div class="measurement-chip" data-chip="diagonal-or-stitch" data-state="review">
-            <span>Diagonal / Stitch</span>
-            <strong id="diagonal-chip-status">REVIEW</strong>
+          <div id="stitch-scope-card" class="scope-card" data-scope="stitch" data-state="review" aria-label="Mui chi SOP scope">
+            <div class="scope-card-header">
+              <span class="scope-card-title">Mui chi</span>
+              <strong id="stitch-scope-status" class="scope-status">REVIEW</strong>
+            </div>
+            <div id="stitch-scope-detail" class="scope-card-detail">Waiting for stitch evidence</div>
           </div>
         </div>
 
@@ -978,9 +1033,13 @@
         operatorStateLabel: document.getElementById("operator-state-label"),
         operatorStateAction: document.getElementById("operator-state-action"),
         operatorStateBadge: document.getElementById("operator-state-badge"),
-        lengthChipStatus: document.getElementById("length-chip-status"),
-        widthChipStatus: document.getElementById("width-chip-status"),
-        diagonalChipStatus: document.getElementById("diagonal-chip-status"),
+        productScopeChip: document.getElementById("product-scope-chip"),
+        measurementScopeCard: document.getElementById("measurement-scope-card"),
+        measurementScopeStatus: document.getElementById("measurement-scope-status"),
+        measurementScopeDetail: document.getElementById("measurement-scope-detail"),
+        stitchScopeCard: document.getElementById("stitch-scope-card"),
+        stitchScopeStatus: document.getElementById("stitch-scope-status"),
+        stitchScopeDetail: document.getElementById("stitch-scope-detail"),
         inspectionImagePanel: document.getElementById("inspection-image-panel"),
         suspectOverlayLayer: document.getElementById("suspect-overlay-layer"),
         suspectRegionLabel: document.getElementById("suspect-region-label"),
@@ -1090,16 +1149,122 @@
       }
 
       function renderMeasurementStrip(payload, operatorState) {
+        const measurement = measurementScopeState(payload);
+        const stitch = stitchScopeState(payload, operatorState);
+        fields.productScopeChip.dataset.state = operatorState.state === "pass" ? "ok" : "review";
+        setScopeCard(fields.measurementScopeCard, fields.measurementScopeStatus, fields.measurementScopeDetail, measurement);
+        setScopeCard(fields.stitchScopeCard, fields.stitchScopeStatus, fields.stitchScopeDetail, stitch);
+      }
+
+      function setScopeCard(card, statusField, detailField, scopeState) {
+        card.dataset.state = scopeState.state;
+        statusField.textContent = scopeState.label;
+        detailField.textContent = scopeState.detail;
+      }
+
+      function measurementScopeState(payload) {
+        const measurements = payload.measurements || {};
+        const lengthPoints = numericValues(measurements.length_points);
+        const widthPoints = numericValues(measurements.width_points);
         const phaseResults = Array.isArray(payload.phase_results) ? payload.phase_results : [];
         const phaseOne = findPhaseResult(phaseResults, "PHASE_1");
-        const phaseTwo = findPhaseResult(phaseResults, "PHASE_2");
-        setMeasurementChip("length", measurementChipState(phaseOne), measurementChipLabel(phaseOne));
-        setMeasurementChip("width", measurementChipState(phaseOne), measurementChipLabel(phaseOne));
-        setMeasurementChip(
-          "diagonal-or-stitch",
-          operatorState.state === "check" ? "check" : measurementChipState(phaseTwo),
-          operatorState.state === "check" ? "CHECK" : measurementChipLabel(phaseTwo)
+        const phaseOneReasons = collectPhaseReasonCodes(phaseOne);
+        const hasDimensionNg = Boolean(
+          phaseOne && (
+            phaseOne.decision === "NG" ||
+            phaseOneReasons.includes("LENGTH_OUT_OF_TOLERANCE") ||
+            phaseOneReasons.includes("WIDTH_OUT_OF_TOLERANCE") ||
+            phaseOneReasons.includes("MEASUREMENT_INCOMPLETE")
+          )
         );
+        if (hasDimensionNg) {
+          return {
+            state: "check",
+            label: "CHECK",
+            detail: formatMeasurementScopeDetail(lengthPoints, widthPoints, measurements.unit)
+          };
+        }
+        if (lengthPoints.length && widthPoints.length) {
+          return {
+            state: "ok",
+            label: "OK",
+            detail: formatMeasurementScopeDetail(lengthPoints, widthPoints, measurements.unit)
+          };
+        }
+        return {
+          state: "review",
+          label: "REVIEW",
+          detail: "Waiting for length and width values"
+        };
+      }
+
+      function stitchScopeState(payload, operatorState) {
+        const observations = Array.isArray(payload.observations) ? payload.observations : [];
+        const actionable = observations.find(hasActionableObservation) || null;
+        if (actionable) {
+          return {
+            state: "check",
+            label: "CHECK",
+            detail: formatObservationScopeDetail(actionable)
+          };
+        }
+        if (operatorState.state === "pass") {
+          return {
+            state: "ok",
+            label: "OK",
+            detail: "No stitch alert"
+          };
+        }
+        return {
+          state: "review",
+          label: "REVIEW",
+          detail: "Waiting for model or QC review evidence"
+        };
+      }
+
+      function numericValues(values) {
+        if (!Array.isArray(values)) {
+          return [];
+        }
+        return values.map(Number).filter(Number.isFinite);
+      }
+
+      function collectPhaseReasonCodes(phaseResult) {
+        const reasons = [];
+        if (!phaseResult) {
+          return reasons;
+        }
+        if (Array.isArray(phaseResult.reason_codes)) {
+          reasons.push(...phaseResult.reason_codes);
+        }
+        const ruleResults = Array.isArray(phaseResult.rule_results) ? phaseResult.rule_results : [];
+        ruleResults.forEach((ruleResult) => {
+          if (Array.isArray(ruleResult.reason_codes)) {
+            reasons.push(...ruleResult.reason_codes);
+          }
+        });
+        return reasons;
+      }
+
+      function formatMeasurementScopeDetail(lengthPoints, widthPoints, unit) {
+        const unitLabel = unit || "unit";
+        const lengthText = lengthPoints.length ? `L ${formatRange(lengthPoints)}` : "L n/a";
+        const widthText = widthPoints.length ? `W ${formatRange(widthPoints)}` : "W n/a";
+        return `${lengthText} / ${widthText} ${unitLabel}`;
+      }
+
+      function formatRange(values) {
+        if (!values.length) {
+          return "n/a";
+        }
+        if (values.length === 1) {
+          return values[0].toFixed(2);
+        }
+        return `${Math.min(...values).toFixed(2)}-${Math.max(...values).toFixed(2)}`;
+      }
+
+      function formatObservationScopeDetail(observation) {
+        return `${observation.label || "suspected defect"} / ${formatConfidence(observation.confidence)}`;
       }
 
       function setMeasurementChip(chipName, state, label) {
