@@ -162,6 +162,11 @@ class HmiStreamSnapshotTests(unittest.TestCase):
         self.assertEqual(body["measurements"]["length_points"], [75.0, 75.0, 75.0])
         self.assertEqual(body["measurements"]["width_points"], [37.5, 37.5, 37.5])
         self.assertEqual(body["measurements"]["diagonals"], [83.852549, 83.852549])
+        self.assertEqual(body["measurements"]["measurement_source"], "boundary_corners_calibrated_shadow")
+        self.assertEqual(
+            body["measurements"]["measurement_evidence"]["calibration_method"],
+            "top_down_boundary_corners_shadow_v1",
+        )
         self.assertEqual(parsed.decision, "BLOCKED")
         self.assertEqual([phase["production_authority"] for phase in body["phase_results"]], [False, False, False, False])
 
@@ -172,6 +177,8 @@ class HmiStreamSnapshotTests(unittest.TestCase):
         self.assertEqual(response["status"], 200)
         self.assertEqual(body["inspection_id"], "fqv2-phase2-synthetic-001")
         self.assertEqual(body["measurements"]["length_points"], [74.9, 75.0, 75.1])
+        self.assertEqual(body["measurements"]["measurement_source"], "provided_measurements")
+        self.assertEqual(body["measurements"]["measurement_evidence"], {})
 
     def test_replay_http_endpoint_persists_snapshot_idempotently_when_audit_db_is_configured(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

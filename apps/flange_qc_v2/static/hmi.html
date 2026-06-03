@@ -981,6 +981,8 @@
           <div class="detail-row"><span class="label">Frame</span><span id="frame-id" class="value">frame-001</span></div>
           <div class="detail-row"><span class="label">Source</span><span id="source-uri" class="value">synthetic://flange-qc-v2/phase2/frame-001</span></div>
           <div class="detail-row"><span class="label">Unit</span><span id="unit" class="value">inch</span></div>
+          <div class="detail-row"><span class="label">Measurement Source</span><span id="measurement-source" class="value">provided_measurements</span></div>
+          <div class="detail-row"><span class="label">Measurement Evidence</span><span id="measurement-evidence" class="value">none</span></div>
         </div>
       </section>
 
@@ -1045,6 +1047,8 @@
         frameId: document.getElementById("frame-id"),
         sourceUri: document.getElementById("source-uri"),
         unit: document.getElementById("unit"),
+        measurementSource: document.getElementById("measurement-source"),
+        measurementEvidence: document.getElementById("measurement-evidence"),
         reasonList: document.getElementById("reason-list"),
         phaseResults: document.getElementById("phase-results"),
         qcTabletViewport: document.getElementById("qc-tablet-viewport"),
@@ -1113,6 +1117,7 @@
           fields.reasonList.appendChild(item);
         });
         renderMeasurements(payload.measurements);
+        renderMeasurementEvidence(payload.measurements);
         renderPhaseResults(payload.phase_results);
         renderQcTabletViewport(payload);
         renderDetectorObservations(observations);
@@ -1130,6 +1135,17 @@
             group.appendChild(item);
           });
         });
+      }
+
+      function renderMeasurementEvidence(measurements) {
+        const source = measurements && measurements.measurement_source
+          ? measurements.measurement_source
+          : "provided_measurements";
+        const evidence = measurements && measurements.measurement_evidence
+          ? measurements.measurement_evidence
+          : {};
+        fields.measurementSource.textContent = source;
+        fields.measurementEvidence.textContent = summarizeEvidence(evidence);
       }
 
       function renderQcTabletViewport(payload) {

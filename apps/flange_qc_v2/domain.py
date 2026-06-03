@@ -136,6 +136,8 @@ class InspectionMeasurements:
     width_points: list[float] = field(default_factory=list)
     diagonals: list[float] = field(default_factory=list)
     unit: str = "inch"
+    measurement_source: str = "provided_measurements"
+    measurement_evidence: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         length_points = _coerce_number_list(self.length_points, "length_points")
@@ -144,6 +146,9 @@ class InspectionMeasurements:
         unit = str(self.unit).strip()
         if unit not in MEASUREMENT_UNITS:
             raise ValidationError(f"unknown measurement unit: {unit}")
+        measurement_source = _require_non_empty(self.measurement_source, "measurement_source")
+        if not isinstance(self.measurement_evidence, dict):
+            raise ValidationError("measurement_evidence must be an object")
         has_measurements = bool(length_points or width_points or diagonals)
         if has_measurements:
             if len(length_points) != 3:
@@ -156,6 +161,8 @@ class InspectionMeasurements:
         object.__setattr__(self, "width_points", width_points)
         object.__setattr__(self, "diagonals", diagonals)
         object.__setattr__(self, "unit", unit)
+        object.__setattr__(self, "measurement_source", measurement_source)
+        object.__setattr__(self, "measurement_evidence", dict(self.measurement_evidence))
 
     def to_payload(self) -> dict[str, Any]:
         return {
@@ -163,6 +170,8 @@ class InspectionMeasurements:
             "width_points": self.width_points,
             "diagonals": self.diagonals,
             "unit": self.unit,
+            "measurement_source": self.measurement_source,
+            "measurement_evidence": dict(self.measurement_evidence),
         }
 
     @classmethod
@@ -174,6 +183,8 @@ class InspectionMeasurements:
             width_points=payload.get("width_points", []),
             diagonals=payload.get("diagonals", []),
             unit=payload.get("unit", "inch"),
+            measurement_source=payload.get("measurement_source", "provided_measurements"),
+            measurement_evidence=payload.get("measurement_evidence", {}),
         )
 
 

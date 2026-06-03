@@ -35,6 +35,9 @@ def build_replay_inspection_snapshot(
         frame,
         source_ref=result.replay_id,
     )
+    measurements = dict(frame.measurements)
+    measurements["measurement_source"] = getattr(frame, "measurement_source", "provided_measurements")
+    measurements["measurement_evidence"] = dict(getattr(frame, "measurement_evidence", {}) or {})
     return InspectionSnapshot(
         inspection_id=result.replay_id,
         product_code=result.product_code,
@@ -42,7 +45,7 @@ def build_replay_inspection_snapshot(
         phase=result.decision.phase,
         decision=result.decision.decision,
         reason_codes=list(result.decision.reason_codes),
-        measurements=InspectionMeasurements.from_payload(frame.measurements),
+        measurements=InspectionMeasurements.from_payload(measurements),
         observations=observations,
         phase_results=[phase_result.to_payload() for phase_result in result.phase_results],
         created_at=frame.captured_at,

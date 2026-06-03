@@ -1,0 +1,83 @@
+{
+  "task_id": "FQV2-050",
+  "github_issue": "https://github.com/namlogan/MIL/issues/157",
+  "branch": "agent/157-measurement-source-evidence-hmi",
+  "title": "Surface measurement source evidence in HMI snapshot",
+  "status": "definition_of_ready",
+  "user_business_goal": "Expose measurement provenance in the normal HMI inspection snapshot so QC and project owner can see whether displayed length, width, and diagonal values came from provided replay measurements or boundary corners calibrated by bootstrap camera calibration metadata.",
+  "allowed_files": [
+    "apps/flange_qc_v2/domain.py",
+    "apps/flange_qc_v2/hmi_stream.py",
+    "apps/flange_qc_v2/static/hmi.html",
+    "contracts/flange_qc_v2/websocket/inspection_snapshot.schema.json",
+    "tests/flange_qc_v2/test_domain_contracts.py",
+    "tests/flange_qc_v2/test_hmi_stream.py",
+    "tests/flange_qc_v2/test_hmi_screen.py",
+    "docs/project/flange_qc_v2/DATA_MODEL.md",
+    "docs/project/flange_qc_v2/TEST_STRATEGY.md",
+    "docs/project/flange_qc_v2/USER_FLOWS.md",
+    ".ai-factory/gates/flange_qc_v2_fqv2_050_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_050_handoff_2026-06-03.md"
+  ],
+  "out_of_scope": [
+    "raw media, raw datasets, customer/factory data, notebooks, model weights, TensorRT engines, model binaries, or model execution",
+    "live camera capture, camera SDK loading, camera credentials, GPU/hardware validation, or hardware readiness approval",
+    "request-supplied file paths for replay/spec/calibration selection",
+    "Windmill credential/tunnel/runtime changes",
+    "production deploy/release, secrets, tokens, provider credentials, destructive migrations, production data migration, billing, legal/compliance behavior, or security boundary change",
+    "product spec approval, QC/SOP tolerance approval, model promotion approval, production PASS/NG authority, or production auto-reject behavior",
+    "Memory0 approved record writes"
+  ],
+  "acceptance_criteria": [
+    "InspectionMeasurements preserves a non-authoritative measurement_source value in snapshot payloads.",
+    "Snapshot payloads preserve sanitized measurement_evidence metadata when replay frames include boundary/calibration evidence.",
+    "/inspection/replay with the boundary replay env returns measurement_source=boundary_corners_calibrated_shadow and calibration/boundary evidence in measurements.",
+    "Default replay fixtures still work and report measurement_source=provided_measurements without live camera or model execution.",
+    "HMI renders measurement source/evidence in the Frame Source area without changing the signal-first QC layout.",
+    "WebSocket inspection snapshot schema documents measurement_source and measurement_evidence.",
+    "All production authority remains false; this task is shadow evidence only."
+  ],
+  "required_checks": [
+    "python3 -m unittest tests.flange_qc_v2.test_domain_contracts tests.flange_qc_v2.test_hmi_stream tests.flange_qc_v2.test_hmi_screen -v",
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m json.tool .ai-factory/gates/flange_qc_v2_fqv2_050_dor.json",
+    "git diff --check",
+    "HTTP preview smoke for /inspection/replay with FLANGE_QC_V2_REPLAY_MANIFEST_PATH=samples/replay/flange_qc_v2/phase2_synthetic_boundary.json when local preview is available"
+  ],
+  "memory_preflight": {
+    "query": "FQV2 measurement provenance evidence in HMI snapshot.",
+    "retrieved_decisions": [
+      "Boundary/corners measurement derivation remains shadow-only.",
+      "FQV2-049 makes replay/spec/calibration paths env-only.",
+      "Request-supplied paths are ignored."
+    ],
+    "retrieved_lessons": [
+      "HMI should expose useful sanitized evidence through normal endpoints without granting production authority or showing raw artifacts.",
+      "Measurement provenance should stay in the snapshot contract so QA, HMI, and audit payloads agree."
+    ],
+    "restricted_areas": [
+      "secrets",
+      "raw media/data",
+      "model binaries/deserialization/inference",
+      "live camera/hardware",
+      "destructive migrations",
+      "production deploy/release",
+      "request-supplied file paths",
+      "product spec approval",
+      "QC/SOP tolerance approval",
+      "model promotion",
+      "production PASS/NG authority"
+    ],
+    "conflicts_found": "runtime/Windmill daily attention is separate; this task does not require Windmill secret access.",
+    "sources_to_verify": [
+      "AGENTS.md",
+      "apps/flange_qc_v2/domain.py",
+      "apps/flange_qc_v2/replay.py",
+      "apps/flange_qc_v2/hmi_stream.py",
+      "apps/flange_qc_v2/static/hmi.html",
+      "contracts/flange_qc_v2/websocket/inspection_snapshot.schema.json"
+    ]
+  },
+  "rollback_note": "Revert the FQV2-050 PR to remove measurement provenance display from snapshots/HMI. Existing replay, boundary-derived measurements, HMI signal layout, product tolerance, and product CI behavior remain valid."
+}
