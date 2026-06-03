@@ -103,6 +103,16 @@ but it remains `BLOCKED` with no production authority until QC/SOP tolerance
 approval and the later decision engine gate are complete. Incomplete measurement
 evidence fails closed with `MEASUREMENTS_INCOMPLETE`.
 
+Geometry can also derive the same measurement contract from sanitized replay
+boundary corners and calibration scale. The bootstrap shadow path uses four
+corners (`top_left`, `top_right`, `bottom_right`, `bottom_left`) and
+`calibration.geometry.inch_per_pixel` to sample three calibrated length points,
+three calibrated width points, and two calibrated diagonals. The derived payload
+sets `measurement_source=boundary_corners_calibrated_shadow`, records boundary
+and calibration evidence, keeps `production_authority=false`, and still flows
+through the same product tolerance and Phase 1/2 decision engine. This does not
+resolve the open QC/SOP question about final production measurement method.
+
 Bootstrap shadow decision evaluation lives in:
 
 ```text

@@ -22,6 +22,11 @@
 - Missing or pending calibration returns `BLOCKED`.
 - Product-specific tolerance is validated by config/schema/tests.
 - 3 length points, 3 width points, and 2 diagonals are required by domain contract.
+- Boundary/corners measurement derivation tests validate that sanitized replay
+  corners plus `calibration.geometry.inch_per_pixel` produce the same 3 length
+  points, 3 width points, and 2 diagonals consumed by product tolerance logic.
+  Missing calibration scale fails closed, and derived evidence remains
+  `production_authority=false`.
 - Phase 1 length/width shadow evaluation blocks before product spec,
   calibration, and geometry evidence are complete; otherwise it emits rule-level
   evidence with `all_points_must_pass_bootstrap`, bounds, min/max/average, and

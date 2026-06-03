@@ -12,7 +12,10 @@
 1. Operator or CI starts app in replay mode.
 2. App loads runtime config, product specs, calibration state, and detector adapter.
 3. Replay source provides frames.
-4. Vision preprocessing and geometry measurement produce measurements.
+4. Vision preprocessing and geometry measurement produce measurements. In
+   no-camera shadow replay, a sanitized frame may provide boundary corners; the
+   app uses calibration scale to derive length, width, and diagonal measurements
+   before running the same SOP rules.
 5. Detector adapter returns observations when available.
 6. SOP rule engine evaluates product, calibration, geometry, and model-dependent rules.
 7. Inspection decision emits PASS, NG, BLOCKED, NOT_EVALUATED, or ASSIST reason codes.
