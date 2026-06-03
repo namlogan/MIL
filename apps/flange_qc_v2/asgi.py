@@ -11,6 +11,7 @@ from apps.flange_qc_v2.artifact_readiness import build_artifact_readiness_report
 from apps.flange_qc_v2.audit import AuditStore
 from apps.flange_qc_v2.detector import (
     build_shadow_detector_status_from_intake,
+    build_shadow_detector_result_from_payload,
     build_shadow_detector_unconfigured_status,
 )
 from apps.flange_qc_v2.domain import ValidationError
@@ -64,6 +65,19 @@ async def _handle_http(scope: Scope, receive: Receive, send: Send) -> None:
         return
     if method == "GET" and path == "/detector/shadow/status":
         await _send_json(send, 200, _shadow_detector_status_from_env())
+        return
+    if method == "POST" and path == "/detector/shadow/observations":
+        try:
+            payload = await _read_json_body(receive)
+            result = build_shadow_detector_result_from_payload(
+                payload,
+                intake_dir=os.environ.get(ARTIFACT_INTAKE_ENV, "").strip(),
+                repo_root=REPO_ROOT,
+            )
+        except (OSError, ValueError, ValidationError, json.JSONDecodeError) as exc:
+            await _send_json(send, 400, {"detail": str(exc)})
+            return
+        await _send_json(send, 200, result.to_payload())
         return
     if method == "POST" and path == "/feedback":
         try:
