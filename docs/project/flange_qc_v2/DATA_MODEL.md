@@ -126,6 +126,12 @@ evidence does not grant production authority and carries authority blockers
 until product spec approval, QC/SOP tolerance approval, model approval, and
 production release gates are complete.
 
+The health subsystem reports this as
+`sop_decision_engine=shadow_implemented_requires_qc_sop_approval` rather than
+`not_implemented`. This means the shadow SOP logic is present for replay,
+evidence, and operator review, but final production PASS/NG authority remains
+blocked by QC/SOP and release approval gates.
+
 Bootstrap no-camera replay validation lives in:
 
 ```text

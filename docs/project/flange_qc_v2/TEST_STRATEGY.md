@@ -35,6 +35,9 @@
 - Phase 4 post-MVP SOP rules return `NOT_EVALUATED`, Phase 4 review-dependent
   rules return `ASSIST`, and fallback aggregation never maps disabled or review
   states to `PASS`.
+- Health endpoint tests validate that the SOP decision engine is reported as
+  `shadow_implemented_requires_qc_sop_approval`, not `not_implemented`, while
+  `decision_authority=none` and QC/SOP approval blockers remain present.
 - Detector returns observations only.
 - Missing model produces `NOT_EVALUATED`, `ASSIST`, or `BLOCKED` for model-dependent rules.
 - Model artifact manifests validate contract version, registry reference,

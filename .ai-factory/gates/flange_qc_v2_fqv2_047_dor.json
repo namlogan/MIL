@@ -1,0 +1,78 @@
+{
+  "task_id": "FQV2-047",
+  "github_issue": "https://github.com/namlogan/MIL/issues/151",
+  "branch": "agent/151-health-sop-decision-readiness",
+  "title": "Align health SOP decision engine readiness",
+  "status": "definition_of_ready",
+  "user_business_goal": "Align /health subsystem readiness with the implemented SOP decision engine so operator and coordinator evidence no longer reports the SOP logic as not implemented after shadow phase logic exists.",
+  "allowed_files": [
+    "apps/flange_qc_v2/domain.py",
+    "apps/flange_qc_v2/health.py",
+    "tests/flange_qc_v2/test_health.py",
+    "tests/flange_qc_v2/test_domain_contracts.py",
+    "docs/project/flange_qc_v2/DATA_MODEL.md",
+    "docs/project/flange_qc_v2/TEST_STRATEGY.md",
+    ".ai-factory/gates/flange_qc_v2_fqv2_047_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_047_handoff_2026-06-03.md"
+  ],
+  "out_of_scope": [
+    "raw media, raw datasets, customer/factory data, notebooks, model weights, TensorRT engines, model binaries, or model execution",
+    "live camera capture, camera SDK loading, camera credentials, GPU/hardware validation, or hardware readiness approval",
+    "Windmill credential/tunnel/runtime changes",
+    "production deploy/release, secrets, tokens, provider credentials, destructive migrations, production data migration, billing, legal/compliance behavior, or security boundary change",
+    "product spec approval, QC/SOP tolerance approval, model promotion approval, production PASS/NG authority, or production auto-reject behavior",
+    "Memory0 approved record writes"
+  ],
+  "acceptance_criteria": [
+    "/health reports sop_decision_engine=shadow_implemented_requires_qc_sop_approval instead of not_implemented.",
+    "Domain bootstrap subsystem payload uses the same SOP decision engine state.",
+    "/health still reports status=degraded, mode=bootstrap, and decision_authority=none.",
+    "/health includes qc_sop_tolerance_approval_missing as a blocker.",
+    "Product spec approval, QC/SOP tolerance approval, model approval, camera hardware approval, and production release remain human-gated.",
+    "No production PASS/NG authority is granted.",
+    "Tests and docs reflect the readiness wording."
+  ],
+  "required_checks": [
+    "python3 -m unittest tests.flange_qc_v2.test_health tests.flange_qc_v2.test_domain_contracts -v",
+    "python3 -m unittest tests.flange_qc_v2.test_decision_engine -v",
+    "python3 -m unittest tests.flange_qc_v2.test_hmi_stream -v",
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m json.tool .ai-factory/gates/flange_qc_v2_fqv2_047_dor.json",
+    "git diff --check",
+    "HTTP preview smoke for /health when local preview is available"
+  ],
+  "memory_preflight": {
+    "query": "FQV2 health SOP decision engine readiness after shadow SOP phase logic.",
+    "retrieved_decisions": [
+      "SOP phase logic exists for shadow replay evidence but remains non-authoritative.",
+      "Product spec approval, QC/SOP tolerance approval, model approval, camera hardware approval, and production release remain human gates."
+    ],
+    "retrieved_lessons": [
+      "Readiness labels should distinguish implemented shadow logic from production authority.",
+      "Health evidence should not keep saying not_implemented after the app has tested shadow decision logic."
+    ],
+    "restricted_areas": [
+      "secrets",
+      "raw media/data",
+      "model binaries/deserialization/inference",
+      "live camera/hardware",
+      "destructive migrations",
+      "production deploy/release",
+      "product spec approval",
+      "QC/SOP tolerance approval",
+      "model promotion",
+      "production PASS/NG authority"
+    ],
+    "conflicts_found": "runtime/Windmill daily attention is a non-app-code auth/session blocker; this task does not require Windmill secret access.",
+    "sources_to_verify": [
+      "AGENTS.md",
+      "apps/flange_qc_v2/domain.py",
+      "apps/flange_qc_v2/health.py",
+      "tests/flange_qc_v2/test_health.py",
+      "tests/flange_qc_v2/test_domain_contracts.py",
+      "docs/project/flange_qc_v2/DATA_MODEL.md"
+    ]
+  },
+  "rollback_note": "Revert the FQV2-047 PR to restore the previous health subsystem wording. Existing decision engine, replay, HMI, artifact readiness, and product CI behavior remain valid."
+}

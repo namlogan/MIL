@@ -23,12 +23,16 @@ class HealthSnapshotTests(unittest.TestCase):
             snapshot["subsystems"]["product_specs"],
             "draft_requires_qc_owner_approval",
         )
-        self.assertEqual(snapshot["subsystems"]["sop_decision_engine"], "not_implemented")
+        self.assertEqual(
+            snapshot["subsystems"]["sop_decision_engine"],
+            "shadow_implemented_requires_qc_sop_approval",
+        )
         self.assertEqual(snapshot["decision_authority"], "none")
         self.assertEqual(snapshot["model_boundary"]["contract_version"], "model.artifact.v1")
         self.assertEqual(snapshot["model_boundary"]["state"], "manifest_ready_shadow_only")
         self.assertFalse(snapshot["model_boundary"]["production_authority"])
         self.assertIn("qc_product_spec_approval_missing", snapshot["blockers"])
+        self.assertIn("qc_sop_tolerance_approval_missing", snapshot["blockers"])
 
 
 class AsgiHealthEndpointTests(unittest.TestCase):
@@ -52,6 +56,10 @@ class AsgiHealthEndpointTests(unittest.TestCase):
         self.assertEqual(headers[b"content-type"], b"application/json")
         self.assertEqual(body["service"], "flange-qc-v2")
         self.assertEqual(body["decision_authority"], "none")
+        self.assertEqual(
+            body["subsystems"]["sop_decision_engine"],
+            "shadow_implemented_requires_qc_sop_approval",
+        )
 
 
 class HealthCliTests(unittest.TestCase):
