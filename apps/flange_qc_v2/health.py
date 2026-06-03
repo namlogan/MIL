@@ -27,6 +27,7 @@ def build_health_snapshot() -> dict[str, Any]:
         },
         "blockers": [
             "qc_product_spec_approval_missing",
+            "qc_sop_tolerance_approval_missing",
             "camera_hardware_validation_missing",
             "model_approval_missing",
             "audit_db_not_configured",

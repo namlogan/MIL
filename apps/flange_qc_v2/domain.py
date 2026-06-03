@@ -12,7 +12,7 @@ BOOTSTRAP_SUBSYSTEM_STATES = {
     "gpu": "unavailable",
     "model": "unavailable",
     "product_specs": "draft_requires_qc_owner_approval",
-    "sop_decision_engine": "not_implemented",
+    "sop_decision_engine": "shadow_implemented_requires_qc_sop_approval",
     "audit_db": "not_configured",
     "replay_source": "not_configured",
 }
