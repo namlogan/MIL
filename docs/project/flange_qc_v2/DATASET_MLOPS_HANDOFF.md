@@ -71,6 +71,8 @@ Contract/runtime:
 ```text
 apps/flange_qc_v2/audit.py
 scripts/flange_qc_v2/export_qc_feedback.py
+contracts/flange_qc_v2/feedback/qc_feedback_export.schema.json
+scripts/flange_qc_v2/validate_qc_feedback_export.py
 ```
 
 The app can export existing audit feedback into JSONL records with
@@ -83,6 +85,17 @@ metadata when present.
 This export does not include raw images, videos, raw datasets, notebooks, model
 weights, camera credentials, production secrets, or production PASS/NG authority.
 Empty audit stores produce an empty JSONL file.
+
+Validate an export before giving it to MLOps:
+
+```bash
+python3 scripts/flange_qc_v2/validate_qc_feedback_export.py \
+  --input .ai-factory/tmp/flange_qc_v2/qc_feedback_export.jsonl
+```
+
+Valid output means the file matches the sanitized metadata contract only. It
+does not approve labels, raw dataset retention, model training, model promotion,
+or production authority.
 
 ## Forbidden In App Repo
 
