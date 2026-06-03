@@ -83,6 +83,13 @@
   `NOT_EVALUATED` without observations, and rejects missing intake,
   request-supplied paths, request-supplied model/evidence refs, raw source URIs,
   invalid labels, invalid bbox/confidence, and production authority.
+- Shadow detector observation request contract tests validate
+  `shadow_detector_observation_request.v1`, the checked-in sample payload, and
+  `scripts/flange_qc_v2/validate_shadow_detector_observations.py`; the validator
+  must accept sanitized label/confidence/bbox metadata and reject raw-media
+  source URIs, request-supplied artifact/model/data paths, request-supplied
+  model/evidence refs, malformed bbox/confidence, extra fields, and missing
+  input files.
 - HMI screen tests and browser evidence validate that detector bridge status
   renders ready state, adapter, model reference, labels, approval status, and
   authority blockers from `/detector/shadow/status`.

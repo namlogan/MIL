@@ -1,0 +1,16 @@
+{
+  "contract_version": "shadow_detector_observation_request.v1",
+  "request": {
+    "frame_id": "frame-detector-001",
+    "source_uri": "synthetic://flange-qc-v2/phase3/frame-detector-001",
+    "captured_at": "2026-06-02T00:00:00Z",
+    "source_ref": "https://github.com/namlogan/MIL/issues/143"
+  },
+  "observations": [
+    {
+      "label": "punch_mark",
+      "confidence": 0.82,
+      "bbox": [0.2, 0.3, 0.1, 0.1]
+    }
+  ]
+}

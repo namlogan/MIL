@@ -1,6 +1,9 @@
 import asyncio
+import contextlib
+import io
 import json
 import os
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -13,6 +16,12 @@ from apps.flange_qc_v2.model_artifact import ModelArtifactManifest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DETECTOR_SCHEMA = REPO_ROOT / "contracts/flange_qc_v2/detector/detector_result.schema.json"
+SHADOW_OBSERVATION_REQUEST_SCHEMA = (
+    REPO_ROOT / "contracts/flange_qc_v2/detector/shadow_observation_request.schema.json"
+)
+SHADOW_OBSERVATION_SAMPLE = (
+    REPO_ROOT / "samples/replay/flange_qc_v2/shadow_detector_observation_request.json"
+)
 TEMPLATE_DIR = REPO_ROOT / "templates/flange_qc_v2/artifact_intake"
 
 
@@ -98,6 +107,88 @@ class DetectorAdapterSchemaTests(unittest.TestCase):
         self.assertEqual(observation["bbox"]["items"]["minimum"], 0)
         self.assertEqual(observation["bbox"]["items"]["maximum"], 1)
         self.assertEqual(properties["production_authority"]["const"], False)
+
+    def test_shadow_observation_request_schema_documents_mlop_payload_contract(self) -> None:
+        schema = json.loads(SHADOW_OBSERVATION_REQUEST_SCHEMA.read_text(encoding="utf-8"))
+        properties = schema["properties"]
+        observation = properties["observations"]["items"]["properties"]
+
+        self.assertEqual(schema["title"], "FLANGE QC V2 Shadow Detector Observation Request")
+        self.assertEqual(properties["contract_version"]["const"], "shadow_detector_observation_request.v1")
+        self.assertFalse(schema["additionalProperties"])
+        self.assertFalse(properties["request"]["additionalProperties"])
+        self.assertFalse(properties["observations"]["items"]["additionalProperties"])
+        self.assertEqual(properties["request"]["properties"]["source_uri"]["pattern"], "^(synthetic|replay)://")
+        self.assertEqual(observation["bbox"]["items"]["minimum"], 0)
+        self.assertEqual(observation["bbox"]["items"]["maximum"], 1)
+        self.assertNotIn("artifact_intake_dir", properties)
+        self.assertNotIn("manifest_path", properties)
+        self.assertNotIn("model_path", properties)
+        self.assertNotIn("dataset_path", properties)
+        self.assertNotIn("model_ref", observation)
+        self.assertNotIn("evidence_ref", observation)
+
+    def test_validate_cli_accepts_shadow_observation_sample(self) -> None:
+        from scripts.flange_qc_v2.validate_shadow_detector_observations import main as validate_main
+
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            exit_code = validate_main(["--input", str(SHADOW_OBSERVATION_SAMPLE)])
+
+        result = json.loads(stdout.getvalue())
+        self.assertEqual(exit_code, 0)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["observation_count"], 1)
+        self.assertEqual(result["errors"], [])
+
+    def test_validate_cli_rejects_unsafe_shadow_observation_payload(self) -> None:
+        from scripts.flange_qc_v2.validate_shadow_detector_observations import main as validate_main
+
+        payload = {
+            "contract_version": "shadow_detector_observation_request.v1",
+            "artifact_intake_dir": "/tmp/unsafe",
+            "request": detector_request_payload(source_uri="file:///factory/raw-frame.jpg"),
+            "observations": [
+                {
+                    "label": "punch_mark",
+                    "confidence": 1.2,
+                    "bbox": [0.2, 0.3, 1.4, 0.1],
+                    "model_ref": "registry://unsafe/request-supplied",
+                }
+            ],
+        }
+        with tempfile.TemporaryDirectory() as tmpdir:
+            input_path = Path(tmpdir) / "shadow-observations.json"
+            input_path.write_text(json.dumps(payload), encoding="utf-8")
+
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                exit_code = validate_main(["--input", str(input_path)])
+
+        result = json.loads(stdout.getvalue())
+        self.assertEqual(exit_code, 1)
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["observation_count"], 1)
+        self.assertIn("artifact_intake_dir", json.dumps(result["errors"]))
+        self.assertIn("source_uri", json.dumps(result["errors"]))
+        self.assertIn("confidence", json.dumps(result["errors"]))
+        self.assertIn("bbox", json.dumps(result["errors"]))
+        self.assertIn("model_ref", json.dumps(result["errors"]))
+
+    def test_validate_cli_fails_closed_for_missing_shadow_observation_file(self) -> None:
+        from scripts.flange_qc_v2.validate_shadow_detector_observations import main as validate_main
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            missing_path = Path(tmpdir) / "missing.json"
+
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                exit_code = validate_main(["--input", str(missing_path)])
+
+        result = json.loads(stdout.getvalue())
+        self.assertEqual(exit_code, 1)
+        self.assertFalse(result["ok"])
+        self.assertIn("does not exist", result["errors"][0]["message"])
 
 
 class StubDetectorAdapterTests(unittest.TestCase):
