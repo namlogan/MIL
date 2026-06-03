@@ -116,10 +116,13 @@ The app exposes a metadata-only shadow detector bridge through
 report `ready.shadow_model_integration_issue=true`, then loads only
 `model_artifact_manifest.json` to return adapter id, model reference, artifact
 version, labels, evaluation report reference, approval status, shadow mode, and
-approval blockers. Missing or invalid intake returns a non-ready state with
-`production_authority=false`. The bridge does not load weights, deserialize model
-binaries, run inference, import camera SDKs, capture frames, approve model
-promotion, or grant production PASS/NG authority.
+approval blockers. When ready, the status reports
+`ready_for_shadow_observation_review`, `next_task=shadow_observation_review`,
+and `submit_shadow_observation_payload` as the next action. Missing or invalid
+intake returns a non-ready state with `production_authority=false`. The bridge
+does not load weights, deserialize model binaries, run inference, import camera
+SDKs, capture frames, approve model promotion, or grant production PASS/NG
+authority.
 
 The app also exposes `POST /detector/shadow/observations` for shadow detector
 observation dry-runs. MLOps/engineering may send detector request metadata and

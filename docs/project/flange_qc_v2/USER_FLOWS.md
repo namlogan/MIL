@@ -108,7 +108,8 @@
 4. If `ready.shadow_model_integration_issue=true`, the endpoint loads only
    `model_artifact_manifest.json` and returns the `manifest-detector` adapter id,
    model reference, artifact version, labels, evaluation report reference,
-   approval status, shadow mode, and production-authority blockers.
+   approval status, shadow mode, production-authority blockers, and
+   `next_task=shadow_observation_review`.
 5. HMI calls this endpoint and renders the detector bridge status without
    opening raw JSON or changing decision authority.
 6. MLOps/engineering can post sanitized review-only observation metadata to

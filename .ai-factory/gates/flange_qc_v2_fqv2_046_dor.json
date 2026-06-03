@@ -1,0 +1,81 @@
+{
+  "task_id": "FQV2-046",
+  "github_issue": "https://github.com/namlogan/MIL/issues/149",
+  "branch": "agent/149-detector-shadow-observation-next-action",
+  "title": "Align detector shadow status next action with observation review",
+  "status": "definition_of_ready",
+  "user_business_goal": "Align /detector/shadow/status with the current shadow observation review loop so detector, intake, readiness, HMI, and coordinator evidence use consistent task names.",
+  "allowed_files": [
+    "apps/flange_qc_v2/detector.py",
+    "tests/flange_qc_v2/test_detector_adapter.py",
+    "docs/project/flange_qc_v2/MLOPS_BOUNDARY.md",
+    "docs/project/flange_qc_v2/USER_FLOWS.md",
+    "docs/project/flange_qc_v2/DATA_MODEL.md",
+    "docs/project/flange_qc_v2/TEST_STRATEGY.md",
+    ".ai-factory/gates/flange_qc_v2_fqv2_046_dor.json",
+    ".ai-factory/qa/flange_qc_v2_fqv2_046_handoff_2026-06-03.md"
+  ],
+  "out_of_scope": [
+    "raw media, raw datasets, customer/factory data, notebooks, model weights, TensorRT engines, model binaries, or model execution",
+    "live camera capture, camera SDK loading, camera credentials, GPU/hardware validation, or hardware readiness approval",
+    "Windmill credential/tunnel/runtime changes",
+    "production deploy/release, secrets, tokens, provider credentials, destructive migrations, production data migration, billing, legal/compliance behavior, or security boundary change",
+    "product spec approval, QC/SOP tolerance approval, model promotion approval, production PASS/NG authority, or production auto-reject behavior",
+    "Memory0 approved record writes"
+  ],
+  "acceptance_criteria": [
+    "Ready /detector/shadow/status includes state=ready_for_shadow_observation_review.",
+    "Ready /detector/shadow/status includes next_task=shadow_observation_review.",
+    "Ready next_issue.recommended_task is shadow_observation_review.",
+    "Ready next_issue.recommended_next_actions includes submit_shadow_observation_payload.",
+    "Unconfigured detector status still recommends configure_artifact_intake and remains safe/non-authoritative.",
+    "Detector observations dry-run endpoint behavior is unchanged and remains review-only.",
+    "Existing artifact intake, artifact readiness, detector, HMI, product CI, and full repo tests continue to pass."
+  ],
+  "required_checks": [
+    "python3 -m unittest tests.flange_qc_v2.test_detector_adapter -v",
+    "python3 -m unittest tests.flange_qc_v2.test_artifact_intake -v",
+    "python3 -m unittest tests.flange_qc_v2.test_artifact_readiness -v",
+    "python3 -m unittest tests.flange_qc_v2.test_hmi_screen -v",
+    "python3 -m unittest discover -s tests/flange_qc_v2 -v",
+    "python3 -m compileall -q apps/flange_qc_v2 tests/flange_qc_v2 scripts/flange_qc_v2",
+    "python3 scripts/product-ci/run_product_checks.py",
+    "python3 -m unittest discover -s tests -v",
+    "python3 -m json.tool .ai-factory/gates/flange_qc_v2_fqv2_046_dor.json",
+    "git diff --check",
+    "HTTP preview smoke for /detector/shadow/status, /artifact-intake/status, and /artifact-readiness/status when local preview is available"
+  ],
+  "memory_preflight": {
+    "query": "FQV2 detector shadow status next task after artifact readiness shadow observation review.",
+    "retrieved_decisions": [
+      "Artifact intake and artifact readiness now recommend shadow_observation_review and submit_shadow_observation_payload.",
+      "Detector observations remain review-only and production authority false.",
+      "Production authority, model promotion, QC/SOP tolerance approval, product spec approval, and live camera remain human-gated."
+    ],
+    "retrieved_lessons": [
+      "Status endpoints should expose consistent task names and next actions once implementation stages advance.",
+      "Detector readiness can add operator-facing state without changing observation dry-run behavior."
+    ],
+    "restricted_areas": [
+      "secrets",
+      "raw media/data",
+      "model binaries/deserialization/inference",
+      "live camera/hardware",
+      "destructive migrations",
+      "production deploy/release",
+      "product spec approval",
+      "QC/SOP tolerance approval",
+      "model promotion",
+      "production PASS/NG authority"
+    ],
+    "conflicts_found": "runtime/Windmill daily attention is a non-app-code auth/session blocker; this task does not require Windmill secret access.",
+    "sources_to_verify": [
+      "AGENTS.md",
+      ".ai-factory/RULES.md",
+      "apps/flange_qc_v2/detector.py",
+      "tests/flange_qc_v2/test_detector_adapter.py",
+      "docs/project/flange_qc_v2/MLOPS_BOUNDARY.md"
+    ]
+  },
+  "rollback_note": "Revert the FQV2-046 PR to restore the previous detector shadow status next-action wording. Existing detector status, detector observations, artifact intake/readiness, HMI, feedback, and product CI behavior remain valid."
+}

@@ -314,6 +314,10 @@ class ShadowDetectorBridgeTests(unittest.TestCase):
 
         self.assertTrue(status["configured"])
         self.assertTrue(status["ready"])
+        self.assertIn("state", status)
+        self.assertIn("next_task", status)
+        self.assertEqual(status["state"], "ready_for_shadow_observation_review")
+        self.assertEqual(status["next_task"], "shadow_observation_review")
         self.assertEqual(status["adapter_id"], "manifest-detector")
         self.assertEqual(status["model_ref"], "registry://flange-qc-v2/detector/punch-mark/2026-06-02")
         self.assertEqual(status["artifact_version"], "detector-shadow-2026-06-02")
@@ -323,6 +327,9 @@ class ShadowDetectorBridgeTests(unittest.TestCase):
         self.assertTrue(status["shadow_mode"])
         self.assertFalse(status["production_authority"])
         self.assertEqual(status["authority_blockers"], ["MODEL_APPROVAL_REQUIRED", "PRODUCTION_APPROVAL_REQUIRED"])
+        self.assertIn("recommended_next_actions", status["next_issue"])
+        self.assertEqual(status["next_issue"]["recommended_task"], "shadow_observation_review")
+        self.assertIn("submit_shadow_observation_payload", status["next_issue"]["recommended_next_actions"])
 
     def test_builds_manifest_detector_adapter_from_ready_artifact_intake(self) -> None:
         self.assertTrue(hasattr(detector, "build_manifest_detector_from_intake"))
@@ -352,8 +359,15 @@ class ShadowDetectorBridgeTests(unittest.TestCase):
         self.assertEqual(response["status"], 200)
         self.assertTrue(body["configured"])
         self.assertTrue(body["ready"])
+        self.assertIn("state", body)
+        self.assertIn("next_task", body)
+        self.assertEqual(body["state"], "ready_for_shadow_observation_review")
+        self.assertEqual(body["next_task"], "shadow_observation_review")
         self.assertEqual(body["adapter_id"], "manifest-detector")
         self.assertEqual(body["model_ref"], "registry://flange-qc-v2/detector/punch-mark/2026-06-02")
+        self.assertIn("recommended_next_actions", body["next_issue"])
+        self.assertEqual(body["next_issue"]["recommended_task"], "shadow_observation_review")
+        self.assertIn("submit_shadow_observation_payload", body["next_issue"]["recommended_next_actions"])
         self.assertFalse(body["production_authority"])
 
     def test_shadow_detector_status_endpoint_reports_safe_unconfigured_state(self) -> None:

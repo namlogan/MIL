@@ -366,9 +366,12 @@ source. `GET /detector/shadow/status` returns a detector-focused readiness
 payload only after `ready.shadow_model_integration_issue=true`: configured
 state, detector readiness, `manifest-detector` adapter id, model reference,
 artifact version, labels, evaluation report reference, approval status,
-`shadow_mode=true`, `production_authority=false`, and model/production approval
-blockers. Unconfigured or invalid intake stays non-ready and points back to
-intake configuration or repair. The payload is metadata only and does not carry
+`shadow_mode=true`, `production_authority=false`, model/production approval
+blockers, and `next_task=shadow_observation_review`. Ready status also includes
+`submit_shadow_observation_payload` as a next action so it matches artifact
+intake and readiness. Unconfigured or invalid intake stays non-ready and points
+back to intake configuration or repair. The payload is metadata only and does
+not carry
 raw frames, datasets, model binaries, inference output, camera configuration, or
 final QC PASS/NG authority. The HMI renders this payload as detector bridge
 status so operators can see metadata readiness without opening raw JSON or
