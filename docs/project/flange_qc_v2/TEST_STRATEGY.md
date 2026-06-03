@@ -86,6 +86,10 @@
 - QC feedback export tests validate one sanitized JSONL metadata record per
   stored feedback row, empty audit export behavior, and fail-closed missing DB
   behavior without raw payloads or production authority.
+- QC feedback export validator tests validate the `qc_feedback_export.v1`
+  schema, successful JSONL validation, empty-file validation, and fail-closed
+  rejection of full payload dumps, `production_authority=true`, raw-media-like
+  references, malformed bbox values, missing fields, and missing input files.
 
 ## Fixtures And Test Data
 
@@ -126,6 +130,8 @@ promotion evidence, or final inspection authority.
 QC feedback export fixtures must use temporary SQLite audit stores and synthetic
 metadata only. JSONL records must not include raw media, raw datasets, full
 payload dumps, model weights, notebooks, credentials, or production authority.
+The JSONL validator must run before any exported feedback is used for MLOps
+labeling review.
 
 ## Agent Verification Rules
 

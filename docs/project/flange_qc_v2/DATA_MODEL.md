@@ -222,6 +222,8 @@ QC feedback metadata export lives in:
 ```text
 apps/flange_qc_v2/audit.py
 scripts/flange_qc_v2/export_qc_feedback.py
+contracts/flange_qc_v2/feedback/qc_feedback_export.schema.json
+scripts/flange_qc_v2/validate_qc_feedback_export.py
 ```
 
 The exporter reads the existing SQLite audit store and emits one JSONL record per
@@ -232,7 +234,9 @@ source reference, timestamps, authority blockers, and compact detector
 observation label/confidence/bbox metadata when present. The export is for
 dataset-labeling and MLOps review planning only. It does not emit raw media, raw
 datasets, full inspection payload JSON, model binaries, credentials, or
-production authority.
+production authority. The validator accepts empty JSONL files, validates each
+record against `qc_feedback_export.v1`, rejects extra payload dump fields,
+rejects raw-media-like references, and requires `production_authority=false`.
 
 Bootstrap image quality evidence lives in:
 

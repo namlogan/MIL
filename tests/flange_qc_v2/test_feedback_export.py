@@ -5,10 +5,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from apps.flange_qc_v2.audit import AuditStore
+from apps.flange_qc_v2.audit import AuditStore, FEEDBACK_EXPORT_CONTRACT_VERSION
 from apps.flange_qc_v2.domain import BoundingBox, DetectorObservation, InspectionSnapshot
 from apps.flange_qc_v2.feedback import QcFeedback
 from scripts.flange_qc_v2.export_qc_feedback import main as export_main
+from scripts.flange_qc_v2.validate_qc_feedback_export import main as validate_main
 
 
 class QcFeedbackExportTests(unittest.TestCase):
@@ -95,6 +96,120 @@ class QcFeedbackExportTests(unittest.TestCase):
 
         self.assertEqual(exit_code, 1)
         self.assertIn("audit DB does not exist", stderr.getvalue())
+
+
+class QcFeedbackExportValidationTests(unittest.TestCase):
+    def test_feedback_export_schema_documents_sanitized_jsonl_contract(self) -> None:
+        schema_path = Path("contracts/flange_qc_v2/feedback/qc_feedback_export.schema.json")
+
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+        properties = schema["properties"]
+
+        self.assertEqual(schema["title"], "Flange QC V2 QC Feedback Export Record")
+        self.assertIn("contract_version", schema["required"])
+        self.assertIn("observations", schema["required"])
+        self.assertEqual(properties["contract_version"]["const"], FEEDBACK_EXPORT_CONTRACT_VERSION)
+        self.assertEqual(properties["production_authority"]["const"], False)
+        self.assertFalse(properties["observations"]["items"]["additionalProperties"])
+        self.assertNotIn("payload", properties)
+        self.assertNotIn("payload_json", properties)
+
+    def test_validate_cli_accepts_exported_jsonl_records(self) -> None:
+        record = self._valid_record()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            export_path = Path(tmpdir) / "feedback.jsonl"
+            export_path.write_text(json.dumps(record, sort_keys=True) + "\n", encoding="utf-8")
+
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                exit_code = validate_main(["--input", str(export_path)])
+
+        result = json.loads(stdout.getvalue())
+        self.assertEqual(exit_code, 0)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["record_count"], 1)
+        self.assertEqual(result["errors"], [])
+
+    def test_validate_cli_accepts_empty_jsonl_file(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            export_path = Path(tmpdir) / "feedback-empty.jsonl"
+            export_path.write_text("", encoding="utf-8")
+
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                exit_code = validate_main(["--input", str(export_path)])
+
+        result = json.loads(stdout.getvalue())
+        self.assertEqual(exit_code, 0)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["record_count"], 0)
+
+    def test_validate_cli_rejects_unsafe_feedback_export_rows(self) -> None:
+        invalid_record = self._valid_record()
+        invalid_record["production_authority"] = True
+        invalid_record["payload_json"] = {"raw": "full inspection payload dump"}
+        invalid_record["observations"][0]["evidence_ref"] = "file:///tmp/factory-frame.png"
+        invalid_record["observations"][0]["bbox"] = [1.2, 0.2, 0.1, 0.1]
+        with tempfile.TemporaryDirectory() as tmpdir:
+            export_path = Path(tmpdir) / "feedback-invalid.jsonl"
+            export_path.write_text(json.dumps(invalid_record, sort_keys=True) + "\n", encoding="utf-8")
+
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                exit_code = validate_main(["--input", str(export_path)])
+
+        result = json.loads(stdout.getvalue())
+        self.assertEqual(exit_code, 1)
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["record_count"], 1)
+        self.assertGreaterEqual(len(result["errors"]), 3)
+        self.assertIn("production_authority", json.dumps(result["errors"]))
+        self.assertIn("payload_json", json.dumps(result["errors"]))
+        self.assertIn("bbox", json.dumps(result["errors"]))
+
+    def test_validate_cli_fails_closed_for_missing_input_file(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            missing_path = Path(tmpdir) / "missing.jsonl"
+
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                exit_code = validate_main(["--input", str(missing_path)])
+
+        result = json.loads(stdout.getvalue())
+        self.assertEqual(exit_code, 1)
+        self.assertFalse(result["ok"])
+        self.assertIn("does not exist", result["errors"][0]["message"])
+
+    def _valid_record(self) -> dict[str, object]:
+        return {
+            "contract_version": FEEDBACK_EXPORT_CONTRACT_VERSION,
+            "audit_feedback_id": 1,
+            "feedback_id": "fb-export-validated-001",
+            "inspection_id": "insp-export-validated-001",
+            "product": {
+                "code": "611",
+                "spec_version": "bootstrap_replay",
+            },
+            "inspection_decision": "NG",
+            "inspection_created_at": "2026-06-03T00:00:00Z",
+            "feedback_type": "MARK_FALSE_POSITIVE",
+            "reviewer_id": "qc-reviewer-1",
+            "note": "QC confirmed this is a false alarm.",
+            "shadow_decision": "NG",
+            "source_ref": "https://github.com/namlogan/MIL/issues/131",
+            "feedback_created_at": "2026-06-03T00:01:00Z",
+            "production_authority": False,
+            "authority_blockers": ["PRODUCTION_APPROVAL_REQUIRED"],
+            "observations": [
+                {
+                    "label": "punch_mark",
+                    "confidence": 0.87,
+                    "bbox": [0.42, 0.22, 0.12, 0.05],
+                    "model_ref": "registry://flange-qc-v2/shadow-detector@candidate",
+                    "evidence_ref": "eval://flange-qc-v2/shadow-eval-001",
+                }
+            ],
+        }
 
 
 if __name__ == "__main__":
