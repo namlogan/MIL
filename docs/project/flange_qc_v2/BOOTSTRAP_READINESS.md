@@ -14,6 +14,25 @@
 | Release/rollback gate | Pending human release approval | Readiness pack records rollback path and release blockers; no deploy approved |
 | Memory maintenance | Validated for MVP-0 baseline | Memory provider, contract, and framework integration checks pass; no approved memory writeback performed by app package |
 
+## Artifact Readiness Report
+
+The current no-hardware handoff can be summarized with:
+
+```bash
+python3 scripts/flange_qc_v2/build_artifact_readiness_report.py \
+  --intake-dir templates/flange_qc_v2/artifact_intake \
+  --labeling-review-pack .ai-factory/tmp/flange_qc_v2/labeling_review_pack.json \
+  --source-ref https://github.com/namlogan/MIL/issues/135 \
+  --output .ai-factory/tmp/flange_qc_v2/artifact_readiness_report.json
+```
+
+The report consumes validated artifact intake metadata and an optional QC
+labeling review pack. It separates shadow model readiness, live camera
+readiness, QC feedback readiness, and production release authority. Passing the
+report can recommend a shadow model integration issue, but live camera,
+production release, model promotion, product specs, and QC/SOP tolerance gates
+remain blocked until their explicit approvals exist.
+
 ## ZIP Review Decision
 
 The attached kickoff ZIP has now been reviewed from:

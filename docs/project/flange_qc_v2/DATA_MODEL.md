@@ -332,6 +332,21 @@ warnings/errors, and artifact summaries. This does not accept request-supplied
 paths, load model binaries, connect to camera hardware, or grant production
 authority.
 
+The artifact readiness report lives in:
+
+```text
+apps/flange_qc_v2/artifact_readiness.py
+scripts/flange_qc_v2/build_artifact_readiness_report.py
+```
+
+It consumes the artifact intake validation result and an optional QC labeling
+review pack, then emits a metadata-only report with readiness lanes for artifact
+intake, shadow model integration, live camera implementation, QC feedback
+labeling review, and production release. The report records blockers and next
+actions, but always returns `production_authority=false` and does not include
+raw feedback rows, raw media, raw datasets, model binaries, credentials, or
+release approval.
+
 The shadow detector metadata bridge uses the same env-var-bound artifact intake
 source. `GET /detector/shadow/status` returns a detector-focused readiness
 payload only after `ready.shadow_model_integration_issue=true`: configured
